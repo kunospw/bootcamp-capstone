@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import app from "./app.js";
 
 mongoose
-  .connect("mongodb://localhost:27017/bootcamp-project")
+  .connect("mongodb+srv://kindanervous:riePbQANRHbzN3h7@jobportal.mtmu2am.mongodb.net/")
   .then(() => {
     console.log("database connected");
     app.listen(3000, () => {
