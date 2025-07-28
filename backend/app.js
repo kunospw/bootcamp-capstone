@@ -2,8 +2,10 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
+import session from "express-session";
+import passport from "./config/passport.js";
 import userRouter from "./routers/user.js";
-import companyRouter from "./routers/company.js"; // <-- Add this
+import companyRouter from "./routers/company.js";
 
 dotenv.config();
 
@@ -18,11 +20,18 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Only userRouter for login/register
-app.use("/auth", userRouter);
+app.use(
+  session({
+    secret: process.env.JWT_SECRET,
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+app.use(passport.initialize());
+app.use(passport.session());
 
-// Company login/register/validate
-app.use("/company", companyRouter); // <-- Add this
+app.use("/auth", userRouter);
+app.use("/company", companyRouter);
 
 app.use((err, req, res, next) => {
   res.status(500).json({ message: err.message });
