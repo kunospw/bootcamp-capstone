@@ -6,11 +6,12 @@ const companySchema = new mongoose.Schema({
   phoneNumber: String,
   password: { type: String, required: true },
   profilePicture: String,
+  bannerPicture: String,
   website: String,
   industry: String,
   mainLocation: String,
   description: String,
-  credentialFile: String, // path or URL to uploaded file
+  credentialFile: String,
   credentialStatus: {
     type: String,
     enum: ["pending", "approved", "rejected"],
