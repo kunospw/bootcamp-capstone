@@ -1,10 +1,13 @@
 import React from 'react'
+import { useNavigate } from 'react-router-dom'
 import SideBar from '../../Components/SideBar'
 import { FaCamera, FaEdit, FaMapMarkerAlt, FaIndustry, FaGlobe, FaPhone, FaEnvelope } from 'react-icons/fa'
 
 const Profile = () => {
+    const navigate = useNavigate();
+    
     const handleEditBanner = () => {
-        console.log('Navigate to edit profile page');
+        navigate('/company/profile/edit');
     };
     return (
         <div className="flex h-screen bg-gray-50">
@@ -14,22 +17,21 @@ const Profile = () => {
             <div className="flex-1 ml-0 sm:ml-72 transition-all duration-300">
                 <div className="p-6">
                     {/* Banner Placeholder Section */}
-                    <div className="relative bg-gray-200 rounded-lg shadow-sm border border-gray-200 mb-6 overflow-hidden cursor-pointer group" onClick={handleEditBanner}>
+                    <div className="relative bg-gray-200 rounded-lg shadow-sm border border-gray-200 mb-6 overflow-hidden group">
                         {/* Banner Placeholder */}
-                        <div className="relative h-64 flex items-center justify-center bg-gradient-to-r from-gray-300 to-gray-400">
+                        <div className="relative h-64 flex items-center justify-center bg-gray-200">
                             {/* Default Content */}
-                            <div className="text-center text-gray-600 group-hover:opacity-30 transition-opacity duration-300">
+                            <div className="text-center text-gray-600 transition-opacity duration-300">
                                 <FaCamera className="w-16 h-16 mx-auto mb-4 opacity-60" />
                                 <h2 className="text-2xl font-semibold mb-2">Company Banner</h2>
                                 <p className="text-lg">Click to add your company banner</p>
                             </div>
 
-                            {/* Hover Overlay */}
-                            <div className="absolute inset-0 bg-black group-hover:bg-black/50 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                            {/* Right Overlay - Only right portion */}
+                            <div onClick={handleEditBanner} className="cursor-pointer absolute top-0 right-0 bottom-0 w-1/4 bg-black/0 group-hover:bg-black/50 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100 rounded-r-lg">
                                 <div className="text-center text-white">
-                                    <FaEdit className="w-12 h-12 mx-auto mb-3" />
-                                    <h3 className="text-xl font-semibold mb-2">Edit Banner</h3>
-                                    <p className="text-sm opacity-90">Click to customize your company banner</p>
+                                    <FaEdit className="w-8 h-8 mx-auto mb-2" />
+                                    <h3 className="text-sm font-semibold mb-1">Edit Banner</h3>
                                 </div>
                             </div>
                         </div>
@@ -40,7 +42,19 @@ const Profile = () => {
                     <div className="card-company w-full min-h-[660px] bg-white rounded-lg shadow-sm border border-gray-200 p-6 flex flex-col gap-5">
                         <div className="w-full justify-between flex gap-3">
                             <div className='flex gap-10 justify-start items-center p-3 w-full'>
-                                <div className='profile-pic w-48 h-48 rounded-full bg-gray-200 shadow-sm flex-shrink-0 overflow-hidden'>
+                                <div className='profile-pic w-48 h-48 rounded-full bg-gray-200 shadow-sm flex-shrink-0 overflow-hidden relative group'>
+                                    {/* Profile Picture Content */}
+                                    <div className="w-full h-full flex items-center justify-center text-gray-500">
+                                        <FaCamera className="w-12 h-12 opacity-60" />
+                                    </div>
+                                    
+                                    {/* Bottom Overlay - 1/3 of the circle */}
+                                    <div onClick={handleEditBanner} className="cursor-pointer absolute bottom-0 left-0 right-0 h-1/3 bg-black/0 group-hover:bg-black/50 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100 rounded-b-full">
+                                        <div className="text-center text-white">
+                                            <FaEdit className="w-6 h-6 mx-auto mb-1" />
+                                            <p className="text-xs font-medium">Edit Photo</p>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div className='py-3 flex flex-col gap-4 justify-center items-start w-full'>
                                     <div className='flex justify-between items-center gap-8'>
