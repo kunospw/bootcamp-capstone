@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import SideBar from '../../Components/SideBar'
-import { FaCamera, FaSave, FaTimes, FaMapMarkerAlt, FaIndustry, FaGlobe, FaPhone, FaEnvelope, FaUpload } from 'react-icons/fa'
+import { FaCamera, FaSave, FaTimes, FaMapMarkerAlt, FaIndustry, FaGlobe, FaPhone, FaEnvelope, FaUpload, FaChevronDown } from 'react-icons/fa'
 
 const ProfileEdit = () => {
     const navigate = useNavigate();
