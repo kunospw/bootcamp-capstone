@@ -25,6 +25,10 @@ const SideBar = () => {
     };
 
     const isActivePath = (path) => {
+        if (path === '/company/profile') {
+            // Profile page should be active for both /company/profile and /company/profile/edit
+            return location.pathname === '/company/profile' || location.pathname === '/company/profile/edit';
+        }
         return location.pathname === path;
     };
 
