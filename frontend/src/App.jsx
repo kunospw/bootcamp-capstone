@@ -1,8 +1,11 @@
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import SignUp from "./pages/SignUp.jsx";
 import SignIn from "./pages/SignIn.jsx";
-import UserLandingPage from "./pages/user/LandingPage.jsx";
-import CompanyLandingPage from "./pages/company/LandingPage.jsx";
+import UserProfile from "./pages/user/Profile.jsx";
+import CompanyProfile from "./pages/company/Profile.jsx";
+import ProfileEdit from "./pages/company/ProfileEdit.jsx";
+import JobList from "./pages/company/JobList.jsx";
+import Inbox from "./pages/company/Inbox.jsx";
 
 export default function App() {
   return (
@@ -10,9 +13,12 @@ export default function App() {
       <Routes>
         <Route path="/signup" element={<SignUp />} />
         <Route path="/signin" element={<SignIn />} />
-        <Route path="/user/landing" element={<UserLandingPage />} />
-        <Route path="/company/landing" element={<CompanyLandingPage />} />
         <Route path="/" element={<SignIn />} />
+        <Route path="/company/profile" element={<CompanyProfile />} />
+        <Route path="/company/profile/edit" element={<ProfileEdit />} />
+        <Route path="/company/jobs" element={<JobList />} />
+        <Route path="/company/applications" element={<Inbox />} />
+        <Route path="/user/profile" element={<UserProfile />} />
       </Routes>
     </Router>
   );

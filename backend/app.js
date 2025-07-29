@@ -10,6 +10,10 @@ import companyRouter from "./routers/company.js";
 dotenv.config();
 
 const app = express();
+
+// Serve uploaded files
+app.use("/uploads", express.static("uploads"));
+
 app.use(cookieParser());
 app.use(
   cors({
@@ -20,13 +24,20 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Add session middleware BEFORE passport
 app.use(
   session({
     secret: process.env.JWT_SECRET,
     resave: false,
     saveUninitialized: false,
+    cookie: {
+      secure: false, // Set to true in production with HTTPS
+      maxAge: 1000 * 60 * 60 * 24, // 24 hours
+    },
   })
 );
+
+// Initialize passport AFTER session
 app.use(passport.initialize());
 app.use(passport.session());
 
