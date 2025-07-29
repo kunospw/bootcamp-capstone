@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import SignUp from "./pages/SignUp.jsx";
 import SignIn from "./pages/SignIn.jsx";
+import UserProfile from "./pages/user/Profile.jsx";
 import CompanyProfile from "./pages/company/Profile.jsx";
 import ProfileEdit from "./pages/company/ProfileEdit.jsx";
 import JobList from "./pages/company/JobList.jsx";
@@ -17,6 +18,7 @@ export default function App() {
         <Route path="/company/profile/edit" element={<ProfileEdit />} />
         <Route path="/company/jobs" element={<JobList />} />
         <Route path="/company/applications" element={<Inbox />} />
+        <Route path="/user/profile" element={<UserProfile />} />
       </Routes>
     </Router>
   );
