@@ -37,7 +37,20 @@ Complete database documentation with entity relationships and schema details.
 - Virtual fields and methods
 - Migration scripts
 
-### 4. [Data Models](./models.md)
+### 4. [Security Guide](./security.md)
+Comprehensive security documentation covering environment variables, authentication, and deployment security.
+
+**What you'll find:**
+- Environment variable security best practices
+- GitHub secrets resolution steps
+- Authentication and JWT security
+- API security measures
+- Database protection strategies
+- File upload security
+- Production deployment security
+- Incident response procedures
+
+### 5. [Data Models](./models.md)
 Comprehensive documentation of all Mongoose models.
 
 **What you'll find:**
@@ -48,7 +61,7 @@ Comprehensive documentation of all Mongoose models.
 - Validation rules
 - Relationships between models
 
-### 5. [Setup & Deployment](./setup.md)
+### 6. [Setup & Deployment](./setup.md)
 Complete guide for setting up development environment and production deployment.
 
 **What you'll find:**
