@@ -1,5 +1,5 @@
 import express from "express";
-import Company from "../models/companies.model.js";
+import Company from "../models/company.model.js";
 import bcrypt from "bcryptjs";
 import multer from "multer";
 import path from "path";

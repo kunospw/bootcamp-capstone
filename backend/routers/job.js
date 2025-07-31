@@ -1,0 +1,172 @@
+import express from "express";
+import Job from "../models/job.model.js";
+import { authenticateCompany, authenticateUser } from "../middleware/auth.js";
+import Category from "../models/category.model.js";
+
+const router = express.Router();
+
+// Get all jobs with filtering and pagination
+router.get("/", async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      title,
+      location,
+      type,
+      workLocation,
+      experienceLevel,
+      category,
+      companyId,
+      search
+    } = req.query;
+
+    const query = { isActive: true };
+    
+    // Build query filters
+    if (title) query.title = { $regex: title, $options: "i" };
+    if (location) query.location = { $regex: location, $options: "i" };
+    if (type) query.type = type;
+    if (workLocation) query.workLocation = workLocation;
+    if (experienceLevel) query.experienceLevel = experienceLevel;
+    if (category) query.category = category;
+    if (companyId) query.companyId = companyId;
+    
+    // Text search across multiple fields
+    if (search) {
+      query.$text = { $search: search };
+    }
+
+    const jobs = await Job.find(query)
+      .populate("category", "categoryName")
+      .populate("companyId", "companyName profilePicture")
+      .sort({ datePosted: -1 })
+      .limit(limit * 1)
+      .skip((page - 1) * limit);
+
+    const total = await Job.countDocuments(query);
+
+    res.json({
+      jobs,
+      totalPages: Math.ceil(total / limit),
+      currentPage: page,
+      total
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Get single job by ID
+router.get("/:id", async (req, res) => {
+  try {
+    const job = await Job.findById(req.params.id)
+      .populate("category")
+      .populate("companyId", "-password");
+    
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+
+    // Increment view count
+    await job.incrementViews();
+
+    res.json(job);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Create new job (Company only)
+router.post("/", authenticateCompany, async (req, res) => {
+  try {
+    const jobData = {
+      ...req.body,
+      companyId: req.company._id
+    };
+
+    const job = new Job(jobData);
+    await job.save();
+    
+    await job.populate("category");
+    await job.populate("companyId", "companyName");
+
+    res.status(201).json(job);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// Update job (Company only - own jobs)
+router.put("/:id", authenticateCompany, async (req, res) => {
+  try {
+    const job = await Job.findOne({ 
+      _id: req.params.id, 
+      companyId: req.company._id 
+    });
+
+    if (!job) {
+      return res.status(404).json({ message: "Job not found or unauthorized" });
+    }
+
+    Object.assign(job, req.body);
+    await job.save();
+
+    await job.populate("category");
+    await job.populate("companyId", "companyName");
+
+    res.json(job);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// Delete job (Company only - own jobs)
+router.delete("/:id", authenticateCompany, async (req, res) => {
+  try {
+    const job = await Job.findOneAndDelete({ 
+      _id: req.params.id, 
+      companyId: req.company._id 
+    });
+
+    if (!job) {
+      return res.status(404).json({ message: "Job not found or unauthorized" });
+    }
+
+    res.json({ message: "Job deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Get jobs by company
+router.get("/company/:companyId", async (req, res) => {
+  try {
+    const { page = 1, limit = 10 } = req.query;
+    
+    const jobs = await Job.find({ 
+      companyId: req.params.companyId, 
+      isActive: true 
+    })
+      .populate("category", "categoryName")
+      .sort({ datePosted: -1 })
+      .limit(limit * 1)
+      .skip((page - 1) * limit);
+
+    const total = await Job.countDocuments({ 
+      companyId: req.params.companyId, 
+      isActive: true 
+    });
+
+    res.json({
+      jobs,
+      totalPages: Math.ceil(total / limit),
+      currentPage: page,
+      total
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+export default router;

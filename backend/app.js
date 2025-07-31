@@ -6,6 +6,8 @@ import session from "express-session";
 import passport from "./config/passport.js";
 import userRouter from "./routers/user.js";
 import companyRouter from "./routers/company.js";
+import jobRouter from "./routers/job.js";
+import applicationRouter from "./routers/application.js";
 
 dotenv.config();
 
@@ -43,6 +45,8 @@ app.use(passport.session());
 
 app.use("/auth", userRouter);
 app.use("/company", companyRouter);
+app.use("/api/jobs", jobRouter);
+app.use("/api/applications", applicationRouter);
 
 app.use((err, req, res, next) => {
   res.status(500).json({ message: err.message });

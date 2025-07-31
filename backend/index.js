@@ -1,12 +1,16 @@
 import mongoose from "mongoose";
 import app from "./app.js";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 mongoose
-  .connect("mongodb+srv://kindanervous:riePbQANRHbzN3h7@jobportal.mtmu2am.mongodb.net/")
+  .connect(process.env.MONGODB_URI)
   .then(() => {
     console.log("database connected");
-    app.listen(3000, () => {
-      console.log("server is running on 3000");
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => {
+      console.log(`server is running on port ${PORT}`);
     });
   })
   .catch((e) => {

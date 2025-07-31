@@ -174,7 +174,7 @@ userSchema.pre("save", async function (next) {
 
 // Match password method
 userSchema.methods.matchPassword = async function (enteredPassword) {
-  return await compare(enteredPassword, this.password);
+  return await bcrypt.compare(enteredPassword, this.password);
 };
 
 // Update last login
