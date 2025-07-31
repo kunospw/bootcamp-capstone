@@ -5,7 +5,12 @@ import { FaBuilding, FaUser } from "react-icons/fa";
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [type, setType] = useState("user");
+  
+  // Get type from URL parameter, default to "user" if not specified
+  const searchParams = new URLSearchParams(location.search);
+  const typeFromUrl = searchParams.get('type') || 'user';
+  
+  const [type, setType] = useState(typeFromUrl);
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -41,6 +46,18 @@ export default function Login() {
       }
     }
   }, [location, navigate]);
+
+  // Update type when URL parameter changes
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const typeFromUrl = searchParams.get('type');
+    if (typeFromUrl && (typeFromUrl === 'user' || typeFromUrl === 'company')) {
+      setType(typeFromUrl);
+      // Clear form when type changes
+      setForm({ email: "", password: "" });
+      setMessage("");
+    }
+  }, [location.search]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -244,7 +261,7 @@ export default function Login() {
           <div className='text-center mt-6'>
             <p className='text-gray-600'>
               Don't have an account?{' '}
-              <a href='/signup' className='text-blue-600 hover:text-blue-700 font-medium'>
+              <a href={`/signup?type=${type}`} className='text-blue-600 hover:text-blue-700 font-medium'>
                 Sign up
               </a>
             </p>

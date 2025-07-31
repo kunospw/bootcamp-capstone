@@ -1,10 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaBuilding, FaUser } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export default function SignUp() {
   const navigate = useNavigate();
-  const [type, setType] = useState("user"); // "user" or "company"
+  const location = useLocation();
+  
+  // Get type from URL parameter, default to "user" if not specified
+  const searchParams = new URLSearchParams(location.search);
+  const typeFromUrl = searchParams.get('type') || 'user';
+  
+  const [type, setType] = useState(typeFromUrl); // "user" or "company"
   const [form, setForm] = useState({
     fullName: "",
     email: "",
@@ -14,6 +20,25 @@ export default function SignUp() {
   });
   const [credentialFile, setCredentialFile] = useState(null);
   const [message, setMessage] = useState("");
+
+  // Update type when URL parameter changes
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const typeFromUrl = searchParams.get('type');
+    if (typeFromUrl && (typeFromUrl === 'user' || typeFromUrl === 'company')) {
+      setType(typeFromUrl);
+      // Clear form when type changes
+      setForm({
+        fullName: "",
+        email: "",
+        password: "",
+        phoneNumber: "",
+        companyName: "",
+      });
+      setCredentialFile(null);
+      setMessage("");
+    }
+  }, [location.search]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -342,7 +367,7 @@ export default function SignUp() {
           <div className='text-center mt-6'>
             <p className='text-gray-600'>
               Already have an account?{' '}
-              <a href='/signin' className='text-blue-600 hover:text-blue-700 font-medium'>
+              <a href={`/signin?type=${type}`} className='text-blue-600 hover:text-blue-700 font-medium'>
                 Sign in
               </a>
             </p>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import logo from '../assets/logo.png'
+import logo from '../assets/logo.svg'
 import { FaBuilding, FaBriefcase, FaInbox, FaSignOutAlt, FaUser, FaTimes, FaBars } from "react-icons/fa";
 
 
@@ -28,6 +28,12 @@ const SideBar = () => {
         if (path === '/company/profile') {
             // Profile page should be active for both /company/profile and /company/profile/edit
             return location.pathname === '/company/profile' || location.pathname === '/company/profile/edit';
+        }
+        if (path === '/company/jobs') {
+            // Job List should be active for /company/jobs, /company/jobs/add, /company/jobs/:id, and /company/jobs/:id/edit
+            return location.pathname === '/company/jobs' || 
+                   location.pathname === '/company/jobs/add' || 
+                   location.pathname.startsWith('/company/jobs/');
         }
         return location.pathname === path;
     };
