@@ -5,6 +5,8 @@ import UserProfile from "./pages/user/Profile.jsx";
 import CompanyProfile from "./pages/company/Profile.jsx";
 import ProfileEdit from "./pages/company/ProfileEdit.jsx";
 import JobList from "./pages/company/JobList.jsx";
+import AddJob from "./pages/company/AddJob.jsx";
+import EditJob from "./pages/company/EditJob.jsx";
 import Inbox from "./pages/company/Inbox.jsx";
 
 export default function App() {
@@ -17,6 +19,8 @@ export default function App() {
         <Route path="/company/profile" element={<CompanyProfile />} />
         <Route path="/company/profile/edit" element={<ProfileEdit />} />
         <Route path="/company/jobs" element={<JobList />} />
+        <Route path="/company/jobs/add" element={<AddJob />} />
+        <Route path="/company/jobs/edit/:jobId" element={<EditJob />} />
         <Route path="/company/applications" element={<Inbox />} />
         <Route path="/user/profile" element={<UserProfile />} />
       </Routes>

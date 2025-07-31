@@ -5,6 +5,18 @@ import Category from "../models/category.model.js";
 
 const router = express.Router();
 
+// Get all categories
+router.get("/categories", async (req, res) => {
+  try {
+    const categories = await Category.find({ isActive: true }).sort({
+      categoryName: 1,
+    });
+    res.json(categories);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Get all jobs with filtering and pagination
 router.get("/", async (req, res) => {
   try {
@@ -18,11 +30,11 @@ router.get("/", async (req, res) => {
       experienceLevel,
       category,
       companyId,
-      search
+      search,
     } = req.query;
 
     const query = { isActive: true };
-    
+
     // Build query filters
     if (title) query.title = { $regex: title, $options: "i" };
     if (location) query.location = { $regex: location, $options: "i" };
@@ -31,7 +43,7 @@ router.get("/", async (req, res) => {
     if (experienceLevel) query.experienceLevel = experienceLevel;
     if (category) query.category = category;
     if (companyId) query.companyId = companyId;
-    
+
     // Text search across multiple fields
     if (search) {
       query.$text = { $search: search };
@@ -50,7 +62,7 @@ router.get("/", async (req, res) => {
       jobs,
       totalPages: Math.ceil(total / limit),
       currentPage: page,
-      total
+      total,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -63,7 +75,7 @@ router.get("/:id", async (req, res) => {
     const job = await Job.findById(req.params.id)
       .populate("category")
       .populate("companyId", "-password");
-    
+
     if (!job) {
       return res.status(404).json({ message: "Job not found" });
     }
@@ -82,12 +94,12 @@ router.post("/", authenticateCompany, async (req, res) => {
   try {
     const jobData = {
       ...req.body,
-      companyId: req.company._id
+      companyId: req.company._id,
     };
 
     const job = new Job(jobData);
     await job.save();
-    
+
     await job.populate("category");
     await job.populate("companyId", "companyName");
 
@@ -100,9 +112,9 @@ router.post("/", authenticateCompany, async (req, res) => {
 // Update job (Company only - own jobs)
 router.put("/:id", authenticateCompany, async (req, res) => {
   try {
-    const job = await Job.findOne({ 
-      _id: req.params.id, 
-      companyId: req.company._id 
+    const job = await Job.findOne({
+      _id: req.params.id,
+      companyId: req.company._id,
     });
 
     if (!job) {
@@ -124,9 +136,9 @@ router.put("/:id", authenticateCompany, async (req, res) => {
 // Delete job (Company only - own jobs)
 router.delete("/:id", authenticateCompany, async (req, res) => {
   try {
-    const job = await Job.findOneAndDelete({ 
-      _id: req.params.id, 
-      companyId: req.company._id 
+    const job = await Job.findOneAndDelete({
+      _id: req.params.id,
+      companyId: req.company._id,
     });
 
     if (!job) {
@@ -143,26 +155,26 @@ router.delete("/:id", authenticateCompany, async (req, res) => {
 router.get("/company/:companyId", async (req, res) => {
   try {
     const { page = 1, limit = 10 } = req.query;
-    
-    const jobs = await Job.find({ 
-      companyId: req.params.companyId, 
-      isActive: true 
+
+    const jobs = await Job.find({
+      companyId: req.params.companyId,
+      isActive: true,
     })
       .populate("category", "categoryName")
       .sort({ datePosted: -1 })
       .limit(limit * 1)
       .skip((page - 1) * limit);
 
-    const total = await Job.countDocuments({ 
-      companyId: req.params.companyId, 
-      isActive: true 
+    const total = await Job.countDocuments({
+      companyId: req.params.companyId,
+      isActive: true,
     });
 
     res.json({
       jobs,
       totalPages: Math.ceil(total / limit),
       currentPage: page,
-      total
+      total,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
