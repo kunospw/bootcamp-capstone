@@ -1,6 +1,5 @@
 import express from "express";
 import Company from "../models/company.model.js";
-import bcrypt from "bcryptjs";
 import multer from "multer";
 import path from "path";
 import jwt from "jsonwebtoken";
@@ -46,26 +45,44 @@ const verifyToken = (req, res, next) => {
 router.post("/register", upload.single("credentialFile"), async (req, res) => {
   try {
     const { companyName, email, password, phoneNumber } = req.body;
+    
+    // Validate required fields
+    if (!companyName || !email || !password) {
+      return res.status(400).json({ message: "Company name, email, and password are required." });
+    }
+    
     if (!validateEmail(email)) {
       return res.status(400).json({ message: "Invalid email format." });
     }
-    if (!validatePhone(phoneNumber)) {
+    if (phoneNumber && !validatePhone(phoneNumber)) {
       return res.status(400).json({ message: "Invalid phone number format." });
     }
+    
+    // Check if password is at least 3 characters
+    if (password.length < 3) {
+      return res.status(400).json({ message: "Password must be at least 3 characters long." });
+    }
+    
+    // Check if company already exists
+    const existingCompany = await Company.findOne({ email });
+    if (existingCompany) {
+      return res.status(409).json({ message: "Company with this email already exists." });
+    }
 
-    // DON'T hash here - let the pre-save hook handle it
     const company = new Company({
       companyName,
       email,
-      password, // Raw password - will be hashed by pre-save hook
+      password, // Store password as plain text
       phoneNumber,
-      // credentialFile: req.file ? req.file.path : undefined,
-      // credentialStatus: "pending",
     });
     await company.save();
     res.status(201).json({ message: "Company registered successfully." });
   } catch (err) {
-    res.status(400).json({ message: err.message });
+    if (err.code === 11000) {
+      res.status(409).json({ message: "Company with this email already exists." });
+    } else {
+      res.status(400).json({ message: err.message });
+    }
   }
 });
 
@@ -81,22 +98,14 @@ router.post("/login", async (req, res) => {
         .json({ message: "Email and password are required." });
     }
 
-    // Make sure to select password field
-    const company = await Company.findOne({ email }).select("+password");
+    // Find company (no need to select password since it's not hidden now)
+    const company = await Company.findOne({ email });
     if (!company) {
       return res.status(401).json({ message: "Invalid credentials." });
     }
 
-    // Check if password exists on company object
-    if (!company.password) {
-      return res
-        .status(500)
-        .json({ message: "Password not found in database." });
-    }
-
-    // Use the model method instead of direct bcrypt
-    const valid = await company.matchPassword(password);
-    if (!valid) {
+    // Simple password comparison (plain text)
+    if (company.password !== password) {
       return res.status(401).json({ message: "Invalid credentials." });
     }
 
@@ -117,6 +126,7 @@ router.post("/login", async (req, res) => {
         _id: company._id,
         companyName: company.companyName,
         email: company.email,
+        type: "company"
       },
     });
   } catch (err) {

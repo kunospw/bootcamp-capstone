@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import bcrypt from "bcryptjs";
 
 const userSchema = new mongoose.Schema(
   {
@@ -23,8 +22,7 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: [true, "Password is required"],
-      minlength: [6, "Password must be at least 6 characters"],
-      select: false,
+      minlength: [3, "Password must be at least 3 characters"],
     },
     phoneNumber: {
       type: String,
@@ -161,20 +159,9 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-// Encrypt password before saving
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) {
-    next();
-  }
-
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
-  next();
-});
-
 // Match password method
-userSchema.methods.matchPassword = async function (enteredPassword) {
-  return await bcrypt.compare(enteredPassword, this.password);
+userSchema.methods.matchPassword = function (enteredPassword) {
+  return enteredPassword === this.password;
 };
 
 // Update last login
