@@ -9,6 +9,7 @@ import AddJob from "./pages/company/AddJob.jsx";
 import EditJob from "./pages/company/EditJob.jsx";
 import JobDetail from "./pages/company/JobDetail.jsx";
 import Inbox from "./pages/company/Inbox.jsx";
+import NavBar from "./Components/NavBar.jsx";
 
 export default function App() {
   return (
@@ -25,6 +26,8 @@ export default function App() {
         <Route path="/company/jobs/:id" element={<JobDetail />} />
         <Route path="/company/applications" element={<Inbox />} />
         <Route path="/user/profile" element={<UserProfile />} />
+        <Route path="/navbar" element={<NavBar />} />
+        {/* Add more routes as needed */}
       </Routes>
     </Router>
   );
