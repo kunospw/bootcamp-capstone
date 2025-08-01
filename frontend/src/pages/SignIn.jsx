@@ -111,7 +111,7 @@ export default function Login() {
         } else {
           // Redirect to user dashboard or profile
           setTimeout(() => {
-            navigate("/user/dashboard"); // or whatever the user page should be
+            navigate("/user/profile"); // or whatever the user page should be
           }, 1000);
         }
       } else {
