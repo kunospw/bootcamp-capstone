@@ -21,7 +21,7 @@ export default function App() {
         <Route path="/company/profile/edit" element={<ProfileEdit />} />
         <Route path="/company/jobs" element={<JobList />} />
         <Route path="/company/jobs/add" element={<AddJob />} />
-        <Route path="/company/jobs/:id/edit" element={<EditJob />} />
+        <Route path="/company/jobs/edit/:jobId" element={<EditJob />} />
         <Route path="/company/jobs/:id" element={<JobDetail />} />
         <Route path="/company/applications" element={<Inbox />} />
         <Route path="/user/profile" element={<UserProfile />} />

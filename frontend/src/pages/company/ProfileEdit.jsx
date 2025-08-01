@@ -192,7 +192,7 @@ const ProfileEdit = () => {
 
             {/* Main Content Area */}
             <div className="flex-1 ml-0 sm:ml-72 transition-all duration-300">
-                <div className="p-6">
+                <div className="p-4 sm:p-6 pt-4 sm:pt-6">
                     {/* Error Message */}
                     {error && (
                         <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -202,7 +202,7 @@ const ProfileEdit = () => {
 
                     {/* Banner Upload Section */}
                     <div className="relative bg-gray-200 rounded-lg shadow-sm border border-gray-200 mb-6 overflow-hidden group">
-                        <div className="relative h-64 flex items-center justify-center bg-gray-200">
+                        <div className="relative h-32 sm:h-64 flex items-center justify-center bg-gray-200">
                             {/* Show current banner or preview or upload placeholder */}
                             {bannerPreview ? (
                                 <img 
@@ -217,10 +217,10 @@ const ProfileEdit = () => {
                                     className="w-full h-full object-cover"
                                 />
                             ) : (
-                                <div className="text-center text-gray-600">
-                                    <FaUpload className="w-16 h-16 mx-auto mb-4 opacity-60" />
-                                    <h2 className="text-2xl font-semibold mb-2">Upload Company Banner</h2>
-                                    <p className="text-lg">Click to upload your company banner image</p>
+                                <div className="text-center text-gray-600 px-4">
+                                    <FaUpload className="w-8 h-8 sm:w-16 sm:h-16 mx-auto mb-2 sm:mb-4 opacity-60" />
+                                    <h2 className="text-lg sm:text-2xl font-semibold mb-1 sm:mb-2">Upload Company Banner</h2>
+                                    <p className="text-sm sm:text-lg hidden sm:block">Click to upload your company banner image</p>
                                 </div>
                             )}
 
@@ -233,13 +233,13 @@ const ProfileEdit = () => {
                                     onChange={handleBannerUpload}
                                     className="hidden"
                                 />
-                                <label htmlFor="bannerUpload" className="cursor-pointer text-center text-white">
-                                    <FaCamera className="w-12 h-12 mx-auto mb-2" />
-                                    <h3 className="text-lg font-semibold mb-1">
+                                <label htmlFor="bannerUpload" className="cursor-pointer text-center text-white px-4">
+                                    <FaCamera className="w-6 h-6 sm:w-12 sm:h-12 mx-auto mb-1 sm:mb-2" />
+                                    <h3 className="text-sm sm:text-lg font-semibold mb-1">
                                         {currentImages.bannerPicture || bannerPreview ? 'Change Banner' : 'Upload Banner'}
                                     </h3>
                                     {bannerFile && (
-                                        <p className="text-sm text-blue-200 font-medium">
+                                        <p className="text-xs sm:text-sm text-blue-200 font-medium">
                                             New file: {bannerFile.name}
                                         </p>
                                     )}
@@ -249,12 +249,13 @@ const ProfileEdit = () => {
                     </div>
 
                     {/* Profile Content Form */}
-                    <div className="card-company w-full min-h-[660px] bg-white rounded-lg shadow-sm border border-gray-200 p-6 flex flex-col gap-5">
-                        <div className="w-full justify-between flex gap-3">
-                            <div className='flex gap-10 justify-start items-center p-3 w-full'>
+                    <div className="card-company w-full min-h-[400px] sm:min-h-[660px] bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 flex flex-col gap-4 sm:gap-5">
+                        <div className="w-full flex flex-col lg:flex-row gap-4 lg:gap-3">
+                            {/* Profile Section */}
+                            <div className='flex flex-col sm:flex-row gap-4 sm:gap-10 justify-start items-center sm:items-center p-3 w-full lg:flex-1'>
                                 {/* Profile Picture Upload */}
                                 <div className='profile-pic-container flex-shrink-0'>
-                                    <div className='w-48 h-48 rounded-full bg-gray-200 shadow-sm overflow-hidden relative group cursor-pointer'>
+                                    <div className='w-32 h-32 sm:w-48 sm:h-48 rounded-full bg-gray-200 shadow-sm overflow-hidden relative group cursor-pointer'>
                                         {/* Show current profile picture or preview or upload placeholder */}
                                         {profilePreview ? (
                                             <img 
@@ -271,8 +272,8 @@ const ProfileEdit = () => {
                                         ) : (
                                             <div className="w-full h-full flex items-center justify-center text-gray-500">
                                                 <div className="text-center">
-                                                    <FaCamera className="w-8 h-8 mx-auto mb-2" />
-                                                    <p className="text-sm">Upload Photo</p>
+                                                    <FaCamera className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-1 sm:mb-2" />
+                                                    <p className="text-xs sm:text-sm">Upload Photo</p>
                                                 </div>
                                             </div>
                                         )}
@@ -287,13 +288,13 @@ const ProfileEdit = () => {
                                                 className="hidden"
                                             />
                                             <label htmlFor="profileUpload" className="cursor-pointer text-center text-white">
-                                                <FaCamera className="w-6 h-6 mx-auto mb-1" />
+                                                <FaCamera className="w-4 h-4 sm:w-6 sm:h-6 mx-auto mb-1" />
                                                 <p className="text-xs font-medium">
                                                     {currentImages.profilePicture || profilePreview ? 'Change Photo' : 'Upload Photo'}
                                                 </p>
                                                 {profileFile && (
                                                     <p className="text-xs mt-1 text-blue-200">
-                                                        {profileFile.name.substring(0, 12)}...
+                                                        {profileFile.name.substring(0, 8)}...
                                                     </p>
                                                 )}
                                             </label>
@@ -302,21 +303,42 @@ const ProfileEdit = () => {
                                 </div>
 
                                 {/* Company Information Form */}
-                                <div className='py-3 flex flex-col gap-4 justify-center items-start w-full'>
+                                <div className='py-3 flex flex-col gap-3 sm:gap-4 justify-center items-center sm:items-start w-full'>
+                                    {/* Action Buttons - Mobile Only */}
+                                    <div className="sm:hidden flex gap-3 w-full justify-end mb-4">
+                                        <button 
+                                            onClick={handleCancel}
+                                            disabled={saving}
+                                            className='flex items-center gap-2 px-4 py-2 bg-gray-500 text-white cursor-pointer rounded-lg hover:bg-gray-600 transition-colors duration-200 font-medium text-sm disabled:opacity-50'
+                                        >
+                                            <FaTimes className='w-4 h-4' />
+                                            Cancel
+                                        </button>
+                                        <button 
+                                            onClick={handleSave}
+                                            disabled={saving}
+                                            className='flex items-center gap-2 px-4 py-2 bg-blue-600 text-white cursor-pointer rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium text-sm disabled:opacity-50'
+                                        >
+                                            <FaSave className='w-4 h-4' />
+                                            {saving ? 'Saving...' : 'Save'}
+                                        </button>
+                                    </div>
+
                                     {/* Company Name */}
                                     <div className='w-full'>
                                         <label className='block text-sm font-medium text-gray-700 mb-2'>
                                             Company Name
                                         </label>
-                                        <div className='flex items-center gap-8'>
+                                        <div className='flex flex-col sm:flex-row items-center gap-4 sm:gap-8'>
                                             <input
                                                 type="text"
                                                 name="companyName"
                                                 value={formData.companyName}
                                                 onChange={handleInputChange}
-                                                className='w-[50%] px-4 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-bold text-2xl uppercase'
+                                                className='w-full sm:w-[60%] px-4 py-2 sm:py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-bold text-lg sm:text-2xl uppercase'
                                             />
-                                            <div className="flex gap-3">
+                                            {/* Action Buttons - Desktop Only */}
+                                            <div className="hidden sm:flex gap-3 w-auto justify-start">
                                                 <button 
                                                     onClick={handleCancel}
                                                     disabled={saving}
@@ -347,7 +369,7 @@ const ProfileEdit = () => {
                                                 value={formData.mainLocation}
                                                 onChange={handleInputChange}
                                                 placeholder="Company Location"
-                                                className='w-[30%] px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-600'
+                                                className='w-full sm:w-[60%] lg:w-[50%] px-3 py-2 sm:py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-600'
                                             />
                                         </div>
                                         <div className='flex items-center gap-2'>
@@ -358,7 +380,7 @@ const ProfileEdit = () => {
                                                 value={formData.industry}
                                                 onChange={handleInputChange}
                                                 placeholder="Industry"
-                                                className='w-[30%] px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-600'
+                                                className='w-full sm:w-[60%] lg:w-[50%] px-3 py-2 sm:py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-600'
                                             />
                                         </div>
                                         <div className='flex items-center gap-2'>
@@ -369,7 +391,7 @@ const ProfileEdit = () => {
                                                 value={formData.website}
                                                 onChange={handleInputChange}
                                                 placeholder="Company Website"
-                                                className='w-[30%] px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-600'
+                                                className='w-full sm:w-[60%] lg:w-[50%] px-3 py-2 sm:py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-600'
                                             />
                                         </div>
                                     </div>
@@ -377,12 +399,12 @@ const ProfileEdit = () => {
                             </div>
 
                             {/* Contact Information Form */}
-                            <div className="bg-white rounded-lg shadow-sm border w-[400px] border-gray-200 p-6">
-                                <h2 className="text-lg font-semibold text-gray-900 mb-4">Contact Information</h2>
+                            <div className="bg-white rounded-lg shadow-sm border w-full lg:w-[400px] border-gray-200 p-4 sm:p-6">
+                                <h2 className="text-lg font-semibold text-gray-900 mb-4 text-center lg:text-left">Contact Information</h2>
                                 <div className="space-y-4">
                                     <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
                                         <FaPhone className="text-blue-600 flex-shrink-0" />
-                                        <div className="flex-1">
+                                        <div className="flex-1 min-w-0">
                                             <p className="text-sm text-gray-600 mb-1">Phone</p>
                                             <input
                                                 type="tel"
@@ -390,13 +412,13 @@ const ProfileEdit = () => {
                                                 value={formData.phoneNumber}
                                                 onChange={handleInputChange}
                                                 placeholder="Phone Number"
-                                                className='w-full px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-semibold text-gray-900'
+                                                className='w-full px-3 py-2 sm:py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-semibold text-gray-900'
                                             />
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
                                         <FaEnvelope className="text-green-600 flex-shrink-0" />
-                                        <div className="flex-1">
+                                        <div className="flex-1 min-w-0">
                                             <p className="text-sm text-gray-600 mb-1">Email</p>
                                             <input
                                                 type="email"
@@ -404,7 +426,7 @@ const ProfileEdit = () => {
                                                 value={formData.email}
                                                 onChange={handleInputChange}
                                                 placeholder="Email Address"
-                                                className='w-full px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-semibold text-gray-900'
+                                                className='w-full px-3 py-2 sm:py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-semibold text-gray-900'
                                             />
                                         </div>
                                     </div>

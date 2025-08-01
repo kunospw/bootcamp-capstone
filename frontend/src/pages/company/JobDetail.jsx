@@ -1,63 +1,57 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import SideBar from '../../Components/SideBar'
-import { FaArrowLeft, FaMapMarkerAlt, FaClock, FaCalendarAlt, FaDollarSign, FaUsers, FaEdit, FaTrash, FaEye, FaDownload, FaEnvelope } from 'react-icons/fa'
+import { FaArrowLeft, FaMapMarkerAlt, FaClock, FaCalendarAlt, FaDollarSign, FaUsers, FaEdit, FaTrash, FaEye, FaDownload, FaEnvelope, FaPhone, FaGraduationCap, FaHome } from 'react-icons/fa'
 
 const JobDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('job-info');
     const [currentPage, setCurrentPage] = useState(1);
+    const [job, setJob] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+    const [actionLoading, setActionLoading] = useState(false);
     const applicantsPerPage = 6;
 
-    // Mock data - in real app, this would come from API
-    const jobPostings = [
-        {
-            id: 1,
-            title: "Senior Frontend Developer",
-            description: "We are looking for an experienced Frontend Developer to join our dynamic team. You will be responsible for building user-facing web applications using modern frameworks and technologies.",
-            requirements: [
-                "3+ years experience with React.js",
-                "Strong knowledge of JavaScript/TypeScript",
-                "Experience with CSS frameworks like Tailwind CSS",
-                "Familiarity with version control (Git)",
-                "Good understanding of responsive design"
-            ],
-            jobType: "Full Time",
-            location: "Jakarta, Indonesia",
-            postedDate: new Date("2024-11-17"),
-            isActive: true,
-            salaryMin: 8000000,
-            salaryMax: 15000000,
-            experienceLevel: "Senior Level",
-            deadline: new Date("2024-12-31"),
-            applicants: 25
-        },
-        {
-            id: 2,
-            title: "Backend Developer",
-            description: "Join our backend team to build scalable and robust server-side applications. You'll work with modern technologies and contribute to our microservices architecture.",
-            requirements: [
-                "2+ years experience with Node.js",
-                "Knowledge of database systems (MongoDB, PostgreSQL)",
-                "Experience with REST API development",
-                "Understanding of cloud platforms (AWS, GCP)",
-                "Familiarity with Docker and containerization"
-            ],
-            jobType: "Full Time",
-            location: "Bandung, Indonesia",
-            postedDate: new Date("2024-11-15"),
-            isActive: true,
-            salaryMin: 7000000,
-            salaryMax: 12000000,
-            experienceLevel: "Mid Level",
-            deadline: new Date("2024-12-25"),
-            applicants: 18
-        }
-        // Add more mock jobs as needed
-    ];
+    // Fetch job data from API
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    navigate('/signin');
+                    return;
+                }
 
-    // Mock applicants data
+                const response = await fetch(`http://localhost:3000/api/jobs/${id}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const jobData = await response.json();
+                    setJob(jobData);
+                    setError('');
+                } else {
+                    const errorData = await response.json();
+                    setError(errorData.message || 'Failed to fetch job data');
+                }
+            } catch (err) {
+                console.error('Error fetching job:', err);
+                setError('Failed to load job data');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [id, navigate]);
+
+    // Mock applicants data - TODO: Replace with real API data
     const applicantsData = [
         {
             id: 1,
@@ -126,17 +120,38 @@ const JobDetail = () => {
         }
     ];
 
-    const job = jobPostings.find(job => job.id === parseInt(id));
+    // Handle loading and error states
+    if (loading) {
+        return (
+            <div className="flex h-screen bg-gray-50">
+                <SideBar />
+                <div className="flex-1 ml-0 sm:ml-72 transition-all duration-300">
+                    <div className="p-6">
+                        <div className="flex items-center justify-center h-96">
+                            <div className="text-center">
+                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                                <p className="text-gray-600">Loading job details...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
-    if (!job) {
+    if (error || !job) {
         return (
             <div className="flex h-screen bg-gray-50">
                 <SideBar />
                 <div className="flex-1 ml-0 sm:ml-72 transition-all duration-300">
                     <div className="p-6">
                         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
-                            <h1 className="text-2xl font-bold text-gray-900 mb-2">Job Not Found</h1>
-                            <p className="text-gray-600 mb-4">The job you're looking for doesn't exist.</p>
+                            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                                {error ? 'Error Loading Job' : 'Job Not Found'}
+                            </h1>
+                            <p className="text-gray-600 mb-4">
+                                {error || "The job you're looking for doesn't exist."}
+                            </p>
                             <button
                                 onClick={() => navigate('/company/jobs')}
                                 className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
@@ -151,22 +166,125 @@ const JobDetail = () => {
     }
 
     const formatDate = (date) => {
-        return date.toLocaleDateString('id-ID', {
+        const jobDate = new Date(date);
+        return jobDate.toLocaleDateString('id-ID', {
             year: 'numeric',
             month: 'long',
             day: 'numeric'
         });
     };
 
-    const formatSalary = (min, max) => {
+    const formatSalary = (salaryObj) => {
+        if (!salaryObj) return 'Salary not specified';
+        
+        const { min, max, currency = 'IDR', period = 'monthly' } = salaryObj;
+        const periodText = period === 'monthly' ? '/month' : period === 'yearly' ? '/year' : '/hour';
+        
         if (min && max) {
-            return `IDR ${min.toLocaleString()} - ${max.toLocaleString()}`;
+            return `${currency} ${min.toLocaleString()} - ${max.toLocaleString()} ${periodText}`;
         } else if (min) {
-            return `IDR ${min.toLocaleString()}+`;
+            return `${currency} ${min.toLocaleString()}+ ${periodText}`;
         } else if (max) {
-            return `Up to IDR ${max.toLocaleString()}`;
+            return `Up to ${currency} ${max.toLocaleString()} ${periodText}`;
         }
         return 'Salary not specified';
+    };
+
+    const formatJobType = (type) => {
+        const typeMap = {
+            'full-time': 'Full Time',
+            'part-time': 'Part Time',
+            'contract': 'Contract',
+            'internship': 'Internship',
+            'freelance': 'Freelance'
+        };
+        return typeMap[type] || type;
+    };
+
+    const formatWorkLocation = (workLocation) => {
+        const locationMap = {
+            'onsite': 'On-site',
+            'remote': 'Remote',
+            'hybrid': 'Hybrid'
+        };
+        return locationMap[workLocation] || workLocation;
+    };
+
+    const formatExperienceLevel = (level) => {
+        const levelMap = {
+            'entry': 'Entry Level',
+            'mid': 'Mid Level',
+            'senior': 'Senior Level',
+            'lead': 'Lead Level',
+            'executive': 'Executive Level'
+        };
+        return levelMap[level] || level;
+    };
+
+    // Handler functions for job actions
+    const handleEditJob = () => {
+        navigate(`/company/jobs/edit/${id}`);
+    };
+
+    const handleDeleteJob = async () => {
+        if (!window.confirm('Are you sure you want to delete this job?')) {
+            return;
+        }
+
+        try {
+            setActionLoading(true);
+            const token = localStorage.getItem('token');
+            const response = await fetch(`http://localhost:3000/api/jobs/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                // Navigate back to job list after successful deletion
+                navigate('/company/jobs');
+            } else {
+                const errorData = await response.json();
+                alert(errorData.message || 'Failed to delete job');
+            }
+        } catch (err) {
+            console.error('Error deleting job:', err);
+            alert('Failed to delete job');
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    const handleToggleJobStatus = async () => {
+        try {
+            setActionLoading(true);
+            const token = localStorage.getItem('token');
+            const response = await fetch(`http://localhost:3000/api/jobs/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    isActive: !job.isActive
+                })
+            });
+
+            if (response.ok) {
+                const updatedJob = await response.json();
+                setJob(updatedJob);
+            } else {
+                const errorData = await response.json();
+                alert(errorData.message || 'Failed to update job status');
+            }
+        } catch (err) {
+            console.error('Error updating job status:', err);
+            alert('Failed to update job status');
+        } finally {
+            setActionLoading(false);
+        }
     };
 
     // Pagination logic for applicants
@@ -310,7 +428,7 @@ const JobDetail = () => {
                                                         </div>
                                                         <div>
                                                             <p className="text-sm text-gray-500">Job Type</p>
-                                                            <p className="font-medium text-gray-900">{job.jobType}</p>
+                                                            <p className="font-medium text-gray-900">{formatJobType(job.type)}</p>
                                                         </div>
                                                     </div>
 
@@ -320,7 +438,7 @@ const JobDetail = () => {
                                                         </div>
                                                         <div>
                                                             <p className="text-sm text-gray-500">Experience Level</p>
-                                                            <p className="font-medium text-gray-900">{job.experienceLevel}</p>
+                                                            <p className="font-medium text-gray-900">{formatExperienceLevel(job.experienceLevel)}</p>
                                                         </div>
                                                     </div>
 
@@ -330,7 +448,27 @@ const JobDetail = () => {
                                                         </div>
                                                         <div>
                                                             <p className="text-sm text-gray-500">Salary Range</p>
-                                                            <p className="font-medium text-gray-900">{formatSalary(job.salaryMin, job.salaryMax)}</p>
+                                                            <p className="font-medium text-gray-900">{formatSalary(job.salary)}</p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="flex items-center justify-center w-10 h-10 bg-indigo-100 rounded-lg">
+                                                            <FaGraduationCap className="w-5 h-5 text-indigo-600" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-sm text-gray-500">Major/Field</p>
+                                                            <p className="font-medium text-gray-900">{job.major}</p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="flex items-center justify-center w-10 h-10 bg-orange-100 rounded-lg">
+                                                            <FaHome className="w-5 h-5 text-orange-600" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-sm text-gray-500">Work Location</p>
+                                                            <p className="font-medium text-gray-900">{formatWorkLocation(job.workLocation)}</p>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -352,6 +490,21 @@ const JobDetail = () => {
                                                         ))}
                                                     </ul>
                                                 </div>
+
+                                                {/* Benefits */}
+                                                {job.benefits && job.benefits.length > 0 && (
+                                                    <div className="border-t border-gray-200 pt-4">
+                                                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Benefits</h3>
+                                                        <ul className="space-y-3">
+                                                            {job.benefits.map((benefit, index) => (
+                                                                <li key={index} className="flex items-start gap-3">
+                                                                    <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
+                                                                    <span className="text-gray-700">{benefit}</span>
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     ) : (
@@ -529,41 +682,82 @@ const JobDetail = () => {
 
                                     <div className="flex items-center justify-between">
                                         <span className="text-gray-600">Posted Date</span>
-                                        <span className="font-medium text-gray-900">{formatDate(job.postedDate)}</span>
+                                        <span className="font-medium text-gray-900">{formatDate(job.datePosted)}</span>
                                     </div>
 
-                                    {job.deadline && (
+                                    {job.applicationDeadline && (
                                         <div className="flex items-center justify-between">
                                             <span className="text-gray-600">Deadline</span>
-                                            <span className="font-medium text-gray-900">{formatDate(job.deadline)}</span>
+                                            <span className="font-medium text-gray-900">{formatDate(job.applicationDeadline)}</span>
                                         </div>
                                     )}
 
                                     <div className="flex items-center justify-between">
                                         <span className="text-gray-600">Applicants</span>
-                                        <span className="font-medium text-gray-900">{job.applicants} candidates</span>
+                                        <span className="font-medium text-gray-900">{job.applicationsCount || 0} candidates</span>
                                     </div>
                                 </div>
 
                                 {/* Action Buttons */}
-                                <div className="mt-6 flex gap-2">
+                                <div className="mt-6 flex gap-2">   
                                     <button 
-                                        onClick={() => navigate(`/company/jobs/${id}/edit`)}
-                                        className="flex-1 flex cursor-pointer items-center justify-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                                        onClick={handleEditJob}
+                                        disabled={actionLoading}
+                                        className="flex-1 flex cursor-pointer items-center justify-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
                                     >
                                         <FaEdit className="w-3 h-3" />
                                         Edit
                                     </button>
-                                    <button className="flex-1 flex cursor-pointer items-center justify-center gap-2 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm">
+                                    <button 
+                                        onClick={handleDeleteJob}
+                                        disabled={actionLoading}
+                                        className="flex-1 flex cursor-pointer items-center justify-center gap-2 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
+                                    >
                                         <FaTrash className="w-3 h-3" />
-                                        Delete
+                                        {actionLoading ? 'Deleting...' : 'Delete'}
                                     </button>
-                                    <button className="flex-1 flex cursor-pointer items-center justify-center gap-2 px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm">
+                                    <button 
+                                        onClick={handleToggleJobStatus}
+                                        disabled={actionLoading}
+                                        className="flex-1 flex cursor-pointer items-center justify-center gap-2 px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
+                                    >
                                         <FaClock className="w-3 h-3" />
-                                        {job.isActive ? 'Deactivate' : 'Activate'}
+                                        {actionLoading ? 'Updating...' : (job.isActive ? 'Deactivate' : 'Activate')}
                                     </button>
                                 </div>
                             </div>
+
+                            {/* Contact Information */}
+                            {(job.contactEmail || job.contactPhone) && (
+                                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Contact Information</h3>
+                                    <div className="space-y-4">
+                                        {job.contactEmail && (
+                                            <div className="flex items-center gap-3">
+                                                <div className="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-lg">
+                                                    <FaEnvelope className="w-4 h-4 text-blue-600" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm text-gray-500">Email</p>
+                                                    <p className="font-medium text-gray-900">{job.contactEmail}</p>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {job.contactPhone && (
+                                            <div className="flex items-center gap-3">
+                                                <div className="flex items-center justify-center w-10 h-10 bg-green-100 rounded-lg">
+                                                    <FaPhone className="w-4 h-4 text-green-600" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm text-gray-500">Phone</p>
+                                                    <p className="font-medium text-gray-900">{job.contactPhone}</p>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
