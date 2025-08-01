@@ -8,10 +8,11 @@ import JobList from "./pages/company/JobList.jsx";
 import AddJob from "./pages/company/AddJob.jsx";
 import EditJob from "./pages/company/EditJob.jsx";
 import CompanyJobDetail from "./pages/company/JobDetail.jsx";
-import Inbox from "./pages/company/Inbox.jsx";
+import Applications from "./pages/company/Applications.jsx";
 import ApplicantsDetail from "./pages/company/ApplicantsDetail.jsx";
 import LandingPage from "./pages/user/LandingPage.jsx";
 import UserJobDetail from "./pages/user/JobDetail.jsx";
+import NavBar from "./Components/NavBar.jsx";
 
 export default function App() {
   return (
@@ -28,8 +29,8 @@ export default function App() {
         <Route path="/company/jobs/add" element={<AddJob />} />
         <Route path="/company/jobs/edit/:jobId" element={<EditJob />} />
         <Route path="/company/jobs/:id" element={<CompanyJobDetail />} />
-        <Route path="/company/applications" element={<Inbox />} />
-        <Route path="/company/applicants/:applicationId" element={<ApplicantsDetail />} />
+        <Route path="/company/applications" element={<Applications />} />
+        <Route path="/company/applications/:applicationId" element={<ApplicantsDetail />} />
         <Route path="/user/profile" element={<UserProfile />} />
         <Route path="/navbar" element={<NavBar />} />
         {/* Add more routes as needed */}

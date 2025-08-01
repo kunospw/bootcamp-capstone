@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import SideBar from '../../Components/SideBar'
 import { FaArrowLeft, FaMapMarkerAlt, FaClock, FaCalendarAlt, FaDollarSign, FaUsers, FaEdit, FaTrash, FaEye, FaDownload, FaEnvelope, FaPhone, FaGraduationCap, FaHome } from 'react-icons/fa'
@@ -9,12 +9,16 @@ const JobDetail = () => {
     const [activeTab, setActiveTab] = useState('job-info');
     const [currentPage, setCurrentPage] = useState(1);
     const [job, setJob] = useState(null);
+    const [applications, setApplications] = useState([]);
+    const [applicationsLoading, setApplicationsLoading] = useState(false);
+    const [applicationsTotal, setApplicationsTotal] = useState(0);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [actionLoading, setActionLoading] = useState(false);
+    const [statusCounts, setStatusCounts] = useState({});
     const applicantsPerPage = 6;
 
-    // Fetch job data from API
+    // Fetch job data and applications count from API
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -25,23 +29,39 @@ const JobDetail = () => {
                     return;
                 }
 
-                const response = await fetch(`http://localhost:3000/api/jobs/${id}`, {
+                // Fetch job data
+                const jobResponse = await fetch(`http://localhost:3000/api/jobs/${id}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                     }
                 });
 
-                if (response.ok) {
-                    const jobData = await response.json();
+                if (jobResponse.ok) {
+                    const jobData = await jobResponse.json();
                     setJob(jobData);
                     setError('');
                 } else {
-                    const errorData = await response.json();
+                    const errorData = await jobResponse.json();
                     setError(errorData.message || 'Failed to fetch job data');
+                    return;
                 }
+
+                // Fetch applications count (just the total, not the full data)
+                const applicationsResponse = await fetch(`http://localhost:3000/api/applications/company-applications?jobId=${id}&page=1&limit=1`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (applicationsResponse.ok) {
+                    const applicationsData = await applicationsResponse.json();
+                    setApplicationsTotal(applicationsData.total || 0);
+                }
+
             } catch (err) {
-                console.error('Error fetching job:', err);
+                console.error('Error fetching data:', err);
                 setError('Failed to load job data');
             } finally {
                 setLoading(false);
@@ -51,74 +71,81 @@ const JobDetail = () => {
         fetchData();
     }, [id, navigate]);
 
-    // Mock applicants data - TODO: Replace with real API data
-    const applicantsData = [
-        {
-            id: 1,
-            name: "Ahmad Rizki",
-            email: "ahmad.rizki@email.com",
-            phone: "+62 812-3456-7890",
-            experience: "4 years",
-            education: "S1 Teknik Informatika",
-            appliedDate: new Date("2024-11-20"),
-            status: "pending",
-            resume: "ahmad_rizki_cv.pdf",
-            coverLetter: "Looking forward to contribute to your team with my React.js expertise...",
-            skills: ["React.js", "JavaScript", "TypeScript", "Tailwind CSS", "Git"]
-        },
-        {
-            id: 2,
-            name: "Sari Dewi",
-            email: "sari.dewi@email.com",
-            phone: "+62 813-7890-1234",
-            experience: "5 years",
-            education: "S1 Sistem Informasi",
-            appliedDate: new Date("2024-11-18"),
-            status: "reviewed",
-            resume: "sari_dewi_cv.pdf",
-            coverLetter: "I am excited about the opportunity to work as a Frontend Developer...",
-            skills: ["React.js", "Vue.js", "JavaScript", "CSS", "Figma"]
-        },
-        {
-            id: 3,
-            name: "Budi Santoso",
-            email: "budi.santoso@email.com",
-            phone: "+62 814-5678-9012",
-            experience: "3 years",
-            education: "S1 Teknik Komputer",
-            appliedDate: new Date("2024-11-22"),
-            status: "pending",
-            resume: "budi_santoso_cv.pdf",
-            coverLetter: "I believe my experience in frontend development aligns well...",
-            skills: ["React.js", "Angular", "JavaScript", "Bootstrap", "Git"]
-        },
-        {
-            id: 4,
-            name: "Maya Putri",
-            email: "maya.putri@email.com",
-            phone: "+62 815-2345-6789",
-            experience: "6 years",
-            education: "S1 Teknik Informatika",
-            appliedDate: new Date("2024-11-16"),
-            status: "shortlisted",
-            resume: "maya_putri_cv.pdf",
-            coverLetter: "With over 6 years of experience in frontend development...",
-            skills: ["React.js", "Next.js", "TypeScript", "Styled Components", "Jest"]
-        },
-        {
-            id: 5,
-            name: "Andi Wijaya",
-            email: "andi.wijaya@email.com",
-            phone: "+62 816-9012-3456",
-            experience: "3.5 years",
-            education: "S1 Ilmu Komputer",
-            appliedDate: new Date("2024-11-19"),
-            status: "rejected",
-            resume: "andi_wijaya_cv.pdf",
-            coverLetter: "I am passionate about creating user-friendly interfaces...",
-            skills: ["React.js", "JavaScript", "SASS", "Webpack", "Git"]
+    const fetchApplications = useCallback(async () => {
+        try {
+            setApplicationsLoading(true);
+            const token = localStorage.getItem('token');
+            if (!token) {
+                navigate('/signin');
+                return;
+            }
+
+            const response = await fetch(`http://localhost:3000/api/applications/company-applications?jobId=${id}&page=${currentPage}&limit=${applicantsPerPage}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setApplications(data.applications || []);
+                // Update total only if we get valid data
+                if (data.total !== undefined) {
+                    setApplicationsTotal(data.total);
+                }
+            } else {
+                console.error('Failed to fetch applications');
+                setApplications([]);
+                // Don't reset total to 0 on error, keep existing value
+            }
+        } catch (err) {
+            console.error('Error fetching applications:', err);
+            setApplications([]);
+            // Don't reset total to 0 on error, keep existing value
+        } finally {
+            setApplicationsLoading(false);
         }
-    ];
+    }, [id, currentPage, navigate]);
+
+    // Fetch status counts for the specific job
+    const fetchStatusCounts = useCallback(async () => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            const response = await fetch(`http://localhost:3000/api/applications/company-applications?jobId=${id}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                // Calculate status counts from all applications for this job
+                const counts = {};
+                data.applications?.forEach(app => {
+                    counts[app.status] = (counts[app.status] || 0) + 1;
+                });
+                setStatusCounts(counts);
+            }
+        } catch (err) {
+            console.error('Error fetching status counts:', err);
+        }
+    }, [id]);
+
+    // Fetch applications data when applicants tab is active
+    useEffect(() => {
+        if (activeTab === 'applicants') {
+            fetchApplications();
+        }
+    }, [activeTab, fetchApplications]);
+
+    // Fetch status counts when component mounts or id changes
+    useEffect(() => {
+        fetchStatusCounts();
+    }, [fetchStatusCounts]);
 
     // Handle loading and error states
     if (loading) {
@@ -288,11 +315,10 @@ const JobDetail = () => {
     };
 
     // Pagination logic for applicants
-    const totalPages = Math.ceil(applicantsData.length / applicantsPerPage);
+    const totalPages = Math.ceil(applicationsTotal / applicantsPerPage);
     const startIndex = (currentPage - 1) * applicantsPerPage;
     const endIndex = startIndex + applicantsPerPage;
-    const currentApplicants = applicantsData.slice(startIndex, endIndex);
-
+    
     const handleNextPage = () => {
         if (currentPage < totalPages) {
             setCurrentPage(currentPage + 1);
@@ -305,42 +331,50 @@ const JobDetail = () => {
         }
     };
 
+    // Helper functions for applications
+    const getStatusColor = (status) => {
+        const statusColors = {
+            'pending': 'bg-yellow-100 text-yellow-800',
+            'reviewed': 'bg-blue-100 text-blue-800',
+            'shortlisted': 'bg-green-100 text-green-800',
+            'rejected': 'bg-red-100 text-red-800',
+            'accepted': 'bg-purple-100 text-purple-800'
+        };
+        return statusColors[status] || 'bg-gray-100 text-gray-800';
+    };
+
+    const getStatusText = (status) => {
+        const statusTexts = {
+            'pending': 'Pending',
+            'reviewed': 'Reviewed',
+            'shortlisted': 'Shortlisted',
+            'rejected': 'Rejected',
+            'accepted': 'Accepted'
+        };
+        return statusTexts[status] || status;
+    };
+
+    const handleViewApplicationDetail = (application) => {
+        navigate(`/company/applications/${application._id}`);
+    };
+
+    const handleDownloadResume = (application) => {
+        if (application.resume) {
+            const link = document.createElement('a');
+            link.href = `http://localhost:3000/${application.resume}`;
+            link.download = application.resume.split('/').pop();
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    };
+
     const goToPage = (page) => {
         setCurrentPage(page);
     };
 
-    const getStatusColor = (status) => {
-        switch (status) {
-            case 'pending':
-                return 'bg-yellow-100 text-yellow-800';
-            case 'reviewed':
-                return 'bg-blue-100 text-blue-800';
-            case 'shortlisted':
-                return 'bg-green-100 text-green-800';
-            case 'rejected':
-                return 'bg-red-100 text-red-800';
-            default:
-                return 'bg-gray-100 text-gray-800';
-        }
-    };
-
-    const getStatusText = (status) => {
-        switch (status) {
-            case 'pending':
-                return 'Pending Review';
-            case 'reviewed':
-                return 'Reviewed';
-            case 'shortlisted':
-                return 'Shortlisted';
-            case 'rejected':
-                return 'Rejected';
-            default:
-                return 'Unknown';
-        }
-    };
-
     return (
-        <div className="flex h-screen bg-gray-50">
+        <div className="flex min-h-screen bg-gray-50">
             <SideBar />
 
             <div className="flex-1 ml-0 sm:ml-72 transition-all duration-300">
@@ -395,7 +429,7 @@ const JobDetail = () => {
                                         <span className="flex items-center gap-2">
                                             Applicants 
                                             <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-blue-500 rounded-full">
-                                                {applicantsData.length}
+                                                {applicationsTotal}
                                             </span>
                                         </span>
                                     </button>
@@ -513,91 +547,86 @@ const JobDetail = () => {
                                             <div className="flex justify-between items-center">
                                                 <h2 className="text-xl font-semibold text-gray-900">Job Applicants</h2>
                                                 <div className="text-sm text-gray-600">
-                                                    Showing {startIndex + 1}-{Math.min(endIndex, applicantsData.length)} of {applicantsData.length} applicants
+                                                    Showing {startIndex + 1}-{Math.min(endIndex, applicationsTotal)} of {applicationsTotal} applicants
                                                 </div>
                                             </div>
 
                                             {/* Applicants Grid */}
-                                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                                                {currentApplicants.map((applicant) => (
-                                                    <div key={applicant.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                                                        <div className="flex items-start justify-between">
-                                                            <div className="flex-1">
-                                                                <div className="flex items-center gap-3 mb-3">
-                                                                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                                                                        <span className="text-blue-600 font-semibold text-sm">
-                                                                            {applicant.name.split(' ').map(n => n[0]).join('')}
-                                                                        </span>
+                                            {/* Applications List */}
+                                            {applicationsLoading ? (
+                                                <div className="text-center py-12">
+                                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                                                    <p className="text-gray-600">Loading applications...</p>
+                                                </div>
+                                            ) : (
+                                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                                    {applications.map((application) => (
+                                                        <div key={application._id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                                                            <div className="flex items-start justify-between">
+                                                                <div className="flex-1">
+                                                                    <div className="flex items-center gap-3 mb-3">
+                                                                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                                                            <span className="text-blue-600 font-semibold text-sm">
+                                                                                {application.userId?.fullName?.split(' ').map(n => n[0]).join('') || 'U'}
+                                                                            </span>
+                                                                        </div>
+                                                                        <div className="flex-1 min-w-0">
+                                                                            <h3 className="font-semibold text-gray-900 truncate">{application.userId?.fullName || 'No Name'}</h3>
+                                                                            <p className="text-sm text-gray-600 truncate">{application.userId?.email || application.email}</p>
+                                                                        </div>
                                                                     </div>
-                                                                    <div className="flex-1 min-w-0">
-                                                                        <h3 className="font-semibold text-gray-900 truncate">{applicant.name}</h3>
-                                                                        <p className="text-sm text-gray-600 truncate">{applicant.email}</p>
+                                                                    
+                                                                    <div className="space-y-2 mb-3">
+                                                                        {application.userId?.phoneNumber && (
+                                                                            <div className="flex items-center gap-2">
+                                                                                <span className="text-xs text-gray-500">Phone:</span>
+                                                                                <span className="text-xs font-medium text-gray-900">{application.userId.phoneNumber}</span>
+                                                                            </div>
+                                                                        )}
+                                                                        <div className="flex items-center gap-2">
+                                                                            <span className="text-xs text-gray-500">Applied:</span>
+                                                                            <span className="text-xs font-medium text-gray-900">
+                                                                                {formatDate(application.applicationDate)}
+                                                                            </span>
+                                                                        </div>
                                                                     </div>
+
+                                                                    {application.coverLetter && (
+                                                                        <div className="text-sm text-gray-700 mb-3">
+                                                                            <p className="text-xs text-gray-500 mb-1">Cover Letter</p>
+                                                                            <p className="line-clamp-2 text-xs">{application.coverLetter}</p>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                                                                <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(application.status)}`}>
+                                                                    {getStatusText(application.status)}
                                                                 </div>
                                                                 
-                                                                <div className="space-y-2 mb-3">
-                                                                    <div className="flex items-center gap-2">
-                                                                        <span className="text-xs text-gray-500">Experience:</span>
-                                                                        <span className="text-xs font-medium text-gray-900">{applicant.experience}</span>
-                                                                    </div>
-                                                                    <div className="flex items-center gap-2">
-                                                                        <span className="text-xs text-gray-500">Education:</span>
-                                                                        <span className="text-xs font-medium text-gray-900">{applicant.education}</span>
-                                                                    </div>
-                                                                    <div className="flex items-center gap-2">
-                                                                        <span className="text-xs text-gray-500">Applied:</span>
-                                                                        <span className="text-xs font-medium text-gray-900">
-                                                                            {formatDate(applicant.appliedDate)}
-                                                                        </span>
-                                                                    </div>
-                                                                </div>
-
-                                                                <div className="mb-3">
-                                                                    <p className="text-xs text-gray-500 mb-1">Skills</p>
-                                                                    <div className="flex flex-wrap gap-1">
-                                                                        {applicant.skills.slice(0, 3).map((skill, index) => (
-                                                                            <span key={index} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                                                                {skill}
-                                                                            </span>
-                                                                        ))}
-                                                                        {applicant.skills.length > 3 && (
-                                                                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
-                                                                                +{applicant.skills.length - 3}
-                                                                            </span>
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-
-                                                                <div className="text-sm text-gray-700 mb-3">
-                                                                    <p className="text-xs text-gray-500 mb-1">Cover Letter</p>
-                                                                    <p className="line-clamp-2 text-xs">{applicant.coverLetter}</p>
+                                                                <div className="flex gap-1">
+                                                                    <button 
+                                                                        onClick={() => handleViewApplicationDetail(application)}
+                                                                        title="View Application Details"
+                                                                        className="p-1.5 text-blue-600 hover:bg-blue-100 rounded transition-colors cursor-pointer"
+                                                                    >
+                                                                        <FaEye className="w-3 h-3" />
+                                                                    </button>
+                                                                    <button 
+                                                                        onClick={() => handleDownloadResume(application)}
+                                                                        title="Download Resume"
+                                                                        className="p-1.5 text-green-600 hover:bg-green-100 rounded transition-colors cursor-pointer"
+                                                                        disabled={!application.resume}
+                                                                    >
+                                                                        <FaDownload className="w-3 h-3" />
+                                                                    </button>
                                                                 </div>
                                                             </div>
                                                         </div>
-
-                                                        <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                                                            <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(applicant.status)}`}>
-                                                                {getStatusText(applicant.status)}
-                                                            </div>
-                                                            
-                                                            <div className="flex gap-1">
-                                                                <button 
-                                                                    title="View Resume"
-                                                                    className="p-1.5 text-blue-600 hover:bg-blue-100 rounded transition-colors cursor-pointer"
-                                                                >
-                                                                    <FaEye className="w-3 h-3" />
-                                                                </button>
-                                                                <button 
-                                                                    title="Download Resume"
-                                                                    className="p-1.5 text-green-600 hover:bg-green-100 rounded transition-colors cursor-pointer"
-                                                                >
-                                                                    <FaDownload className="w-3 h-3" />
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
+                                                    ))}
+                                                </div>
+                                            )}
 
                                             {/* Pagination */}
                                             {totalPages > 1 && (
@@ -647,7 +676,7 @@ const JobDetail = () => {
                                                 </div>
                                             )}
 
-                                            {applicantsData.length === 0 && (
+                                            {applications.length === 0 && !applicationsLoading && (
                                                 <div className="text-center py-12">
                                                     <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
                                                         <FaUsers className="w-8 h-8 text-gray-400" />
@@ -660,6 +689,38 @@ const JobDetail = () => {
                                     )}
                                 </div>
                             </div>
+
+                            {/* Contact Information Section */}
+                            {(job.contactEmail || job.contactPhone) && (
+                                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Contact Information</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {job.contactEmail && (
+                                            <div className="flex items-center gap-3">
+                                                <div className="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-lg">
+                                                    <FaEnvelope className="w-4 h-4 text-blue-600" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm text-gray-500">Email</p>
+                                                    <p className="font-medium text-gray-900">{job.contactEmail}</p>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {job.contactPhone && (
+                                            <div className="flex items-center gap-3">
+                                                <div className="flex items-center justify-center w-10 h-10 bg-green-100 rounded-lg">
+                                                    <FaPhone className="w-4 h-4 text-green-600" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm text-gray-500">Phone</p>
+                                                    <p className="font-medium text-gray-900">{job.contactPhone}</p>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Sidebar Info */}
@@ -691,11 +752,6 @@ const JobDetail = () => {
                                             <span className="font-medium text-gray-900">{formatDate(job.applicationDeadline)}</span>
                                         </div>
                                     )}
-
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-gray-600">Applicants</span>
-                                        <span className="font-medium text-gray-900">{job.applicationsCount || 0} candidates</span>
-                                    </div>
                                 </div>
 
                                 {/* Action Buttons */}
@@ -727,37 +783,80 @@ const JobDetail = () => {
                                 </div>
                             </div>
 
-                            {/* Contact Information */}
-                            {(job.contactEmail || job.contactPhone) && (
-                                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Contact Information</h3>
-                                    <div className="space-y-4">
-                                        {job.contactEmail && (
-                                            <div className="flex items-center gap-3">
-                                                <div className="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-lg">
-                                                    <FaEnvelope className="w-4 h-4 text-blue-600" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm text-gray-500">Email</p>
-                                                    <p className="font-medium text-gray-900">{job.contactEmail}</p>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {job.contactPhone && (
-                                            <div className="flex items-center gap-3">
-                                                <div className="flex items-center justify-center w-10 h-10 bg-green-100 rounded-lg">
-                                                    <FaPhone className="w-4 h-4 text-green-600" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm text-gray-500">Phone</p>
-                                                    <p className="font-medium text-gray-900">{job.contactPhone}</p>
-                                                </div>
-                                            </div>
-                                        )}
+                            {/* Application Status Section */}
+                            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                                <h3 className="text-lg font-semibold text-gray-900 mb-4">Application Status</h3>
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                                            <span className="text-sm font-medium text-yellow-800">Pending</span>
+                                        </div>
+                                        <span className="text-sm font-bold text-yellow-800">
+                                            {statusCounts.pending || 0}
+                                        </span>
+                                    </div>
+                                    
+                                    <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                                            <span className="text-sm font-medium text-blue-800">Under Review</span>
+                                        </div>
+                                        <span className="text-sm font-bold text-blue-800">
+                                            {statusCounts.reviewing || 0}
+                                        </span>
+                                    </div>
+                                    
+                                    <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg border border-purple-200">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
+                                            <span className="text-sm font-medium text-purple-800">Shortlisted</span>
+                                        </div>
+                                        <span className="text-sm font-bold text-purple-800">
+                                            {statusCounts.shortlisted || 0}
+                                        </span>
+                                    </div>
+                                    
+                                    <div className="flex items-center justify-between p-3 bg-indigo-50 rounded-lg border border-indigo-200">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-3 h-3 bg-indigo-500 rounded-full"></div>
+                                            <span className="text-sm font-medium text-indigo-800">Interview</span>
+                                        </div>
+                                        <span className="text-sm font-bold text-indigo-800">
+                                            {statusCounts.interview || 0}
+                                        </span>
+                                    </div>
+                                    
+                                    <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                                            <span className="text-sm font-medium text-green-800">Offered</span>
+                                        </div>
+                                        <span className="text-sm font-bold text-green-800">
+                                            {statusCounts.offered || 0}
+                                        </span>
+                                    </div>
+                                    
+                                    <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-200">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                                            <span className="text-sm font-medium text-red-800">Rejected</span>
+                                        </div>
+                                        <span className="text-sm font-bold text-red-800">
+                                            {statusCounts.rejected || 0}
+                                        </span>
                                     </div>
                                 </div>
-                            )}
+                                
+                                <div className="mt-6 pt-4 border-t border-gray-200">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-sm font-medium text-gray-600">Total Applications</span>
+                                        <span className="text-sm font-bold text-gray-900">
+                                            {Object.values(statusCounts).reduce((sum, count) => sum + count, 0)}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

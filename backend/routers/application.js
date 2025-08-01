@@ -1,4 +1,5 @@
 import express from "express";
+import mongoose from "mongoose";
 import Application from "../models/application.model.js";
 import Job from "../models/job.model.js";
 import { authenticateUser, authenticateCompany } from "../middleware/auth.js";
@@ -207,21 +208,42 @@ router.post("/:id/note", authenticateCompany, async(req, res) => {
 // Get single application details for company
 router.get("/company/:id", authenticateCompany, async(req, res) => {
     try {
+        console.log('Fetching application details for company:', req.company._id);
+        console.log('Application ID:', req.params.id);
+        
+        // Validate ObjectId
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            console.log('Invalid ObjectId format');
+            return res.status(400).json({ message: "Invalid application ID format" });
+        }
+        
         const application = await Application.findById(req.params.id)
-            .populate("jobId", "title location type")
+            .populate("jobId", "title location type companyId")
             .populate("userId", "fullName email phoneNumber");
 
+        console.log('Application found:', !!application);
+        if (application) {
+            console.log('Application jobId:', application.jobId?._id);
+            console.log('Application jobId companyId:', application.jobId?.companyId);
+        }
+
         if (!application) {
+            console.log('Application not found');
             return res.status(404).json({ message: "Application not found" });
         }
 
         // Check if company owns the job this application is for
         if (application.jobId.companyId.toString() !== req.company._id.toString()) {
+            console.log('Company unauthorized - job belongs to different company');
+            console.log('Job companyId:', application.jobId.companyId.toString());
+            console.log('Request companyId:', req.company._id.toString());
             return res.status(403).json({ message: "Unauthorized" });
         }
 
+        console.log('Sending application data');
         res.json(application);
     } catch (error) {
+        console.error('Error in /company/:id endpoint:', error);
         res.status(500).json({ message: error.message });
     }
 });

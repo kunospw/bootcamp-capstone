@@ -31,9 +31,10 @@ const SideBar = () => {
         }
         if (path === '/company/jobs') {
             // Jobs page should be active for jobs list, add job, and edit job pages
-            return location.pathname === '/company/jobs' || 
-                   location.pathname === '/company/jobs/add' || 
-                   location.pathname.startsWith('/company/jobs/edit/');
+            return location.pathname === '/company/jobs' ||
+                location.pathname === '/company/jobs/add' ||
+                location.pathname.startsWith('/company/jobs/edit/') ||
+                location.pathname.startsWith('/company/jobs/');
         }
         return location.pathname === path;
     };
@@ -41,12 +42,11 @@ const SideBar = () => {
     return (
         <div>
             {/* Mobile menu button - Fixed position, hidden when sidebar is open */}
-            <button 
+            <button
                 onClick={toggleMobileMenu}
-                type="button" 
-                className={`fixed top-4 left-4 z-50 inline-flex items-center p-3 text-sm text-gray-500 rounded-lg sm:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-300 bg-white shadow-lg border border-gray-200 ${
-                    isMobileMenuOpen ? 'opacity-0 pointer-events-none transform -translate-x-2' : 'opacity-100 pointer-events-auto transform translate-x-0'
-                }`}
+                type="button"
+                className={`fixed top-4 left-4 z-50 inline-flex items-center p-3 text-sm text-gray-500 rounded-lg sm:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-300 bg-white shadow-lg border border-gray-200 ${isMobileMenuOpen ? 'opacity-0 pointer-events-none transform -translate-x-2' : 'opacity-100 pointer-events-auto transform translate-x-0'
+                    }`}
             >
                 <span className="sr-only">Open sidebar</span>
                 <FaBars className="w-6 h-6" />
@@ -54,18 +54,17 @@ const SideBar = () => {
 
             {/* Mobile Overlay */}
             {isMobileMenuOpen && (
-                <div 
+                <div
                     className="fixed inset-0 z-30 bg-black/50 sm:hidden"
                     onClick={toggleMobileMenu}
                 ></div>
             )}
 
             {/* Sidebar */}
-            <aside 
-                id="logo-sidebar" 
-                className={`fixed top-0 left-0 z-40 w-72 h-screen transition-transform ${
-                    isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
-                } sm:translate-x-0 shadow-lg`} 
+            <aside
+                id="logo-sidebar"
+                className={`fixed top-0 left-0 z-40 w-72 h-screen transition-transform ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+                    } sm:translate-x-0 shadow-lg`}
                 aria-label="Sidebar"
             >
                 <div className="h-full px-4 py-6 overflow-y-auto bg-gradient-to-b from-blue-50 to-white border-r border-gray-200 flex flex-col">
@@ -75,7 +74,7 @@ const SideBar = () => {
                             <img src={logo} className="h-8 w-8 object-contain" alt="Job Hive Logo" />
                             <span className="text-lg font-bold text-gray-800">Job Hive</span>
                         </div>
-                        <button 
+                        <button
                             onClick={toggleMobileMenu}
                             className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors"
                         >
@@ -98,87 +97,75 @@ const SideBar = () => {
                             <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-3">Main Menu</h3>
                             <ul className="space-y-2">
                                 <li>
-                                    <button 
+                                    <button
                                         onClick={() => handleNavigation('/company/profile')}
-                                        className={`group flex items-center p-3 w-full text-left rounded-xl transition-all duration-200 border border-transparent ${
-                                            isActivePath('/company/profile')
+                                        className={`group flex items-center p-3 w-full text-left rounded-xl transition-all duration-200 border border-transparent ${isActivePath('/company/profile')
                                                 ? 'bg-blue-100 text-blue-700 border-blue-200'
                                                 : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200'
-                                        }`}
+                                            }`}
                                     >
-                                        <div className={`flex items-center justify-center w-10 h-10 rounded-lg transition-colors ${
-                                            isActivePath('/company/profile')
+                                        <div className={`flex items-center justify-center w-10 h-10 rounded-lg transition-colors ${isActivePath('/company/profile')
                                                 ? 'bg-blue-200'
                                                 : 'bg-blue-100 group-hover:bg-blue-200'
-                                        }`}>
-                                            <FaUser className={`w-5 h-5 transition-colors ${
-                                                isActivePath('/company/profile')
+                                            }`}>
+                                            <FaUser className={`w-5 h-5 transition-colors ${isActivePath('/company/profile')
                                                     ? 'text-blue-700'
                                                     : 'text-blue-600 group-hover:text-blue-700'
-                                            }`} />
+                                                }`} />
                                         </div>
                                         <span className="flex-1 ms-4 font-medium">Profile</span>
-                                        <div className={`w-2 h-2 rounded-full bg-blue-500 transition-opacity ${
-                                            isActivePath('/company/profile')
+                                        <div className={`w-2 h-2 rounded-full bg-blue-500 transition-opacity ${isActivePath('/company/profile')
                                                 ? 'opacity-100'
                                                 : 'opacity-0 group-hover:opacity-100'
-                                        }`}></div>
+                                            }`}></div>
                                     </button>
                                 </li>
                                 <li>
-                                    <button 
+                                    <button
                                         onClick={() => handleNavigation('/company/jobs')}
-                                        className={`group flex items-center p-3 w-full text-left rounded-xl transition-all duration-200 border border-transparent ${
-                                            isActivePath('/company/jobs')
+                                        className={`group flex items-center p-3 w-full text-left rounded-xl transition-all duration-200 border border-transparent ${isActivePath('/company/jobs')
                                                 ? 'bg-green-100 text-green-700 border-green-200'
                                                 : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200'
-                                        }`}
+                                            }`}
                                     >
-                                        <div className={`flex items-center justify-center w-10 h-10 rounded-lg transition-colors ${
-                                            isActivePath('/company/jobs')
+                                        <div className={`flex items-center justify-center w-10 h-10 rounded-lg transition-colors ${isActivePath('/company/jobs')
                                                 ? 'bg-green-200'
                                                 : 'bg-green-100 group-hover:bg-green-200'
-                                        }`}>
-                                            <FaBriefcase className={`w-5 h-5 transition-colors ${
-                                                isActivePath('/company/jobs')
+                                            }`}>
+                                            <FaBriefcase className={`w-5 h-5 transition-colors ${isActivePath('/company/jobs')
                                                     ? 'text-green-700'
                                                     : 'text-green-600 group-hover:text-green-700'
-                                            }`} />
+                                                }`} />
                                         </div>
                                         <span className="flex-1 ms-4 font-medium">Job List</span>
-                                        <div className={`w-2 h-2 rounded-full bg-green-500 transition-opacity ${
-                                            isActivePath('/company/jobs')
+                                        <div className={`w-2 h-2 rounded-full bg-green-500 transition-opacity ${isActivePath('/company/jobs')
                                                 ? 'opacity-100'
                                                 : 'opacity-0 group-hover:opacity-100'
-                                        }`}></div>
+                                            }`}></div>
                                     </button>
                                 </li>
                                 <li>
-                                    <button 
+                                    <button
                                         onClick={() => handleNavigation('/company/applications')}
-                                        className={`group flex items-center p-3 w-full text-left rounded-xl transition-all duration-200 border border-transparent ${
-                                            isActivePath('/company/applications')
+                                        className={`group flex items-center p-3 w-full text-left rounded-xl transition-all duration-200 border border-transparent ${isActivePath('/company/applications')
                                                 ? 'bg-purple-100 text-purple-700 border-purple-200'
                                                 : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200'
-                                        }`}
+                                            }`}
                                     >
-                                        <div className={`flex items-center justify-center w-10 h-10 rounded-lg transition-colors ${
-                                            isActivePath('/company/applications')
+                                        <div className={`flex items-center justify-center w-10 h-10 rounded-lg transition-colors ${isActivePath('/company/applications')
                                                 ? 'bg-purple-200'
                                                 : 'bg-purple-100 group-hover:bg-purple-200'
-                                        }`}>
-                                            <FaInbox className={`w-5 h-5 transition-colors ${
-                                                isActivePath('/company/applications')
+                                            }`}>
+                                            <FaInbox className={`w-5 h-5 transition-colors ${isActivePath('/company/applications')
                                                     ? 'text-purple-700'
                                                     : 'text-purple-600 group-hover:text-purple-700'
-                                            }`} />
+                                                }`} />
                                         </div>
                                         <span className="flex-1 ms-4 font-medium">Applications</span>
-                                        <div className={`w-2 h-2 rounded-full bg-purple-500 transition-opacity ${
-                                            isActivePath('/company/applications')
+                                        <div className={`w-2 h-2 rounded-full bg-purple-500 transition-opacity ${isActivePath('/company/applications')
                                                 ? 'opacity-100'
                                                 : 'opacity-0 group-hover:opacity-100'
-                                        }`}></div>
+                                            }`}></div>
                                     </button>
                                 </li>
                             </ul>
@@ -190,7 +177,7 @@ const SideBar = () => {
                         <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-3">Account</h3>
                         <ul className="space-y-2">
                             <li>
-                                <button 
+                                <button
                                     onClick={handleSignOut}
                                     className="group flex items-center p-3 w-full text-left text-gray-700 rounded-xl hover:bg-red-50 hover:text-red-700 transition-all duration-200 border border-transparent hover:border-red-200"
                                 >
