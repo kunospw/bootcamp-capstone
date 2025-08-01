@@ -1,10 +1,27 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaBuilding, FaUser } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export default function SignUp() {
   const navigate = useNavigate();
-  const [type, setType] = useState("user"); // "user" or "company"
+  const location = useLocation();
+  
+  // Get initial type from URL params or localStorage, default to "user"
+  const getInitialType = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const typeFromUrl = urlParams.get('type');
+    const typeFromStorage = localStorage.getItem('userType');
+    
+    if (typeFromUrl && (typeFromUrl === 'user' || typeFromUrl === 'company')) {
+      return typeFromUrl;
+    }
+    if (typeFromStorage && (typeFromStorage === 'user' || typeFromStorage === 'company')) {
+      return typeFromStorage;
+    }
+    return "user";
+  };
+
+  const [type, setType] = useState(getInitialType()); // "user" or "company"
   const [form, setForm] = useState({
     fullName: "",
     email: "",
@@ -15,12 +32,30 @@ export default function SignUp() {
   const [credentialFile, setCredentialFile] = useState(null);
   const [message, setMessage] = useState("");
 
+  // Update type when URL changes
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const typeFromUrl = urlParams.get('type');
+    if (typeFromUrl && (typeFromUrl === 'user' || typeFromUrl === 'company')) {
+      setType(typeFromUrl);
+      localStorage.setItem('userType', typeFromUrl);
+    }
+  }, [location.search]);
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleTypeChange = (e) => {
-    setType(e.target.value);
+    const newType = e.target.value;
+    setType(newType);
+    
+    // Save to localStorage and update URL
+    localStorage.setItem('userType', newType);
+    const url = new URL(window.location);
+    url.searchParams.set('type', newType);
+    window.history.replaceState({}, '', url);
+    
     setForm({
       fullName: "",
       email: "",
@@ -101,7 +136,7 @@ export default function SignUp() {
 
   return (
     <div className='w-full h-screen flex'>
-      {/* Left Section - Visual/Branding */}
+      {/* Desktop Layout - Left Section Visual/Branding */}
       <div className='hidden lg:flex lg:w-1/2 bg-[#0D6EFD] items-center justify-center relative overflow-hidden'>
         <div className='text-white text-center z-10'>
           <h1 className='text-4xl font-bold mb-4'>Welcome to Job Hive</h1>
@@ -123,18 +158,83 @@ export default function SignUp() {
             </div>
           </div>
         </div>
-        {/* Background decorative elements */}
-        <div className='absolute top-10 left-10 w-20 h-20 bg-[#F4B400] rounded-full'></div>
-        <div className='absolute bottom-10 right-10 w-32 h-32 bg-[#F4B400] rounded-full'></div>
-        <div className='absolute top-1/2 left-1/4 w-16 h-16 bg-[#F4B400] rounded-full'></div>
+        {/* Background decorative elements with floating animations */}
+        <div className='absolute top-10 left-10 w-20 h-20 bg-[#F4B400] rounded-full animate-float-1 opacity-80'></div>
+        <div className='absolute bottom-10 right-10 w-32 h-32 bg-[#F4B400] rounded-full animate-float-2 opacity-70'></div>
+        <div className='absolute top-1/2 left-1/4 w-16 h-16 bg-[#F4B400] rounded-full animate-float-3 opacity-90'></div>
+        <div className='absolute top-20 right-1/4 w-12 h-12 bg-white/20 rounded-full animate-float-4 opacity-60'></div>
+        <div className='absolute bottom-1/3 left-1/3 w-24 h-24 bg-white/15 rounded-full animate-float-5 opacity-50'></div>
+        <div className='absolute top-1/3 right-20 w-8 h-8 bg-[#F4B400] rounded-full animate-float-6 opacity-75'></div>
+        
+        {/* Additional floating styles */}
+        <style jsx>{`
+          @keyframes float-1 {
+            0%, 100% { transform: translateY(0px) translateX(0px) rotate(0deg); }
+            25% { transform: translateY(-20px) translateX(10px) rotate(90deg); }
+            50% { transform: translateY(-10px) translateX(-15px) rotate(180deg); }
+            75% { transform: translateY(-25px) translateX(5px) rotate(270deg); }
+          }
+          
+          @keyframes float-2 {
+            0%, 100% { transform: translateY(0px) translateX(0px) rotate(0deg); }
+            33% { transform: translateY(15px) translateX(-20px) rotate(120deg); }
+            66% { transform: translateY(-10px) translateX(10px) rotate(240deg); }
+          }
+          
+          @keyframes float-3 {
+            0%, 100% { transform: translateY(0px) translateX(0px) scale(1); }
+            50% { transform: translateY(-30px) translateX(20px) scale(1.1); }
+          }
+          
+          @keyframes float-4 {
+            0%, 100% { transform: translateY(0px) translateX(0px) rotate(0deg); }
+            25% { transform: translateY(20px) translateX(-10px) rotate(-90deg); }
+            50% { transform: translateY(5px) translateX(15px) rotate(-180deg); }
+            75% { transform: translateY(-15px) translateX(-5px) rotate(-270deg); }
+          }
+          
+          @keyframes float-5 {
+            0%, 100% { transform: translateY(0px) translateX(0px) scale(1) rotate(0deg); }
+            20% { transform: translateY(-10px) translateX(10px) scale(0.9) rotate(72deg); }
+            40% { transform: translateY(5px) translateX(-15px) scale(1.1) rotate(144deg); }
+            60% { transform: translateY(-20px) translateX(8px) scale(0.95) rotate(216deg); }
+            80% { transform: translateY(10px) translateX(-5px) scale(1.05) rotate(288deg); }
+          }
+          
+          @keyframes float-6 {
+            0%, 100% { transform: translateY(0px) translateX(0px); }
+            33% { transform: translateY(-25px) translateX(15px); }
+            66% { transform: translateY(10px) translateX(-10px); }
+          }
+          
+          .animate-float-1 { animation: float-1 8s ease-in-out infinite; }
+          .animate-float-2 { animation: float-2 12s ease-in-out infinite; }
+          .animate-float-3 { animation: float-3 6s ease-in-out infinite; }
+          .animate-float-4 { animation: float-4 10s ease-in-out infinite; }
+          .animate-float-5 { animation: float-5 15s ease-in-out infinite; }
+          .animate-float-6 { animation: float-6 7s ease-in-out infinite; }
+        `}</style>
       </div>
 
-      {/* Right Section - Registration Form */}
-      <div className='w-full lg:w-1/2 flex flex-col items-center justify-center p-8 bg-white relative'>
-        {/* Registration Type Selector - Top Right */}
-        <div className='absolute top-6 right-6'>
+      {/* Mobile & Desktop Layout - Registration Form Section */}
+      <div className='w-full lg:w-1/2 flex flex-col items-center justify-center p-8 relative
+                      lg:bg-white 
+                      bg-[#0D6EFD] overflow-hidden'>
+        
+        {/* Mobile Background - Decorative elements (only visible on mobile) */}
+        <div className='lg:hidden absolute inset-0 overflow-hidden'>
+          <div className='absolute top-8 left-8 w-16 h-16 bg-[#F4B400] rounded-full animate-float-1 opacity-60'></div>
+          <div className='absolute bottom-8 right-8 w-24 h-24 bg-[#F4B400] rounded-full animate-float-2 opacity-50'></div>
+          <div className='absolute top-1/3 right-1/4 w-12 h-12 bg-[#F4B400] rounded-full animate-float-3 opacity-70'></div>
+          <div className='absolute top-16 right-12 w-8 h-8 bg-white/20 rounded-full animate-float-4 opacity-40'></div>
+          <div className='absolute bottom-1/4 left-1/4 w-20 h-20 bg-white/15 rounded-full animate-float-5 opacity-35'></div>
+          <div className='absolute top-2/3 left-8 w-10 h-10 bg-[#F4B400] rounded-full animate-float-6 opacity-55'></div>
+        </div>
+        
+        {/* Registration Type Selector - Top Right (Fixed for both mobile and desktop) */}
+        <div className='absolute top-6 right-6 z-20'>
           <div className='flex items-center justify-center'>
-            <div className='relative bg-gray-100 rounded-full p-1 w-fit'>
+            <div className='relative lg:bg-gray-100 bg-white/20 backdrop-blur-sm rounded-full p-1 w-fit'>
               {/* Background slider */}
               <div 
                 className={`absolute top-1 left-1 h-8 w-28 bg-blue-600 rounded-full transition-transform duration-300 ease-in-out ${
@@ -150,7 +250,7 @@ export default function SignUp() {
                   className={`flex items-center justify-center px-2 py-2 rounded-full text-xs font-medium transition-colors duration-300 w-28 ${
                     type === 'company' 
                       ? 'text-white' 
-                      : 'text-gray-600 hover:text-gray-800'
+                      : 'lg:text-gray-600 lg:hover:text-gray-800 text-white/80 hover:text-white'
                   }`}
                 >
                   <FaBuilding className='w-3 h-3 mr-1' />
@@ -164,7 +264,7 @@ export default function SignUp() {
                   className={`flex items-center justify-center px-2 py-2 rounded-full text-xs font-medium transition-colors duration-300 w-28 ${
                     type === 'user' 
                       ? 'text-white' 
-                      : 'text-gray-600 hover:text-gray-800'
+                      : 'lg:text-gray-600 lg:hover:text-gray-800 text-white/80 hover:text-white'
                   }`}
                 >
                   <FaUser className='w-3 h-3 mr-1' />
@@ -175,12 +275,18 @@ export default function SignUp() {
           </div>
         </div>
         
-        <div className='w-full max-w-md'>
-          <div className='text-center mb-8'>
-            <h2 className='text-3xl font-bold text-gray-900 mb-2'>
-              {type === "user" ? "Create Job Seeker Account" : "Create Company Account"}
+        {/* Form Container - Styled differently for mobile vs desktop */}
+        <div className='w-full max-w-md relative z-10 
+                        lg:bg-transparent lg:p-0 lg:shadow-none lg:rounded-none
+                        bg-white/95 backdrop-blur-md p-8 shadow-2xl rounded-2xl border border-white/20'>
+          <div className='mb-5'>
+            <h2 className='text-3xl font-bold lg:text-gray-900 text-gray-900 mb-2 hidden md:block'>
+              {type === "user" ? "Let's Create your Account" : "Create your Company Account"}
             </h2>
-            <p className='text-gray-600'>
+            <h2 className='text-2xl font-bold lg:text-gray-900 text-gray-900 mb-2 md:hidden block'>
+              {type === "user" ? "Create your Account" : "Create Company Account"}
+            </h2>
+            <p className='lg:text-gray-600 text-gray-700 hidden md:block'>
               {type === "user" 
                 ? "Start your career journey and find amazing opportunities"
                 : "Start recruiting top talent and build your dream team today"
@@ -193,7 +299,7 @@ export default function SignUp() {
               <>
                 {/* Full Name Field */}
                 <div>
-                  <label htmlFor='fullName' className='block text-sm font-medium text-gray-700 mb-2'>
+                  <label htmlFor='fullName' className='block text-sm font-medium text-gray-700 mb-1'>
                     Full Name
                   </label>
                   <input
@@ -210,7 +316,7 @@ export default function SignUp() {
                 
                 {/* Phone Number Field */}
                 <div>
-                  <label htmlFor='phoneNumber' className='block text-sm font-medium text-gray-700 mb-2'>
+                  <label htmlFor='phoneNumber' className='block text-sm font-medium text-gray-700 mb-1'>
                     Phone Number
                   </label>
                   <input
@@ -229,7 +335,7 @@ export default function SignUp() {
               <>
                 {/* Company Name Field */}
                 <div>
-                  <label htmlFor='companyName' className='block text-sm font-medium text-gray-700 mb-2'>
+                  <label htmlFor='companyName' className='block text-sm font-medium text-gray-700 mb-1'>
                     Company Name
                   </label>
                   <input
@@ -246,7 +352,7 @@ export default function SignUp() {
 
                 {/* Phone Number Field */}
                 <div>
-                  <label htmlFor='phoneNumber' className='block text-sm font-medium text-gray-700 mb-2'>
+                  <label htmlFor='phoneNumber' className='block text-sm font-medium text-gray-700 mb-1'>
                     Phone Number
                   </label>
                   <input
@@ -263,7 +369,7 @@ export default function SignUp() {
 
                 {/* Company Credentials Field */}
                 <div>
-                  <label htmlFor='credentialFile' className='block text-sm font-medium text-gray-700 mb-2'>
+                  <label htmlFor='credentialFile' className='block text-sm font-medium text-gray-700 mb-1'>
                     Company Credentials
                   </label>
                   <div className='relative'>
@@ -286,7 +392,7 @@ export default function SignUp() {
 
             {/* Email Field */}
             <div>
-              <label htmlFor='email' className='block text-sm font-medium text-gray-700 mb-2'>
+              <label htmlFor='email' className='block text-sm font-medium text-gray-700 mb-1'>
                 Email Address
               </label>
               <input
@@ -303,7 +409,7 @@ export default function SignUp() {
 
             {/* Password Field */}
             <div>
-              <label htmlFor='password' className='block text-sm font-medium text-gray-700 mb-2'>
+              <label htmlFor='password' className='block text-sm font-medium text-gray-700 mb-1'>
                 Password
               </label>
               <input
@@ -321,7 +427,7 @@ export default function SignUp() {
             {/* Submit Button */}
             <button
               type='submit'
-              className='w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 font-medium'
+              className='w-full bg-blue-600 text-white py-3 px-4 rounded-xl hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 font-medium'
             >
               Create Account
             </button>
@@ -342,7 +448,7 @@ export default function SignUp() {
           <div className='text-center mt-6'>
             <p className='text-gray-600'>
               Already have an account?{' '}
-              <a href='/signin' className='text-blue-600 hover:text-blue-700 font-medium'>
+              <a href={`/signin?type=${type}`} className='text-blue-600 hover:text-blue-700 font-medium'>
                 Sign in
               </a>
             </p>
@@ -378,7 +484,7 @@ export default function SignUp() {
 
           {/* Company Registration Notice */}
           {type === "company" && (
-            <div className='mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg'>
+            <div className='mt-6 p-4 lg:bg-blue-50 bg-blue-50/90 border border-blue-200 rounded-lg backdrop-blur-sm'>
               <div className='flex items-center'>
                 <FaBuilding className='w-4 h-4 text-blue-600 mr-2' />
                 <p className='text-sm text-blue-800'>

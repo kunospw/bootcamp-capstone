@@ -68,13 +68,13 @@ const jobSchema = new mongoose.Schema(
       {
         type: String,
         trim: true,
-        required: true,
+        // required: true,
       },
     ],
     skills: [
       {
         type: String,
-        trim: true,
+        // trim: true,
       },
     ],
     benefits: [

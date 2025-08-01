@@ -211,9 +211,9 @@ const EditJob = () => {
         if (formData.requirements.filter(req => req.trim()).length === 0) {
             errors.push('At least one requirement is required');
         }
-        if (formData.responsibilities.filter(resp => resp.trim()).length === 0) {
-            errors.push('At least one responsibility is required');
-        }
+        // if (formData.responsibilities.filter(resp => resp.trim()).length === 0) {
+        //   errors.push('At least one responsibility is required');
+        // }
         if (formData.applicationDeadline && new Date(formData.applicationDeadline) <= new Date()) {
             errors.push('Application deadline must be in the future');
         }
@@ -342,43 +342,23 @@ const EditJob = () => {
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                         {/* Error/Success Messages */}
                         {error && (
-                            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-                                <div className="flex">
-                                    <div className="text-red-400">
-                                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                                        </svg>
-                                    </div>
-                                    <div className="ml-3">
-                                        <p className="text-sm text-red-800">{error}</p>
-                                    </div>
-                                </div>
+                            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                                <p className="text-red-800 text-sm">{error}</p>
                             </div>
                         )}
-
                         {success && (
-                            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-                                <div className="flex">
-                                    <div className="text-green-400">
-                                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                        </svg>
-                                    </div>
-                                    <div className="ml-3">
-                                        <p className="text-sm text-green-800">{success}</p>
-                                    </div>
-                                </div>
+                            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                                <p className="text-green-800 text-sm">{success}</p>
                             </div>
                         )}
 
-                        {/* Form Fields */}
-                        <div className="space-y-6">
-                            {/* Basic Information */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            {/* Left Column - Form Fields */}
+                            <div className="space-y-6">
                                 {/* Job Title */}
                                 <div>
                                     <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                                        <FaBriefcase className="text-blue-600" />
+                                        <FaBriefcase className="text-blue-500" />
                                         Job Title *
                                     </label>
                                     <input
@@ -392,41 +372,21 @@ const EditJob = () => {
                                     />
                                 </div>
 
-                                {/* Major/Field */}
+                                {/* Job Major/Field */}
                                 <div>
                                     <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                                        <FaIndustry className="text-purple-600" />
-                                        Major/Field *
+                                        <FaIndustry className="text-purple-500" />
+                                        Job Major/Field *
                                     </label>
                                     <input
                                         type="text"
                                         name="major"
                                         value={formData.major}
                                         onChange={handleInputChange}
-                                        placeholder="e.g. Computer Science, Engineering"
+                                        placeholder="e.g. Software Engineering, Marketing, Finance"
                                         className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         required
                                     />
-                                </div>
-
-                                {/* Experience Level */}
-                                <div>
-                                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                                        <FaUsers className="text-indigo-500" />
-                                        Experience Level *
-                                    </label>
-                                    <select
-                                        name="experienceLevel"
-                                        value={formData.experienceLevel}
-                                        onChange={handleInputChange}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    >
-                                        {experienceLevels.map(level => (
-                                            <option key={level.value} value={level.value}>
-                                                {level.label}
-                                            </option>
-                                        ))}
-                                    </select>
                                 </div>
 
                                 {/* Location */}
@@ -447,39 +407,61 @@ const EditJob = () => {
                                 </div>
 
                                 {/* Job Type & Work Location */}
-                                <div>
-                                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                                        <FaClock className="text-green-500" />
-                                        Job Type *
-                                    </label>
-                                    <select
-                                        name="type"
-                                        value={formData.type}
-                                        onChange={handleInputChange}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    >
-                                        {jobTypes.map(type => (
-                                            <option key={type.value} value={type.value}>
-                                                {type.label}
-                                            </option>
-                                        ))}
-                                    </select>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                                            <FaClock className="text-green-500" />
+                                            Job Type *
+                                        </label>
+                                        <select
+                                            name="type"
+                                            value={formData.type}
+                                            onChange={handleInputChange}
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        >
+                                            {jobTypes.map(type => (
+                                                <option key={type.value} value={type.value}>
+                                                    {type.label}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                                            <FaMapMarkerAlt className="text-orange-500" />
+                                            Work Location *
+                                        </label>
+                                        <select
+                                            name="workLocation"
+                                            value={formData.workLocation}
+                                            onChange={handleInputChange}
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        >
+                                            {workLocations.map(location => (
+                                                <option key={location.value} value={location.value}>
+                                                    {location.label}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
                                 </div>
 
+                                {/* Experience Level */}
                                 <div>
                                     <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                                        <FaMapMarkerAlt className="text-orange-500" />
-                                        Work Location *
+                                        <FaUsers className="text-purple-500" />
+                                        Experience Level *
                                     </label>
                                     <select
-                                        name="workLocation"
-                                        value={formData.workLocation}
+                                        name="experienceLevel"
+                                        value={formData.experienceLevel}
                                         onChange={handleInputChange}
                                         className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     >
-                                        {workLocations.map(location => (
-                                            <option key={location.value} value={location.value}>
-                                                {location.label}
+                                        {experienceLevels.map(level => (
+                                            <option key={level.value} value={level.value}>
+                                                {level.label}
                                             </option>
                                         ))}
                                     </select>
@@ -500,346 +482,476 @@ const EditJob = () => {
                                         className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     />
                                 </div>
-                            </div>
 
-                            {/* Job Description */}
-                            <div>
-                                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                                    <FaFileAlt className="text-gray-600" />
-                                    Job Description *
-                                </label>
-                                <textarea
-                                    name="description"
-                                    value={formData.description}
-                                    onChange={handleInputChange}
-                                    placeholder="Describe the job role, responsibilities, and what you're looking for in a candidate..."
-                                    rows="6"
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-vertical"
-                                    required
-                                />
-                                <p className="text-sm text-gray-500 mt-1">
-                                    {formData.description.length}/5000 characters
-                                </p>
-                            </div>
-
-                            {/* Salary Range */}
-                            <div>
-                                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                                    <FaDollarSign className="text-green-600" />
-                                    Salary Range
-                                </label>
-                                <div className="grid grid-cols-2 gap-3 mb-3">
-                                    <input
-                                        type="number"
-                                        name="salary.min"
-                                        value={formData.salary.min}
-                                        onChange={handleInputChange}
-                                        placeholder="Min salary"
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    />
-                                    <input
-                                        type="number"
-                                        name="salary.max"
-                                        value={formData.salary.max}
-                                        onChange={handleInputChange}
-                                        placeholder="Max salary"
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    />
-                                </div>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <select
-                                        name="salary.currency"
-                                        value={formData.salary.currency}
-                                        onChange={handleInputChange}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    >
-                                        {currencies.map(currency => (
-                                            <option key={currency.value} value={currency.value}>
-                                                {currency.label}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <select
-                                        name="salary.period"
-                                        value={formData.salary.period}
-                                        onChange={handleInputChange}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    >
-                                        {salaryPeriods.map(period => (
-                                            <option key={period.value} value={period.value}>
-                                                {period.label}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
-
-                            {/* Requirements */}
-                            <div>
-                                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                                    <FaListUl className="text-indigo-500" />
-                                    Requirements *
-                                </label>
-                                <div className="space-y-2">
-                                    {formData.requirements.map((requirement, index) => (
-                                        <div key={index} className="flex gap-2">
-                                            <input
-                                                type="text"
-                                                value={requirement}
-                                                onChange={(e) => handleRequirementChange(index, e.target.value)}
-                                                placeholder={`Requirement ${index + 1}`}
-                                                className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                            />
-                                            {formData.requirements.length > 1 && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => removeRequirement(index)}
-                                                    className="px-3 py-2 text-red-600 border border-red-300 rounded-md hover:bg-red-50 transition-colors"
-                                                >
-                                                    <FaTimes />
-                                                </button>
-                                            )}
-                                        </div>
-                                    ))}
-                                    <button
-                                        type="button"
-                                        onClick={addRequirement}
-                                        className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                                    >
-                                        + Add Requirement
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Responsibilities */}
-                            <div>
-                                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                                    <FaListUl className="text-green-500" />
-                                    Responsibilities *
-                                </label>
-                                <div className="space-y-2">
-                                    {formData.responsibilities.map((responsibility, index) => (
-                                        <div key={index} className="flex gap-2">
-                                            <input
-                                                type="text"
-                                                value={responsibility}
-                                                onChange={(e) => handleArrayChange('responsibilities', index, e.target.value)}
-                                                placeholder={`Responsibility ${index + 1}`}
-                                                className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                            />
-                                            {formData.responsibilities.length > 1 && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => removeArrayItem('responsibilities', index)}
-                                                    className="px-3 py-2 text-red-600 border border-red-300 rounded-md hover:bg-red-50 transition-colors"
-                                                >
-                                                    <FaTimes />
-                                                </button>
-                                            )}
-                                        </div>
-                                    ))}
-                                    <button
-                                        type="button"
-                                        onClick={() => addArrayItem('responsibilities')}
-                                        className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                                    >
-                                        + Add Responsibility
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Skills */}
-                            <div>
-                                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                                    <FaListUl className="text-purple-500" />
-                                    Skills
-                                </label>
-                                <div className="space-y-2">
-                                    {formData.skills.map((skill, index) => (
-                                        <div key={index} className="flex gap-2">
-                                            <input
-                                                type="text"
-                                                value={skill}
-                                                onChange={(e) => handleArrayChange('skills', index, e.target.value)}
-                                                placeholder={`Skill ${index + 1}`}
-                                                className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                            />
-                                            {formData.skills.length > 1 && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => removeArrayItem('skills', index)}
-                                                    className="px-3 py-2 text-red-600 border border-red-300 rounded-md hover:bg-red-50 transition-colors"
-                                                >
-                                                    <FaTimes />
-                                                </button>
-                                            )}
-                                        </div>
-                                    ))}
-                                    <button
-                                        type="button"
-                                        onClick={() => addArrayItem('skills')}
-                                        className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                                    >
-                                        + Add Skill
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Benefits */}
-                            <div>
-                                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                                    <FaListUl className="text-yellow-500" />
-                                    Benefits
-                                </label>
-                                <div className="space-y-2">
-                                    {formData.benefits.map((benefit, index) => (
-                                        <div key={index} className="flex gap-2">
-                                            <input
-                                                type="text"
-                                                value={benefit}
-                                                onChange={(e) => handleArrayChange('benefits', index, e.target.value)}
-                                                placeholder={`Benefit ${index + 1}`}
-                                                className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                            />
-                                            {formData.benefits.length > 1 && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => removeArrayItem('benefits', index)}
-                                                    className="px-3 py-2 text-red-600 border border-red-300 rounded-md hover:bg-red-50 transition-colors"
-                                                >
-                                                    <FaTimes />
-                                                </button>
-                                            )}
-                                        </div>
-                                    ))}
-                                    <button
-                                        type="button"
-                                        onClick={() => addArrayItem('benefits')}
-                                        className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                                    >
-                                        + Add Benefit
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Tags */}
-                            <div>
-                                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                                    <FaListUl className="text-pink-500" />
-                                    Tags
-                                </label>
-                                <div className="space-y-2">
-                                    {formData.tags.map((tag, index) => (
-                                        <div key={index} className="flex gap-2">
-                                            <input
-                                                type="text"
-                                                value={tag}
-                                                onChange={(e) => handleArrayChange('tags', index, e.target.value)}
-                                                placeholder={`Tag ${index + 1}`}
-                                                className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                            />
-                                            {formData.tags.length > 1 && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => removeArrayItem('tags', index)}
-                                                    className="px-3 py-2 text-red-600 border border-red-300 rounded-md hover:bg-red-50 transition-colors"
-                                                >
-                                                    <FaTimes />
-                                                </button>
-                                            )}
-                                        </div>
-                                    ))}
-                                    <button
-                                        type="button"
-                                        onClick={() => addArrayItem('tags')}
-                                        className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                                    >
-                                        + Add Tag
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Contact Information */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* Job Description */}
                                 <div>
                                     <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                                        <FaEnvelope className="text-red-500" />
-                                        Contact Email
+                                        <FaFileAlt className="text-gray-600" />
+                                        Job Description *
                                     </label>
-                                    <input
-                                        type="email"
-                                        name="contactEmail"
-                                        value={formData.contactEmail}
+                                    <textarea
+                                        name="description"
+                                        value={formData.description}
                                         onChange={handleInputChange}
-                                        placeholder="hr@company.com"
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        placeholder="Describe the job role, responsibilities, and what you're looking for in a candidate..."
+                                        rows="6"
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-vertical"
+                                        required
                                     />
+                                    <p className="text-sm text-gray-500 mt-1">
+                                        {formData.description.length}/5000 characters
+                                    </p>
                                 </div>
 
+                                {/* Salary Range */}
                                 <div>
                                     <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                                        <FaPhone className="text-green-500" />
-                                        Contact Phone
+                                        <FaDollarSign className="text-green-600" />
+                                        Salary Range
                                     </label>
-                                    <input
-                                        type="tel"
-                                        name="contactPhone"
-                                        value={formData.contactPhone}
-                                        onChange={handleInputChange}
-                                        placeholder="+1234567890"
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    />
+                                    <div className="grid grid-cols-2 gap-3 mb-3">
+                                        <input
+                                            type="number"
+                                            name="salary.min"
+                                            value={formData.salary.min}
+                                            onChange={handleInputChange}
+                                            placeholder="Min salary"
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        />
+                                        <input
+                                            type="number"
+                                            name="salary.max"
+                                            value={formData.salary.max}
+                                            onChange={handleInputChange}
+                                            placeholder="Max salary"
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <select
+                                            name="salary.currency"
+                                            value={formData.salary.currency}
+                                            onChange={handleInputChange}
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        >
+                                            {currencies.map(currency => (
+                                                <option key={currency.value} value={currency.value}>
+                                                    {currency.label}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <select
+                                            name="salary.period"
+                                            value={formData.salary.period}
+                                            onChange={handleInputChange}
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        >
+                                            {salaryPeriods.map(period => (
+                                                <option key={period.value} value={period.value}>
+                                                    {period.label}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {/* Requirements */}
+                                <div>
+                                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                                        <FaListUl className="text-indigo-500" />
+                                        Requirements *
+                                    </label>
+                                    <div className="space-y-2">
+                                        {formData.requirements.map((requirement, index) => (
+                                            <div key={index} className="flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    value={requirement}
+                                                    onChange={(e) => handleRequirementChange(index, e.target.value)}
+                                                    placeholder={`Requirement ${index + 1}`}
+                                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                />
+                                                {formData.requirements.length > 1 && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeRequirement(index)}
+                                                        className="px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+                                                    >
+                                                        <FaTimes className="w-3 h-3" />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ))}
+                                        <button
+                                            type="button"
+                                            onClick={addRequirement}
+                                            className="w-full px-3 py-2 border border-dashed border-gray-400 rounded-md text-gray-600 hover:border-blue-500 hover:text-blue-600 transition-colors"
+                                        >
+                                            + Add Requirement
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Responsibilities */}
+                                {/* <div>
+                                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                                        <FaListUl className="text-green-500" />
+                                        Responsibilities (Optional)
+                                    </label>
+                                    <div className="space-y-2">
+                                        {formData.responsibilities.map((responsibility, index) => (
+                                            <div key={index} className="flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    value={responsibility}
+                                                    onChange={(e) => handleArrayChange('responsibilities', index, e.target.value)}
+                                                    placeholder={`Responsibility ${index + 1}`}
+                                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                />
+                                                {formData.responsibilities.length > 1 && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeArrayItem('responsibilities', index)}
+                                                        className="px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+                                                    >
+                                                        <FaTimes className="w-3 h-3" />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ))}
+                                        <button
+                                            type="button"
+                                            onClick={() => addArrayItem('responsibilities')}
+                                            className="w-full px-3 py-2 border border-dashed border-gray-400 rounded-md text-gray-600 hover:border-blue-500 hover:text-blue-600 transition-colors"
+                                        >
+                                            + Add Responsibility
+                                        </button>
+                                    </div>
+                                </div> */}
+
+                                {/* Skills */}
+                                {/* <div>
+                                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                                        <FaListUl className="text-purple-500" />
+                                        Skills (Optional)
+                                    </label>
+                                    <div className="space-y-2">
+                                        {formData.skills.map((skill, index) => (
+                                            <div key={index} className="flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    value={skill}
+                                                    onChange={(e) => handleArrayChange('skills', index, e.target.value)}
+                                                    placeholder={`Skill ${index + 1}`}
+                                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                />
+                                                {formData.skills.length > 1 && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeArrayItem('skills', index)}
+                                                        className="px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+                                                    >
+                                                        <FaTimes className="w-3 h-3" />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ))}
+                                        <button
+                                            type="button"
+                                            onClick={() => addArrayItem('skills')}
+                                            className="w-full px-3 py-2 border border-dashed border-gray-400 rounded-md text-gray-600 hover:border-blue-500 hover:text-blue-600 transition-colors"
+                                        >
+                                            + Add Skill
+                                        </button>
+                                    </div>
+                                </div> */}
+
+                                {/* Benefits */}
+                                <div>
+                                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                                        <FaListUl className="text-yellow-500" />
+                                        Benefits (Optional)
+                                    </label>
+                                    <div className="space-y-2">
+                                        {formData.benefits.map((benefit, index) => (
+                                            <div key={index} className="flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    value={benefit}
+                                                    onChange={(e) => handleArrayChange('benefits', index, e.target.value)}
+                                                    placeholder={`Benefit ${index + 1}`}
+                                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                />
+                                                {formData.benefits.length > 1 && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeArrayItem('benefits', index)}
+                                                        className="px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+                                                    >
+                                                        <FaTimes className="w-3 h-3" />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ))}
+                                        <button
+                                            type="button"
+                                            onClick={() => addArrayItem('benefits')}
+                                            className="w-full px-3 py-2 border border-dashed border-gray-400 rounded-md text-gray-600 hover:border-blue-500 hover:text-blue-600 transition-colors"
+                                        >
+                                            + Add Benefit
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Contact Information */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                                            <FaEnvelope className="text-blue-500" />
+                                            Contact Email (Optional)
+                                        </label>
+                                        <input
+                                            type="email"
+                                            name="contactEmail"
+                                            value={formData.contactEmail}
+                                            onChange={handleInputChange}
+                                            placeholder="hr@company.com"
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                                            <FaPhone className="text-green-500" />
+                                            Contact Phone (Optional)
+                                        </label>
+                                        <input
+                                            type="tel"
+                                            name="contactPhone"
+                                            value={formData.contactPhone}
+                                            onChange={handleInputChange}
+                                            placeholder="+62-XXX-XXXX-XXXX"
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Job Status */}
+                                <div className="space-y-3">
+                                    <div className="flex items-center gap-3">
+                                        <input
+                                            type="checkbox"
+                                            name="isActive"
+                                            checked={formData.isActive}
+                                            onChange={handleInputChange}
+                                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                        />
+                                        <label className="text-sm font-medium text-gray-700">
+                                            Activate job posting immediately
+                                        </label>
+                                    </div>
+                                    {/* <div className="flex items-center gap-3">
+                                        <input
+                                            type="checkbox"
+                                            name="isFeatured"
+                                            checked={formData.isFeatured}
+                                            onChange={handleInputChange}
+                                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                        />
+                                        <label className="text-sm font-medium text-gray-700">
+                                            Featured Job (highlighted in listings)
+                                        </label>
+                                    </div> */}
                                 </div>
                             </div>
 
-                            {/* Job Status */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="flex items-center">
-                                    <input
-                                        type="checkbox"
-                                        name="isActive"
-                                        checked={formData.isActive}
-                                        onChange={handleInputChange}
-                                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                                    />
-                                    <label className="ml-2 text-sm font-medium text-gray-700">
-                                        Job is Active
-                                    </label>
-                                </div>
+                            {/* Right Column - Preview */}
+                            <div className="space-y-6">
+                                <div className="sticky top-6">
+                                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                        <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                        </svg>
+                                        Job Preview
+                                    </h3>
 
-                                <div className="flex items-center">
-                                    <input
-                                        type="checkbox"
-                                        name="isFeatured"
-                                        checked={formData.isFeatured}
-                                        onChange={handleInputChange}
-                                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                                    />
-                                    <label className="ml-2 text-sm font-medium text-gray-700">
-                                        Featured Job
-                                    </label>
+                                    {/* Job Preview Card */}
+                                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 space-y-4">
+                                        {/* Header */}
+                                        <div>
+                                            <h4 className="text-xl font-bold text-gray-900">
+                                                {formData.title || 'Job Title'}
+                                            </h4>
+                                            <p className="text-gray-600 text-sm mt-1">Your Company Name</p>
+                                        </div>
+
+                                        {/* Job Details */}
+                                        <div className="space-y-3">
+                                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                                                <FaMapMarkerAlt className="text-red-500 w-4 h-4" />
+                                                <span>{formData.location || 'Location'}</span>
+                                            </div>
+
+                                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                                                <FaClock className="text-green-500 w-4 h-4" />
+                                                <span>{jobTypes.find(type => type.value === formData.type)?.label || 'Job Type'}</span>
+                                            </div>
+
+                                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                                                <FaMapMarkerAlt className="text-orange-500 w-4 h-4" />
+                                                <span>{workLocations.find(location => location.value === formData.workLocation)?.label || 'Work Location'}</span>
+                                            </div>
+
+                                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                                                <FaUsers className="text-purple-500 w-4 h-4" />
+                                                <span>{experienceLevels.find(level => level.value === formData.experienceLevel)?.label || 'Experience Level'}</span>
+                                            </div>
+
+                                            {formData.applicationDeadline && (
+                                                <div className="flex items-center gap-2 text-sm text-gray-600">
+                                                    <FaCalendarAlt className="text-orange-500 w-4 h-4" />
+                                                    <span>Deadline: {new Date(formData.applicationDeadline).toLocaleDateString('id-ID')}</span>
+                                                </div>
+                                            )}
+
+                                            {(formData.salary.min || formData.salary.max) && (
+                                                <div className="flex items-center gap-2 text-sm text-gray-600">
+                                                    <FaDollarSign className="text-green-600 w-4 h-4" />
+                                                    <span>
+                                                        {formData.salary.min && formData.salary.max
+                                                            ? `${formData.salary.currency} ${parseInt(formData.salary.min).toLocaleString()} - ${parseInt(formData.salary.max).toLocaleString()} ${salaryPeriods.find(p => p.value === formData.salary.period)?.label?.toLowerCase() || ''}`
+                                                            : formData.salary.min
+                                                                ? `${formData.salary.currency} ${parseInt(formData.salary.min).toLocaleString()}+ ${salaryPeriods.find(p => p.value === formData.salary.period)?.label?.toLowerCase() || ''}`
+                                                                : formData.salary.max
+                                                                    ? `Up to ${formData.salary.currency} ${parseInt(formData.salary.max).toLocaleString()} ${salaryPeriods.find(p => p.value === formData.salary.period)?.label?.toLowerCase() || ''}`
+                                                                    : 'Salary Range'
+                                                        }
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Description Preview */}
+                                        {formData.description && (
+                                            <div>
+                                                <h5 className="font-semibold text-gray-900 mb-2">Description</h5>
+                                                <p className="text-sm text-gray-600 line-clamp-4">
+                                                    {formData.description.substring(0, 200)}
+                                                    {formData.description.length > 200 && '...'}
+                                                </p>
+                                            </div>
+                                        )}
+
+                                        {/* Requirements Preview */}
+                                        {formData.requirements.some(req => req.trim()) && (
+                                            <div>
+                                                <h5 className="font-semibold text-gray-900 mb-2">Requirements</h5>
+                                                <ul className="text-sm text-gray-600 space-y-1">
+                                                    {formData.requirements
+                                                        .filter(req => req.trim())
+                                                        .slice(0, 3)
+                                                        .map((req, index) => (
+                                                            <li key={index} className="flex items-start gap-2">
+                                                                <span className="text-blue-500 mt-1">•</span>
+                                                                <span>{req}</span>
+                                                            </li>
+                                                        ))}
+                                                    {formData.requirements.filter(req => req.trim()).length > 3 && (
+                                                        <li className="text-gray-400 text-xs">
+                                                            +{formData.requirements.filter(req => req.trim()).length - 3} more requirements
+                                                        </li>
+                                                    )}
+                                                </ul>
+                                            </div>
+                                        )}
+    
+                                        {/* Benefits Preview */}
+                                        {formData.benefits.some(benefit => benefit.trim()) && (
+                                            <div>
+                                                <h5 className="font-semibold text-gray-900 mb-2">Benefits</h5>
+                                                <ul className="text-sm text-gray-600 space-y-1">
+                                                    {formData.benefits
+                                                        .filter(benefit => benefit.trim())
+                                                        .slice(0, 3)
+                                                        .map((benefit, index) => (
+                                                            <li key={index} className="flex items-start gap-2">
+                                                                <span className="text-green-500 mt-1">•</span>
+                                                                <span>{benefit}</span>
+                                                            </li>
+                                                        ))}
+                                                    {formData.benefits.filter(benefit => benefit.trim()).length > 3 && (
+                                                        <li className="text-gray-400 text-xs">
+                                                            +{formData.benefits.filter(benefit => benefit.trim()).length - 3} more benefits
+                                                        </li>
+                                                    )}
+                                                </ul>
+                                            </div>
+                                        )}
+
+                                        {/* Contact Information Preview */}
+                                        {(formData.contactEmail || formData.contactPhone) && (
+                                            <div>
+                                                <h5 className="font-semibold text-gray-900 mb-2">Contact Information</h5>
+                                                <div className="space-y-2">
+                                                    {formData.contactEmail && (
+                                                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                                                            <FaEnvelope className="text-blue-500 w-4 h-4" />
+                                                            <span>{formData.contactEmail}</span>
+                                                        </div>
+                                                    )}
+                                                    {formData.contactPhone && (
+                                                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                                                            <FaPhone className="text-green-500 w-4 h-4" />
+                                                            <span>{formData.contactPhone}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Status Badge */}
+                                        <div className="pt-4 border-t border-gray-200">
+                                            <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium ${formData.isActive
+                                                ? 'bg-green-100 text-green-700'
+                                                : 'bg-gray-100 text-gray-700'
+                                                }`}>
+                                                <div className={`w-2 h-2 rounded-full ${formData.isActive ? 'bg-green-500' : 'bg-gray-400'
+                                                    }`}></div>
+                                                {formData.isActive ? 'Active' : 'Draft'}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Action Buttons */}
+                                    <div className="mt-6 flex justify-end gap-3">
+                                        <button
+                                            onClick={handleCancel}
+                                            disabled={loading}
+                                            className='flex items-center gap-2 px-6 py-2 bg-gray-500 text-white cursor-pointer rounded-lg hover:bg-gray-600 transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed'
+                                        >
+                                            <FaTimes className='w-4 h-4' />
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={handleUpdate}
+                                            disabled={loading}
+                                            className='flex items-center gap-2 px-6 py-2 bg-blue-600 text-white cursor-pointer rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed'
+                                        >
+                                            {loading ? (
+                                                <>
+                                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                                    Updating...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <FaSave className='w-4 h-4' />
+                                                    Update Job
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-
-                        {/* Action Buttons */}
-                        <div className="flex gap-4 mt-8 pt-6 border-t border-gray-200">
-                            <button
-                                onClick={handleUpdate}
-                                disabled={loading}
-                                className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors"
-                            >
-                                <FaSave />
-                                {loading ? 'Updating...' : 'Update Job'}
-                            </button>
-                            <button
-                                onClick={handleCancel}
-                                disabled={loading}
-                                className="flex items-center gap-2 bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-                            >
-                                <FaTimes />
-                                Cancel
-                            </button>
                         </div>
                     </div>
                 </div>

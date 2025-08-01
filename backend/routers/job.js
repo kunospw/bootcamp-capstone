@@ -158,7 +158,7 @@ router.get("/company/:companyId", async (req, res) => {
 
     const jobs = await Job.find({
       companyId: req.params.companyId,
-      isActive: true,
+      // isActive: true,
     })
       .populate("category", "categoryName")
       .sort({ datePosted: -1 })
@@ -167,7 +167,7 @@ router.get("/company/:companyId", async (req, res) => {
 
     const total = await Job.countDocuments({
       companyId: req.params.companyId,
-      isActive: true,
+      // isActive: true,
     });
 
     res.json({

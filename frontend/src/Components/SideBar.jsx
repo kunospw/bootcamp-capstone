@@ -29,23 +29,27 @@ const SideBar = () => {
             // Profile page should be active for both /company/profile and /company/profile/edit
             return location.pathname === '/company/profile' || location.pathname === '/company/profile/edit';
         }
+        if (path === '/company/jobs') {
+            // Jobs page should be active for jobs list, add job, and edit job pages
+            return location.pathname === '/company/jobs' || 
+                   location.pathname === '/company/jobs/add' || 
+                   location.pathname.startsWith('/company/jobs/edit/');
+        }
         return location.pathname === path;
     };
 
     return (
         <div>
-            {/* Mobile menu button */}
+            {/* Mobile menu button - Fixed position, hidden when sidebar is open */}
             <button 
                 onClick={toggleMobileMenu}
                 type="button" 
-                className="inline-flex items-center p-3 mt-2 ms-3 text-sm text-gray-500 rounded-lg sm:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-colors"
+                className={`fixed top-4 left-4 z-50 inline-flex items-center p-3 text-sm text-gray-500 rounded-lg sm:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-300 bg-white shadow-lg border border-gray-200 ${
+                    isMobileMenuOpen ? 'opacity-0 pointer-events-none transform -translate-x-2' : 'opacity-100 pointer-events-auto transform translate-x-0'
+                }`}
             >
                 <span className="sr-only">Open sidebar</span>
-                {isMobileMenuOpen ? (
-                    <FaTimes className="w-6 h-6" />
-                ) : (
-                    <FaBars className="w-6 h-6" />
-                )}
+                <FaBars className="w-6 h-6" />
             </button>
 
             {/* Mobile Overlay */}

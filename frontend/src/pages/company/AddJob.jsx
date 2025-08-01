@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import SideBar from '../../Components/SideBar'
 import { FaSave, FaTimes, FaBriefcase, FaMapMarkerAlt, FaDollarSign, FaClock, FaCalendarAlt, FaUsers, FaFileAlt, FaListUl, FaIndustry, FaPhone, FaEnvelope, FaTags } from 'react-icons/fa'
@@ -140,9 +140,9 @@ const AddJob = () => {
     if (formData.requirements.filter(req => req.trim()).length === 0) {
       errors.push('At least one requirement is required');
     }
-    if (formData.responsibilities.filter(resp => resp.trim()).length === 0) {
-      errors.push('At least one responsibility is required');
-    }
+    // if (formData.responsibilities.filter(resp => resp.trim()).length === 0) {
+    //   errors.push('At least one responsibility is required');
+    // }
     if (formData.applicationDeadline && new Date(formData.applicationDeadline) <= new Date()) {
       errors.push('Application deadline must be in the future');
     }
@@ -504,7 +504,7 @@ const AddJob = () => {
                 </div>
 
                 {/* Responsibilities */}
-                <div>
+                {/* <div>
                   <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
                     <FaListUl className="text-blue-500" />
                     Responsibilities *
@@ -538,10 +538,10 @@ const AddJob = () => {
                       + Add Responsibility
                     </button>
                   </div>
-                </div>
+                </div> */}
 
                 {/* Skills */}
-                <div>
+                {/* <div>
                   <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
                     <FaTags className="text-green-500" />
                     Skills (Optional)
@@ -575,7 +575,7 @@ const AddJob = () => {
                       + Add Skill
                     </button>
                   </div>
-                </div>
+                </div> */}
 
                 {/* Benefits */}
                 <div>
@@ -660,7 +660,7 @@ const AddJob = () => {
                       Activate job posting immediately
                     </label>
                   </div>
-                  <div className="flex items-center gap-3">
+                  {/* <div className="flex items-center gap-3">
                     <input
                       type="checkbox"
                       name="isFeatured"
@@ -671,7 +671,7 @@ const AddJob = () => {
                     <label className="text-sm font-medium text-gray-700">
                       Feature this job posting (Premium)
                     </label>
-                  </div>
+                  </div> */}
                 </div>
               </div>
 
@@ -773,6 +773,50 @@ const AddJob = () => {
                             </li>
                           )}
                         </ul>
+                      </div>
+                    )}
+
+                    {/* Benefits Preview */}
+                    {formData.benefits.some(benefit => benefit.trim()) && (
+                      <div>
+                        <h5 className="font-semibold text-gray-900 mb-2">Benefits</h5>
+                        <ul className="text-sm text-gray-600 space-y-1">
+                          {formData.benefits
+                            .filter(benefit => benefit.trim())
+                            .slice(0, 3)
+                            .map((benefit, index) => (
+                              <li key={index} className="flex items-start gap-2">
+                                <span className="text-green-500 mt-1">•</span>
+                                <span>{benefit}</span>
+                              </li>
+                            ))}
+                          {formData.benefits.filter(benefit => benefit.trim()).length > 3 && (
+                            <li className="text-gray-400 text-xs">
+                              +{formData.benefits.filter(benefit => benefit.trim()).length - 3} more benefits
+                            </li>
+                          )}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Contact Information Preview */}
+                    {(formData.contactEmail || formData.contactPhone) && (
+                      <div>
+                        <h5 className="font-semibold text-gray-900 mb-2">Contact Information</h5>
+                        <div className="space-y-2">
+                          {formData.contactEmail && (
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <FaEnvelope className="text-blue-500 w-4 h-4" />
+                              <span>{formData.contactEmail}</span>
+                            </div>
+                          )}
+                          {formData.contactPhone && (
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <FaPhone className="text-green-500 w-4 h-4" />
+                              <span>{formData.contactPhone}</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
 

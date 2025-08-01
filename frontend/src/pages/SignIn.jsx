@@ -5,7 +5,23 @@ import { FaBuilding, FaUser } from "react-icons/fa";
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [type, setType] = useState("user");
+  
+  // Get initial type from URL params or localStorage, default to "user"
+  const getInitialType = () => {
+    const urlParams = new URLSearchParams(location.search);
+    const typeFromUrl = urlParams.get('type');
+    const typeFromStorage = localStorage.getItem('userType');
+    
+    if (typeFromUrl && (typeFromUrl === 'user' || typeFromUrl === 'company')) {
+      return typeFromUrl;
+    }
+    if (typeFromStorage && (typeFromStorage === 'user' || typeFromStorage === 'company')) {
+      return typeFromStorage;
+    }
+    return "user";
+  };
+
+  const [type, setType] = useState(getInitialType());
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -42,12 +58,30 @@ export default function Login() {
     }
   }, [location, navigate]);
 
+  // Update type when URL changes
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const typeFromUrl = urlParams.get('type');
+    if (typeFromUrl && (typeFromUrl === 'user' || typeFromUrl === 'company')) {
+      setType(typeFromUrl);
+      localStorage.setItem('userType', typeFromUrl);
+    }
+  }, [location.search]);
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleTypeChange = (e) => {
-    setType(e.target.value);
+    const newType = e.target.value;
+    setType(newType);
+    
+    // Save to localStorage and update URL
+    localStorage.setItem('userType', newType);
+    const url = new URL(window.location);
+    url.searchParams.set('type', newType);
+    window.history.replaceState({}, '', url);
+    
     setForm({ email: "", password: "" });
     setMessage("");
   };
@@ -91,7 +125,7 @@ export default function Login() {
 
   return (
     <div className='w-full h-screen flex'>
-      {/* Left Section - Visual/Branding */}
+      {/* Desktop Layout - Left Section Visual/Branding */}
       <div className='hidden lg:flex lg:w-1/2 bg-[#0D6EFD] items-center justify-center relative overflow-hidden'>
         <div className='text-white text-center z-10'>
           <h1 className='text-4xl font-bold mb-4'>Welcome Back to Job Hive</h1>
@@ -113,18 +147,101 @@ export default function Login() {
             </div>
           </div>
         </div>
-        {/* Background decorative elements */}
-        <div className='absolute top-10 left-10 w-20 h-20 bg-[#F4B400] rounded-full'></div>
-        <div className='absolute bottom-10 right-10 w-32 h-32 bg-[#F4B400] rounded-full'></div>
-        <div className='absolute top-1/2 left-1/4 w-16 h-16 bg-[#F4B400] rounded-full'></div>
+        {/* Background decorative elements with floating animations - Different positioning */}
+        <div className='absolute top-16 right-16 w-24 h-24 bg-[#F4B400] rounded-full animate-float-1 opacity-75'></div>
+        <div className='absolute bottom-20 left-16 w-28 h-28 bg-[#F4B400] rounded-full animate-float-2 opacity-80'></div>
+        <div className='absolute top-1/3 right-1/3 w-14 h-14 bg-[#F4B400] rounded-full animate-float-3 opacity-85'></div>
+        <div className='absolute bottom-1/4 right-1/4 w-18 h-18 bg-white/25 rounded-full animate-float-4 opacity-65'></div>
+        <div className='absolute top-1/4 left-8 w-20 h-20 bg-white/20 rounded-full animate-float-5 opacity-55'></div>
+        <div className='absolute bottom-1/3 right-8 w-10 h-10 bg-[#F4B400] rounded-full animate-float-6 opacity-70'></div>
+        <div className='absolute top-2/3 left-1/4 w-16 h-16 bg-white/15 rounded-full animate-float-7 opacity-60'></div>
+        <div className='absolute top-12 left-1/2 w-12 h-12 bg-[#F4B400] rounded-full animate-float-8 opacity-80'></div>
+        
+        {/* Additional floating styles with new animations */}
+        <style jsx>{`
+          @keyframes float-1 {
+            0%, 100% { transform: translateY(0px) translateX(0px) rotate(0deg); }
+            25% { transform: translateY(-15px) translateX(-12px) rotate(90deg); }
+            50% { transform: translateY(-5px) translateX(18px) rotate(180deg); }
+            75% { transform: translateY(-20px) translateX(-8px) rotate(270deg); }
+          }
+          
+          @keyframes float-2 {
+            0%, 100% { transform: translateY(0px) translateX(0px) rotate(0deg); }
+            33% { transform: translateY(12px) translateX(25px) rotate(120deg); }
+            66% { transform: translateY(-15px) translateX(-12px) rotate(240deg); }
+          }
+          
+          @keyframes float-3 {
+            0%, 100% { transform: translateY(0px) translateX(0px) scale(1); }
+            50% { transform: translateY(-25px) translateX(-15px) scale(1.15); }
+          }
+          
+          @keyframes float-4 {
+            0%, 100% { transform: translateY(0px) translateX(0px) rotate(0deg); }
+            25% { transform: translateY(18px) translateX(12px) rotate(-90deg); }
+            50% { transform: translateY(-8px) translateX(-20px) rotate(-180deg); }
+            75% { transform: translateY(-12px) translateX(8px) rotate(-270deg); }
+          }
+          
+          @keyframes float-5 {
+            0%, 100% { transform: translateY(0px) translateX(0px) scale(1) rotate(0deg); }
+            20% { transform: translateY(-8px) translateX(-12px) scale(0.85) rotate(72deg); }
+            40% { transform: translateY(12px) translateX(18px) scale(1.2) rotate(144deg); }
+            60% { transform: translateY(-18px) translateX(-5px) scale(0.9) rotate(216deg); }
+            80% { transform: translateY(8px) translateX(10px) scale(1.1) rotate(288deg); }
+          }
+          
+          @keyframes float-6 {
+            0%, 100% { transform: translateY(0px) translateX(0px); }
+            33% { transform: translateY(-20px) translateX(-18px); }
+            66% { transform: translateY(15px) translateX(12px); }
+          }
+          
+          @keyframes float-7 {
+            0%, 100% { transform: translateY(0px) translateX(0px) rotate(0deg) scale(1); }
+            25% { transform: translateY(-10px) translateX(15px) rotate(45deg) scale(1.1); }
+            50% { transform: translateY(8px) translateX(-10px) rotate(90deg) scale(0.9); }
+            75% { transform: translateY(-15px) translateX(5px) rotate(135deg) scale(1.05); }
+          }
+          
+          @keyframes float-8 {
+            0%, 100% { transform: translateY(0px) translateX(0px) rotate(0deg); }
+            50% { transform: translateY(-30px) translateX(0px) rotate(180deg); }
+          }
+          
+          .animate-float-1 { animation: float-1 9s ease-in-out infinite; }
+          .animate-float-2 { animation: float-2 11s ease-in-out infinite; }
+          .animate-float-3 { animation: float-3 7s ease-in-out infinite; }
+          .animate-float-4 { animation: float-4 13s ease-in-out infinite; }
+          .animate-float-5 { animation: float-5 16s ease-in-out infinite; }
+          .animate-float-6 { animation: float-6 8s ease-in-out infinite; }
+          .animate-float-7 { animation: float-7 14s ease-in-out infinite; }
+          .animate-float-8 { animation: float-8 6s ease-in-out infinite; }
+        `}</style>
       </div>
 
-      {/* Right Section - Login Form */}
-      <div className='w-full lg:w-1/2 flex flex-col items-center justify-center p-8 bg-white relative'>
-        {/* Login Type Selector - Top Right */}
-        <div className='absolute top-6 right-6'>
+      {/* Mobile & Desktop Layout - Login Form Section */}
+      <div className='w-full lg:w-1/2 flex flex-col items-center justify-center p-8 relative
+                      lg:bg-white 
+                      bg-[#0D6EFD] overflow-hidden'>
+        
+        {/* Mobile Background - Decorative elements (only visible on mobile) */}
+        <div className='lg:hidden absolute inset-0 overflow-hidden'>
+          <div className='absolute top-12 right-12 w-18 h-18 bg-[#F4B400] rounded-full animate-float-1 opacity-65'></div>
+          <div className='absolute bottom-12 left-12 w-22 h-22 bg-[#F4B400] rounded-full animate-float-2 opacity-55'></div>
+          <div className='absolute top-1/4 left-1/3 w-10 h-10 bg-[#F4B400] rounded-full animate-float-3 opacity-75'></div>
+          <div className='absolute top-20 left-8 w-6 h-6 bg-white/25 rounded-full animate-float-4 opacity-45'></div>
+          <div className='absolute bottom-1/3 right-1/4 w-16 h-16 bg-white/20 rounded-full animate-float-5 opacity-40'></div>
+          <div className='absolute top-3/4 right-8 w-8 h-8 bg-[#F4B400] rounded-full animate-float-6 opacity-60'></div>
+          <div className='absolute bottom-20 left-1/3 w-12 h-12 bg-white/15 rounded-full animate-float-7 opacity-35'></div>
+          <div className='absolute top-16 right-1/3 w-14 h-14 bg-[#F4B400] rounded-full animate-float-8 opacity-70'></div>
+        </div>
+        
+        {/* Login Type Selector - Top Right (Fixed for both mobile and desktop) */}
+        <div className='absolute top-6 right-6 z-20'>
           <div className='flex items-center justify-center'>
-            <div className='relative bg-gray-100 rounded-full p-1 w-fit'>
+            <div className='relative lg:bg-gray-100 bg-white/20 backdrop-blur-sm rounded-full p-1 w-fit'>
               {/* Background slider */}
               <div 
                 className={`absolute top-1 left-1 h-8 w-28 bg-blue-600 rounded-full transition-transform duration-300 ease-in-out ${
@@ -140,7 +257,7 @@ export default function Login() {
                   className={`flex items-center justify-center px-2 py-2 rounded-full text-xs font-medium transition-colors duration-300 w-28 ${
                     type === 'company' 
                       ? 'text-white' 
-                      : 'text-gray-600 hover:text-gray-800'
+                      : 'lg:text-gray-600 lg:hover:text-gray-800 text-white/80 hover:text-white'
                   }`}
                 >
                   <FaBuilding className='w-3 h-3 mr-1' />
@@ -154,7 +271,7 @@ export default function Login() {
                   className={`flex items-center justify-center px-2 py-2 rounded-full text-xs font-medium transition-colors duration-300 w-28 ${
                     type === 'user' 
                       ? 'text-white' 
-                      : 'text-gray-600 hover:text-gray-800'
+                      : 'lg:text-gray-600 lg:hover:text-gray-800 text-white/80 hover:text-white'
                   }`}
                 >
                   <FaUser className='w-3 h-3 mr-1' />
@@ -165,12 +282,15 @@ export default function Login() {
           </div>
         </div>
         
-        <div className='w-full max-w-md'>
-          <div className='text-center mb-8'>
-            <h2 className='text-3xl font-bold text-gray-900 mb-2'>
-              {type === "user" ? "Job Seeker Sign In" : "Company Sign In"}
+        {/* Form Container - Styled differently for mobile vs desktop */}
+        <div className='w-full max-w-md relative z-10 
+                        lg:bg-transparent lg:p-0 lg:shadow-none lg:rounded-none
+                        bg-white/95 backdrop-blur-md p-8 shadow-2xl rounded-2xl border border-white/20'>
+          <div className='mb-5'>
+            <h2 className='text-3xl font-bold lg:text-gray-900 text-gray-900 mb-1'>
+              Sign In
             </h2>
-            <p className='text-gray-600'>
+            <p className='lg:text-gray-600 text-gray-700'>
               {type === "user" 
                 ? "Access your account and continue your job search"
                 : "Access your dashboard and manage your recruitment"
@@ -181,7 +301,7 @@ export default function Login() {
           <form onSubmit={handleSubmit} className='space-y-4'>
             {/* Email Field */}
             <div>
-              <label htmlFor='email' className='block text-sm font-medium text-gray-700 mb-2'>
+              <label htmlFor='email' className='block text-sm font-medium text-gray-700 mb-1'>
                 Email Address
               </label>
               <input
@@ -198,7 +318,7 @@ export default function Login() {
 
             {/* Password Field */}
             <div>
-              <label htmlFor='password' className='block text-sm font-medium text-gray-700 mb-2'>
+              <label htmlFor='password' className='block text-sm font-medium text-gray-700 mb-1'>
                 Password
               </label>
               <input
@@ -223,7 +343,7 @@ export default function Login() {
             {/* Submit Button */}
             <button
               type='submit'
-              className='w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 font-medium'
+              className='w-full bg-blue-600 text-white py-3 px-4 rounded-xl hover:bg-blue-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 font-medium'
             >
               Sign In
             </button>
@@ -244,7 +364,7 @@ export default function Login() {
           <div className='text-center mt-6'>
             <p className='text-gray-600'>
               Don't have an account?{' '}
-              <a href='/signup' className='text-blue-600 hover:text-blue-700 font-medium'>
+              <a href={`/signup?type=${type}`} className='text-blue-600 hover:text-blue-700 font-medium'>
                 Sign up
               </a>
             </p>
@@ -280,7 +400,7 @@ export default function Login() {
 
           {/* Company Login Notice */}
           {type === "company" && (
-            <div className='mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg'>
+            <div className='mt-6 p-4 lg:bg-blue-50 bg-blue-50/90 border border-blue-200 rounded-lg backdrop-blur-sm'>
               <div className='flex items-center'>
                 <FaBuilding className='w-4 h-4 text-blue-600 mr-2' />
                 <p className='text-sm text-blue-800'>
