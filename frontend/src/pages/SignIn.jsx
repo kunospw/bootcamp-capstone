@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { FaBuilding, FaUser } from "react-icons/fa";
+import FloatingDecorations from "../Components/FloatingDecorations";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -41,7 +42,7 @@ export default function Login() {
         const payload = JSON.parse(atob(token.split('.')[1]));
         if (payload.type === "user") {
           setTimeout(() => {
-            navigate("/user/profile");
+            navigate("/");
           }, 1000);
         } else if (payload.type === "company") {
           setTimeout(() => {
@@ -50,9 +51,9 @@ export default function Login() {
         }
       } catch (error) {
         console.error("Error decoding token:", error);
-        // Default redirect for users
+        // Default redirect to job list for users
         setTimeout(() => {
-          navigate("/user/profile");
+          navigate("/");
         }, 1000);
       }
     }
@@ -109,9 +110,9 @@ export default function Login() {
             navigate("/company/profile");
           }, 1000);
         } else {
-          // Redirect to user dashboard or profile
+          // Redirect to job list page for users
           setTimeout(() => {
-            navigate("/user/profile"); // or whatever the user page should be
+            navigate("/");
           }, 1000);
         }
       } else {
@@ -147,78 +148,8 @@ export default function Login() {
             </div>
           </div>
         </div>
-        {/* Background decorative elements with floating animations - Different positioning */}
-        <div className='absolute top-16 right-16 w-24 h-24 bg-[#F4B400] rounded-full animate-float-1 opacity-75'></div>
-        <div className='absolute bottom-20 left-16 w-28 h-28 bg-[#F4B400] rounded-full animate-float-2 opacity-80'></div>
-        <div className='absolute top-1/3 right-1/3 w-14 h-14 bg-[#F4B400] rounded-full animate-float-3 opacity-85'></div>
-        <div className='absolute bottom-1/4 right-1/4 w-18 h-18 bg-white/25 rounded-full animate-float-4 opacity-65'></div>
-        <div className='absolute top-1/4 left-8 w-20 h-20 bg-white/20 rounded-full animate-float-5 opacity-55'></div>
-        <div className='absolute bottom-1/3 right-8 w-10 h-10 bg-[#F4B400] rounded-full animate-float-6 opacity-70'></div>
-        <div className='absolute top-2/3 left-1/4 w-16 h-16 bg-white/15 rounded-full animate-float-7 opacity-60'></div>
-        <div className='absolute top-12 left-1/2 w-12 h-12 bg-[#F4B400] rounded-full animate-float-8 opacity-80'></div>
-        
-        {/* Additional floating styles with new animations */}
-        <style jsx>{`
-          @keyframes float-1 {
-            0%, 100% { transform: translateY(0px) translateX(0px) rotate(0deg); }
-            25% { transform: translateY(-15px) translateX(-12px) rotate(90deg); }
-            50% { transform: translateY(-5px) translateX(18px) rotate(180deg); }
-            75% { transform: translateY(-20px) translateX(-8px) rotate(270deg); }
-          }
-          
-          @keyframes float-2 {
-            0%, 100% { transform: translateY(0px) translateX(0px) rotate(0deg); }
-            33% { transform: translateY(12px) translateX(25px) rotate(120deg); }
-            66% { transform: translateY(-15px) translateX(-12px) rotate(240deg); }
-          }
-          
-          @keyframes float-3 {
-            0%, 100% { transform: translateY(0px) translateX(0px) scale(1); }
-            50% { transform: translateY(-25px) translateX(-15px) scale(1.15); }
-          }
-          
-          @keyframes float-4 {
-            0%, 100% { transform: translateY(0px) translateX(0px) rotate(0deg); }
-            25% { transform: translateY(18px) translateX(12px) rotate(-90deg); }
-            50% { transform: translateY(-8px) translateX(-20px) rotate(-180deg); }
-            75% { transform: translateY(-12px) translateX(8px) rotate(-270deg); }
-          }
-          
-          @keyframes float-5 {
-            0%, 100% { transform: translateY(0px) translateX(0px) scale(1) rotate(0deg); }
-            20% { transform: translateY(-8px) translateX(-12px) scale(0.85) rotate(72deg); }
-            40% { transform: translateY(12px) translateX(18px) scale(1.2) rotate(144deg); }
-            60% { transform: translateY(-18px) translateX(-5px) scale(0.9) rotate(216deg); }
-            80% { transform: translateY(8px) translateX(10px) scale(1.1) rotate(288deg); }
-          }
-          
-          @keyframes float-6 {
-            0%, 100% { transform: translateY(0px) translateX(0px); }
-            33% { transform: translateY(-20px) translateX(-18px); }
-            66% { transform: translateY(15px) translateX(12px); }
-          }
-          
-          @keyframes float-7 {
-            0%, 100% { transform: translateY(0px) translateX(0px) rotate(0deg) scale(1); }
-            25% { transform: translateY(-10px) translateX(15px) rotate(45deg) scale(1.1); }
-            50% { transform: translateY(8px) translateX(-10px) rotate(90deg) scale(0.9); }
-            75% { transform: translateY(-15px) translateX(5px) rotate(135deg) scale(1.05); }
-          }
-          
-          @keyframes float-8 {
-            0%, 100% { transform: translateY(0px) translateX(0px) rotate(0deg); }
-            50% { transform: translateY(-30px) translateX(0px) rotate(180deg); }
-          }
-          
-          .animate-float-1 { animation: float-1 9s ease-in-out infinite; }
-          .animate-float-2 { animation: float-2 11s ease-in-out infinite; }
-          .animate-float-3 { animation: float-3 7s ease-in-out infinite; }
-          .animate-float-4 { animation: float-4 13s ease-in-out infinite; }
-          .animate-float-5 { animation: float-5 16s ease-in-out infinite; }
-          .animate-float-6 { animation: float-6 8s ease-in-out infinite; }
-          .animate-float-7 { animation: float-7 14s ease-in-out infinite; }
-          .animate-float-8 { animation: float-8 6s ease-in-out infinite; }
-        `}</style>
+        {/* Background decorative elements with floating animations */}
+        <FloatingDecorations variant="auth" />
       </div>
 
       {/* Mobile & Desktop Layout - Login Form Section */}
@@ -228,14 +159,7 @@ export default function Login() {
         
         {/* Mobile Background - Decorative elements (only visible on mobile) */}
         <div className='lg:hidden absolute inset-0 overflow-hidden'>
-          <div className='absolute top-12 right-12 w-18 h-18 bg-[#F4B400] rounded-full animate-float-1 opacity-65'></div>
-          <div className='absolute bottom-12 left-12 w-22 h-22 bg-[#F4B400] rounded-full animate-float-2 opacity-55'></div>
-          <div className='absolute top-1/4 left-1/3 w-10 h-10 bg-[#F4B400] rounded-full animate-float-3 opacity-75'></div>
-          <div className='absolute top-20 left-8 w-6 h-6 bg-white/25 rounded-full animate-float-4 opacity-45'></div>
-          <div className='absolute bottom-1/3 right-1/4 w-16 h-16 bg-white/20 rounded-full animate-float-5 opacity-40'></div>
-          <div className='absolute top-3/4 right-8 w-8 h-8 bg-[#F4B400] rounded-full animate-float-6 opacity-60'></div>
-          <div className='absolute bottom-20 left-1/3 w-12 h-12 bg-white/15 rounded-full animate-float-7 opacity-35'></div>
-          <div className='absolute top-16 right-1/3 w-14 h-14 bg-[#F4B400] rounded-full animate-float-8 opacity-70'></div>
+          <FloatingDecorations variant="auth" mobile={true} />
         </div>
         
         {/* Login Type Selector - Top Right (Fixed for both mobile and desktop) */}
