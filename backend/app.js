@@ -8,6 +8,7 @@ import userRouter from "./routers/user.js";
 import companyRouter from "./routers/company.js";
 import jobRouter from "./routers/job.js";
 import applicationRouter from "./routers/application.js";
+import cvAnalyzerRouter from "./routers/cv-analyzer.js";
 
 dotenv.config();
 
@@ -47,6 +48,7 @@ app.use("/auth", userRouter);
 app.use("/company", companyRouter);
 app.use("/api/jobs", jobRouter);
 app.use("/api/applications", applicationRouter);
+app.use("/api/v1/cv-analyzer", cvAnalyzerRouter);
 
 app.use((err, req, res, next) => {
   res.status(500).json({ message: err.message });
