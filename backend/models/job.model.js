@@ -104,12 +104,6 @@ const jobSchema = new mongoose.Schema(
     },
     applicationDeadline: {
       type: Date,
-      validate: {
-        validator: function (deadline) {
-          return deadline > new Date();
-        },
-        message: "Application deadline must be in the future",
-      },
     },
     isActive: {
       type: Boolean,
@@ -187,11 +181,56 @@ jobSchema.methods.isExpired = function () {
   return this.applicationDeadline && this.applicationDeadline < new Date();
 };
 
-// Pre-save middleware to validate salary range
+// Static method to update all expired jobs to inactive
+jobSchema.statics.updateExpiredJobs = async function() {
+  const now = new Date();
+  const result = await this.updateMany(
+    { 
+      applicationDeadline: { $lt: now },
+      isActive: true 
+    },
+    { 
+      isActive: false 
+    }
+  );
+  return result;
+};
+
+// Static method to reactivate jobs with future deadlines
+jobSchema.statics.reactivateValidJobs = async function() {
+  const now = new Date();
+  const result = await this.updateMany(
+    { 
+      applicationDeadline: { $gt: now },
+      isActive: false 
+    },
+    { 
+      isActive: true 
+    }
+  );
+  return result;
+};
+
+// Pre-save middleware to validate salary range and handle deadline expiration
 jobSchema.pre("save", function (next) {
+  // Validate salary range
   if (this.salary.min && this.salary.max && this.salary.min > this.salary.max) {
     next(new Error("Minimum salary cannot be greater than maximum salary"));
   }
+  
+  // Auto-update isActive based on application deadline
+  if (this.applicationDeadline) {
+    const now = new Date();
+    if (this.applicationDeadline < now) {
+      // If deadline has passed, set job as inactive
+      this.isActive = false;
+    } else if (this.applicationDeadline > now && this.isActive === false) {
+      // If deadline is in future and job was inactive due to expiration, reactivate it
+      // (This handles cases where deadline is extended)
+      this.isActive = true;
+    }
+  }
+  
   next();
 });
 

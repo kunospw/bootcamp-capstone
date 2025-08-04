@@ -80,7 +80,7 @@ const userSchema = new mongoose.Schema(
       type: Date,
     },
     skills: [
-      {
+      {  
         type: String,
         trim: true,
       },
