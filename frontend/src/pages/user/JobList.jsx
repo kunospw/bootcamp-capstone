@@ -330,18 +330,6 @@ const JobList = () => {
                                 <div key={job._id} className={`bg-white rounded-lg shadow-sm border p-4 hover:shadow-md transition-shadow ${
                                     !job.isActive ? 'border-gray-300 opacity-75 bg-gray-50' : 'border-gray-200'
                                 }`}>
-                                    {/* Status Badge for Inactive Jobs */}
-                                    {!job.isActive && (
-                                        <div className="mb-2">
-                                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200">
-                                                <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                                                </svg>
-                                                Inactive Job
-                                            </span>
-                                        </div>
-                                    )}
-                                    
                                     <div className="flex items-start space-x-3 mb-4">
                                         {job.companyId?.profilePicture && (
                                             <img
@@ -351,14 +339,25 @@ const JobList = () => {
                                             />
                                         )}
                                         <div className="flex-1 min-w-0">
-                                            <h3
-                                                onClick={() => navigate(`/job/${job._id}`)}
-                                                className={`text-base font-semibold hover:text-blue-600 cursor-pointer transition-colors line-clamp-2 ${
-                                                    !job.isActive ? 'text-gray-700' : 'text-gray-900'
-                                                }`}
-                                            >
-                                                {job.title}
-                                            </h3>
+                                            <div className="flex items-start justify-between gap-2">
+                                                <h3
+                                                    onClick={() => navigate(`/job/${job._id}`)}
+                                                    className={`text-base font-semibold hover:text-blue-600 cursor-pointer transition-colors line-clamp-2 flex-1 ${
+                                                        !job.isActive ? 'text-gray-700' : 'text-gray-900'
+                                                    }`}
+                                                >
+                                                    {job.title}
+                                                </h3>
+                                                {/* Status Badge for Inactive Jobs - moved next to title */}
+                                                {!job.isActive && (
+                                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200 flex-shrink-0">
+                                                        <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                                        </svg>
+                                                        Inactive
+                                                    </span>
+                                                )}
+                                            </div>
                                             <p className="text-sm text-gray-600 mt-1 truncate">{job.companyId?.companyName || 'Unknown Company'}</p>
                                         </div>
                                     </div>
