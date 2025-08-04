@@ -202,6 +202,17 @@ const NavBar = () => {
                                             <button 
                                                 onClick={() => {
                                                     setIsDropdownOpen(false);
+                                                    navigate('/user/applied-jobs');
+                                                }}
+                                                className={getDropdownLinkClasses('/user/applied-jobs')}
+                                            >
+                                                Applied Jobs
+                                            </button>
+                                        </li>
+                                        <li>
+                                            <button 
+                                                onClick={() => {
+                                                    setIsDropdownOpen(false);
                                                     navigate('/user/saved-jobs');
                                                 }}
                                                 className={getDropdownLinkClasses('/user/saved-jobs')}

@@ -16,6 +16,8 @@ import CvAnalyzer from "./pages/user/CvAnalyzer.jsx";
 import CompanyList from "./pages/user/CompanyList.jsx";
 import SavedJobs from "./pages/user/SavedJobs.jsx";
 import NavBar from "./Components/NavBar.jsx";
+import CompanyDetail from './pages/user/CompanyDetail';
+import AppliedJobs from './pages/user/AppliedJobs';
 
 export default function App() {
   return (
@@ -39,6 +41,8 @@ export default function App() {
         <Route path="/company/applications/:applicationId" element={<ApplicantsDetail />} />
         <Route path="/user/profile" element={<UserProfile />} />
         <Route path="/navbar" element={<NavBar />} />
+        <Route path="/company/:id" element={<CompanyDetail />} />
+        <Route path="/user/applied-jobs" element={<AppliedJobs />} />
         {/* Add more routes as needed */}
       </Routes>
     </Router>
