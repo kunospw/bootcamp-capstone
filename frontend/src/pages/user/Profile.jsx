@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import NavBar from '../../Components/NavBar';
 
 const Profile = () => {
   const [user, setUser] = useState(null);
@@ -125,10 +126,17 @@ const Profile = () => {
 
   return (
     <div>
-      <h1>User Profile</h1>
-      {!isEditing && (
-        <button onClick={() => setIsEditing(true)}>Edit Profile</button>
-      )}
+      <NavBar />
+      <div className="container mx-auto px-4 py-8 pt-24">
+        <h1 className="text-3xl font-bold text-gray-900 mb-6">User Profile</h1>
+        {!isEditing && (
+          <button 
+            onClick={() => setIsEditing(true)}
+            className="mb-6 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Edit Profile
+          </button>
+        )}
 
       {isEditing ? (
         <form onSubmit={handleSubmit}>
@@ -294,10 +302,9 @@ const Profile = () => {
             <p><strong>Last updated:</strong> {new Date(user.updatedAt).toLocaleDateString()}</p>
             <p><strong>Email verified:</strong> {user.emailVerified ? 'Yes' : 'No'}</p>
           </div>
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </div>
   );
-};
-
-export default Profile;
+};export default Profile;

@@ -72,6 +72,15 @@ const applicationSchema = new mongoose.Schema({
         type: String,
         maxlength: [1000, 'Personal statement cannot exceed 1000 characters']
     },
+    experienceLevel: {
+        type: String,
+        enum: ['Entry Level', 'Mid Level', 'Senior Level', 'Executive'],
+        trim: true
+    },
+    skills: {
+        type: String,
+        maxlength: [500, 'Skills cannot exceed 500 characters']
+    },
     applicationDate: {
         type: Date,
         default: Date.now
