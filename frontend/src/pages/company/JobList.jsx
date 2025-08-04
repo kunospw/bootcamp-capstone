@@ -42,7 +42,8 @@ const JobList = () => {
             // Build query parameters for filtering
             const queryParams = new URLSearchParams({
                 page: currentPage,
-                limit: jobsPerPage
+                limit: jobsPerPage,
+                includeInactive: 'true' // Always include inactive jobs for company view
             });
 
             if (searchTerm) {
@@ -58,6 +59,8 @@ const JobList = () => {
                 queryParams.append('location', locationFilter);
             }
 
+            console.log('Fetching jobs for company:', companyId); // Debug log
+
             const response = await fetch(
                 `http://localhost:3000/api/jobs/company/${companyId}?${queryParams}`,
                 {
@@ -70,6 +73,7 @@ const JobList = () => {
 
             if (response.ok) {
                 const data = await response.json();
+                console.log('Received jobs:', data.jobs.length); // Debug log
                 
                 // Apply client-side filtering as fallback if backend doesn't support all filters
                 let filteredJobs = data.jobs || [];
