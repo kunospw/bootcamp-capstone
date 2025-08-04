@@ -31,9 +31,15 @@ router.get("/", async (req, res) => {
       category,
       companyId,
       search,
+      includeInactive,
     } = req.query;
 
-    const query = { isActive: true };
+    const query = {};
+    
+    // Only filter by isActive if includeInactive is not explicitly set to 'true'
+    if (includeInactive !== 'true') {
+      query.isActive = true;
+    }
 
     // Build query filters
     if (title) query.title = { $regex: title, $options: "i" };

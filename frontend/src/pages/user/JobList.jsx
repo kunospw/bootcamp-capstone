@@ -15,6 +15,7 @@ const JobList = () => {
         workLocation: '',
         experienceLevel: '',
     });
+    const [showInactive, setShowInactive] = useState(true); // Show inactive jobs by default
     const [pagination, setPagination] = useState({
         currentPage: 1,
         totalPages: 1,
@@ -29,6 +30,7 @@ const JobList = () => {
             const queryParams = new URLSearchParams({
                 page: page.toString(),
                 limit: '15',
+                ...(showInactive && { includeInactive: 'true' }), // Conditionally include inactive jobs
                 ...Object.fromEntries(Object.entries(filters).filter(([, value]) => value))
             });
 
@@ -118,7 +120,8 @@ const JobList = () => {
                 setLoading(true);
                 const queryParams = new URLSearchParams({
                     page: '1',
-                    limit: '15'
+                    limit: '15',
+                    ...(showInactive && { includeInactive: 'true' }) // Conditionally include inactive jobs
                 });
 
                 const response = await fetch(`http://localhost:3000/api/jobs?${queryParams}`);
@@ -145,7 +148,7 @@ const JobList = () => {
         };
 
         loadJobs();
-    }, []);
+    }, [showInactive]); // Add showInactive to dependencies
 
     if (loading && jobs.length === 0) {
         return <div>Loading jobs...</div>;
@@ -241,6 +244,25 @@ const JobList = () => {
                                     <option value="executive">Executive</option>
                                 </select>
                             </div>
+                            
+                            {/* Toggle for showing inactive jobs */}
+                            <div className="mt-4 pt-4 border-t border-gray-200">
+                                <label className="flex items-center text-sm text-gray-600 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={showInactive}
+                                        onChange={(e) => setShowInactive(e.target.checked)}
+                                        className="mr-2 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                    />
+                                    <span>Show inactive job listings</span>
+                                    <svg className="w-4 h-4 ml-1 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                                    </svg>
+                                </label>
+                                <p className="text-xs text-gray-500 mt-1 ml-6">
+                                    Inactive jobs are no longer accepting applications but may still be viewed for reference.
+                                </p>
+                            </div>
                         </form>
                     </div>
 
@@ -305,7 +327,21 @@ const JobList = () => {
                             </div>
                         ) : (
                             jobs.map((job) => (
-                                <div key={job._id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
+                                <div key={job._id} className={`bg-white rounded-lg shadow-sm border p-4 hover:shadow-md transition-shadow ${
+                                    !job.isActive ? 'border-gray-300 opacity-75 bg-gray-50' : 'border-gray-200'
+                                }`}>
+                                    {/* Status Badge for Inactive Jobs */}
+                                    {!job.isActive && (
+                                        <div className="mb-2">
+                                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200">
+                                                <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                                </svg>
+                                                Inactive Job
+                                            </span>
+                                        </div>
+                                    )}
+                                    
                                     <div className="flex items-start space-x-3 mb-4">
                                         {job.companyId?.profilePicture && (
                                             <img
@@ -317,7 +353,9 @@ const JobList = () => {
                                         <div className="flex-1 min-w-0">
                                             <h3
                                                 onClick={() => navigate(`/job/${job._id}`)}
-                                                className="text-base font-semibold text-gray-900 hover:text-blue-600 cursor-pointer transition-colors line-clamp-2"
+                                                className={`text-base font-semibold hover:text-blue-600 cursor-pointer transition-colors line-clamp-2 ${
+                                                    !job.isActive ? 'text-gray-700' : 'text-gray-900'
+                                                }`}
                                             >
                                                 {job.title}
                                             </h3>
@@ -385,9 +423,14 @@ const JobList = () => {
                                             </div>
                                             <button 
                                                 onClick={() => navigate(`/job/${job._id}`)}
-                                                className="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-xs font-medium"
+                                                className={`px-3 py-1 rounded-md transition-colors text-xs font-medium ${
+                                                    !job.isActive 
+                                                        ? 'bg-gray-400 text-white cursor-not-allowed' 
+                                                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                                                }`}
+                                                disabled={!job.isActive}
                                             >
-                                                View
+                                                {!job.isActive ? 'Unavailable' : 'View'}
                                             </button>
                                         </div>
                                         <p className="text-xs text-gray-400 mt-2">{formatDate(job.datePosted)}</p>
