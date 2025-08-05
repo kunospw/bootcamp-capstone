@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ApplicationForm from '../../components/ApplicationForm';
+import NavBar from '../../Components/NavBar';
+import FloatingDecorations from '../../Components/FloatingDecorations';
 
 const JobDetail = () => {
   const { id } = useParams();
@@ -187,210 +189,344 @@ const JobDetail = () => {
   }
 
   return (
-    <div>
-      {/* Back Button */}
-      <div>
-        <button onClick={() => navigate('/')}>← Back to Jobs</button>
-      </div>
-
-      {/* Job Header */}
-      <div>
-        <div>
-          {job.companyId?.profilePicture && (
-            <img 
-              src={`http://localhost:3000/${job.companyId.profilePicture}`} 
-              alt={job.companyId?.companyName || 'Company'}
-              style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px' }}
-            />
-          )}
-          <div>
-            <h1>{job.title}</h1>
-            <h2>{job.companyId?.companyName || 'Unknown Company'}</h2>
-            <p>{job.location}</p>
-          </div>
+    <div className="min-h-screen bg-gray-50">
+      <NavBar />
+      <div className="relative pt-16">
+        <div className="absolute inset-x-0 top-0 h-[325px] bg-[#0D6EFD] overflow-hidden z-10">
+          <FloatingDecorations />
         </div>
         
-        <div>
-          <button 
-            onClick={handleApply}
-            disabled={applicationStatus || (job.applicationDeadline && new Date() > new Date(job.applicationDeadline))}
-            style={{
-              backgroundColor: applicationStatus ? '#6c757d' : (job.applicationDeadline && new Date() > new Date(job.applicationDeadline) ? '#dc3545' : '#007bff'),
-              color: 'white',
-              padding: '12px 24px',
-              border: 'none',
-              borderRadius: '6px',
-              fontSize: '16px',
-              cursor: (applicationStatus || (job.applicationDeadline && new Date() > new Date(job.applicationDeadline))) ? 'not-allowed' : 'pointer'
-            }}
-          >
-            {applicationStatus ? `Applied (${applicationStatus})` : 
-             (job.applicationDeadline && new Date() > new Date(job.applicationDeadline) ? 'Deadline Passed' : 
-              (!isAuthenticated ? 'Login to Apply' : 'Apply Now'))}
-          </button>
-        </div>
-      </div>
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Back Button */}
+          <div className="mb-6">
+            <button 
+              onClick={() => navigate('/')}
+              className="flex items-center text-white/80 hover:text-white transition-colors"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Back to Jobs
+            </button>
+          </div>
 
-      {/* Job Info Tags */}
-      <div>
-        <span>{job.type}</span>
-        <span>{job.workLocation}</span>
-        <span>{job.experienceLevel}</span>
-        <span>{job.major}</span>
-      </div>
+          {/* Job Card */}
+          <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-xl overflow-hidden">
+            {/* Job Header */}
+            <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-8 text-white">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex items-start space-x-6">
+                  {job.companyId?.profilePicture && (
+                    <div className="flex-shrink-0">
+                      <img 
+                        src={`http://localhost:3000/${job.companyId.profilePicture}`} 
+                        alt={job.companyId?.companyName || 'Company'}
+                        className="w-20 h-20 rounded-lg object-cover border-2 border-white/20"
+                      />
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <h1 className="text-3xl font-bold mb-2">{job.title}</h1>
+                    <h2 className="text-xl text-blue-100 mb-2">{job.companyId?.companyName || 'Unknown Company'}</h2>
+                    <div className="flex items-center text-blue-100">
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      {job.location}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-6 lg:mt-0 lg:ml-6">
+                  <button 
+                    onClick={handleApply}
+                    disabled={applicationStatus || (job.applicationDeadline && new Date() > new Date(job.applicationDeadline))}
+                    className={`px-8 py-3 rounded-lg font-semibold text-lg transition-all duration-200 transform hover:scale-105 ${
+                      applicationStatus 
+                        ? 'bg-gray-500 cursor-not-allowed' 
+                        : (job.applicationDeadline && new Date() > new Date(job.applicationDeadline)) 
+                          ? 'bg-red-500 cursor-not-allowed' 
+                          : 'bg-white text-blue-600 hover:bg-blue-50 shadow-lg'
+                    }`}
+                  >
+                    {applicationStatus ? `Applied (${applicationStatus})` : 
+                     (job.applicationDeadline && new Date() > new Date(job.applicationDeadline) ? 'Deadline Passed' : 
+                      (!isAuthenticated ? 'Login to Apply' : 'Apply Now'))}
+                  </button>
+                </div>
+              </div>
 
-      {/* Job Stats */}
-      <div>
-        <div>
-          <span>👁 {job.views} views</span>
-          <span>📝 {job.applicationsCount} applicants</span>
-          <span>📅 Posted: {formatDate(job.datePosted)}</span>
-          {job.applicationDeadline && (
-            <span>⏰ Deadline: {formatDate(job.applicationDeadline)}</span>
-          )}
-        </div>
-      </div>
+              {/* Job Info Tags */}
+              <div className="flex flex-wrap gap-2 mt-6">
+                <span className="px-3 py-1 bg-white/20 rounded-full text-sm">{job.type}</span>
+                <span className="px-3 py-1 bg-white/20 rounded-full text-sm">{job.workLocation}</span>
+                <span className="px-3 py-1 bg-white/20 rounded-full text-sm">{job.experienceLevel}</span>
+                <span className="px-3 py-1 bg-white/20 rounded-full text-sm">{job.major}</span>
+              </div>
+            </div>
 
-      {/* Salary Information */}
-      <div>
-        <h3>Salary</h3>
-        <p>{formatSalary(job.salary)}</p>
-      </div>
+            {/* Job Stats */}
+            <div className="px-8 py-4 bg-gray-50 border-b">
+              <div className="flex flex-wrap items-center gap-6 text-sm text-gray-600">
+                <div className="flex items-center">
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  {job.views} views
+                </div>
+                <div className="flex items-center">
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  {job.applicationsCount} applicants
+                </div>
+                <div className="flex items-center">
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a4 4 0 118 0v4m-4 12v-4m-4 0h8m-4-4v8m-4-4h8" />
+                  </svg>
+                  Posted: {formatDate(job.datePosted)}
+                </div>
+                {job.applicationDeadline && (
+                  <div className="flex items-center text-red-600">
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Deadline: {formatDate(job.applicationDeadline)}
+                  </div>
+                )}
+              </div>
+            </div>
 
-      {/* Job Description */}
-      <div>
-        <h3>Job Description</h3>
-        <div style={{ whiteSpace: 'pre-wrap' }}>
-          {job.description}
-        </div>
-      </div>
+            {/* Content */}
+            <div className="px-8 py-8">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Main Content */}
+                <div className="lg:col-span-2 space-y-8">
+                  {/* Salary Information */}
+                  <div>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                      <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                      </svg>
+                      Salary
+                    </h3>
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                      <p className="text-green-800 font-semibold text-lg">{formatSalary(job.salary)}</p>
+                    </div>
+                  </div>
 
-      {/* Requirements */}
-      {job.requirements && job.requirements.length > 0 && (
-        <div>
-          <h3>Requirements</h3>
-          <ul>
-            {job.requirements.map((requirement, index) => (
-              <li key={index}>{requirement}</li>
-            ))}
-          </ul>
-        </div>
-      )}
+                  {/* Job Description */}
+                  <div>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                      <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      Job Description
+                    </h3>
+                    <div className="prose max-w-none text-gray-700 leading-relaxed whitespace-pre-wrap">
+                      {job.description}
+                    </div>
+                  </div>
 
-      {/* Responsibilities */}
-      {job.responsibilities && job.responsibilities.length > 0 && (
-        <div>
-          <h3>Responsibilities</h3>
-          <ul>
-            {job.responsibilities.map((responsibility, index) => (
-              <li key={index}>{responsibility}</li>
-            ))}
-          </ul>
-        </div>
-      )}
+                  {/* Requirements */}
+                  {job.requirements && job.requirements.length > 0 && (
+                    <div>
+                      <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                        <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                        </svg>
+                        Requirements
+                      </h3>
+                      <ul className="space-y-2">
+                        {job.requirements.map((requirement, index) => (
+                          <li key={index} className="flex items-start">
+                            <svg className="w-5 h-5 text-blue-600 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span className="text-gray-700">{requirement}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
 
-      {/* Skills */}
-      {job.skills && job.skills.length > 0 && (
-        <div>
-          <h3>Required Skills</h3>
-          <div>
-            {job.skills.map((skill, index) => (
-              <span key={index} style={{ 
-                display: 'inline-block', 
-                background: '#f0f0f0', 
-                padding: '4px 8px', 
-                margin: '2px', 
-                borderRadius: '4px' 
-              }}>
-                {skill}
-              </span>
-            ))}
+                  {/* Responsibilities */}
+                  {job.responsibilities && job.responsibilities.length > 0 && (
+                    <div>
+                      <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                        <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                        </svg>
+                        Responsibilities
+                      </h3>
+                      <ul className="space-y-2">
+                        {job.responsibilities.map((responsibility, index) => (
+                          <li key={index} className="flex items-start">
+                            <svg className="w-5 h-5 text-blue-600 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span className="text-gray-700">{responsibility}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Benefits */}
+                  {job.benefits && job.benefits.length > 0 && (
+                    <div>
+                      <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                        <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+                        </svg>
+                        Benefits
+                      </h3>
+                      <ul className="space-y-2">
+                        {job.benefits.map((benefit, index) => (
+                          <li key={index} className="flex items-start">
+                            <svg className="w-5 h-5 text-green-600 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span className="text-gray-700">{benefit}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+
+                {/* Sidebar */}
+                <div className="space-y-6">
+                  {/* Skills */}
+                  {job.skills && job.skills.length > 0 && (
+                    <div className="bg-blue-50 rounded-lg p-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                        <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                        </svg>
+                        Required Skills
+                      </h3>
+                      <div className="flex flex-wrap gap-2">
+                        {job.skills.map((skill, index) => (
+                          <span key={index} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Company Information */}
+                  {job.companyId && (
+                    <div className="bg-gray-50 rounded-lg p-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                        <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m4 0V9a2 2 0 012-2h2a2 2 0 012 2v12M13 7h-2" />
+                        </svg>
+                        About the Company
+                      </h3>
+                      <div className="space-y-3">
+                        <h4 className="font-semibold text-gray-900">{job.companyId.companyName}</h4>
+                        {job.companyId.description && (
+                          <p className="text-gray-700 text-sm leading-relaxed">{job.companyId.description}</p>
+                        )}
+                        {job.companyId.website && (
+                          <div className="flex items-center">
+                            <svg className="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9" />
+                            </svg>
+                            <a href={job.companyId.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 text-sm">
+                              Visit Website
+                            </a>
+                          </div>
+                        )}
+                        {job.companyId.location && (
+                          <div className="flex items-center">
+                            <svg className="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <span className="text-gray-700 text-sm">{job.companyId.location}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Contact Information */}
+                  {(job.contactEmail || job.contactPhone) && (
+                    <div className="bg-yellow-50 rounded-lg p-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                        <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        Contact Information
+                      </h3>
+                      <div className="space-y-2">
+                        {job.contactEmail && (
+                          <div className="flex items-center">
+                            <svg className="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                            </svg>
+                            <span className="text-gray-700 text-sm">{job.contactEmail}</span>
+                          </div>
+                        )}
+                        {job.contactPhone && (
+                          <div className="flex items-center">
+                            <svg className="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                            </svg>
+                            <span className="text-gray-700 text-sm">{job.contactPhone}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tags */}
+                  {job.tags && job.tags.length > 0 && (
+                    <div className="bg-purple-50 rounded-lg p-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                        <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.99 1.99 0 013 12V7a4 4 0 014-4z" />
+                        </svg>
+                        Tags
+                      </h3>
+                      <div className="flex flex-wrap gap-2">
+                        {job.tags.map((tag, index) => (
+                          <span key={index} className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium">
+                            #{tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Apply Button Footer */}
+              <div className="mt-12 pt-8 border-t border-gray-200 text-center">
+                <button 
+                  onClick={handleApply}
+                  disabled={applicationStatus || (job.applicationDeadline && new Date() > new Date(job.applicationDeadline))}
+                  className={`px-12 py-4 rounded-lg font-semibold text-lg transition-all duration-200 transform hover:scale-105 ${
+                    applicationStatus 
+                      ? 'bg-gray-500 text-white cursor-not-allowed' 
+                      : (job.applicationDeadline && new Date() > new Date(job.applicationDeadline)) 
+                        ? 'bg-red-500 text-white cursor-not-allowed' 
+                        : 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl'
+                  }`}
+                >
+                  {applicationStatus ? `Applied (${applicationStatus})` : 
+                   (job.applicationDeadline && new Date() > new Date(job.applicationDeadline) ? 'Deadline Passed' : 
+                    (!isAuthenticated ? 'Login to Apply' : 'Apply for this Position'))}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-      )}
-
-      {/* Benefits */}
-      {job.benefits && job.benefits.length > 0 && (
-        <div>
-          <h3>Benefits</h3>
-          <ul>
-            {job.benefits.map((benefit, index) => (
-              <li key={index}>{benefit}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* Contact Information */}
-      {(job.contactEmail || job.contactPhone) && (
-        <div>
-          <h3>Contact Information</h3>
-          {job.contactEmail && <p>Email: {job.contactEmail}</p>}
-          {job.contactPhone && <p>Phone: {job.contactPhone}</p>}
-        </div>
-      )}
-
-      {/* Company Information */}
-      {job.companyId && (
-        <div>
-          <h3>About the Company</h3>
-          <div>
-            <h4>{job.companyId.companyName}</h4>
-            {job.companyId.description && (
-              <p>{job.companyId.description}</p>
-            )}
-            {job.companyId.website && (
-              <p>Website: <a href={job.companyId.website} target="_blank" rel="noopener noreferrer">
-                {job.companyId.website}
-              </a></p>
-            )}
-            {job.companyId.location && (
-              <p>Location: {job.companyId.location}</p>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Tags */}
-      {job.tags && job.tags.length > 0 && (
-        <div>
-          <h3>Tags</h3>
-          <div>
-            {job.tags.map((tag, index) => (
-              <span key={index} style={{ 
-                display: 'inline-block', 
-                background: '#e3f2fd', 
-                color: '#1976d2',
-                padding: '4px 8px', 
-                margin: '2px', 
-                borderRadius: '4px' 
-              }}>
-                #{tag}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Apply Button Footer */}
-      <div style={{ marginTop: '40px', textAlign: 'center' }}>
-        <button 
-          onClick={handleApply}
-          disabled={applicationStatus || (job.applicationDeadline && new Date() > new Date(job.applicationDeadline))}
-          style={{
-            backgroundColor: applicationStatus ? '#6c757d' : (job.applicationDeadline && new Date() > new Date(job.applicationDeadline) ? '#dc3545' : '#007bff'),
-            color: 'white',
-            padding: '12px 24px',
-            border: 'none',
-            borderRadius: '6px',
-            fontSize: '16px',
-            cursor: (applicationStatus || (job.applicationDeadline && new Date() > new Date(job.applicationDeadline))) ? 'not-allowed' : 'pointer'
-          }}
-        >
-          {applicationStatus ? `Applied (${applicationStatus})` : 
-           (job.applicationDeadline && new Date() > new Date(job.applicationDeadline) ? 'Deadline Passed' : 
-            (!isAuthenticated ? 'Login to Apply' : 'Apply for this Position'))}
-        </button>
       </div>
 
       {/* Application Form Modal - Only show if authenticated */}
