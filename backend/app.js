@@ -8,7 +8,7 @@ import userRouter from "./routers/user.js";
 import companyRouter from "./routers/company.js";
 import jobRouter from "./routers/job.js";
 import applicationRouter from "./routers/application.js";
-import savedJobRouter from "./routers/savedjob.js";
+import cvAnalyzerRouter from "./routers/cv-analyzer.js";
 
 dotenv.config();
 
@@ -49,7 +49,7 @@ app.use("/auth", userRouter);
 app.use("/company", companyRouter);
 app.use("/api/jobs", jobRouter);
 app.use("/api/applications", applicationRouter);
-app.use("/api/saved-jobs", savedJobRouter); // Added saved jobs router
+app.use("/api/v1/cv-analyzer", cvAnalyzerRouter);
 
 // Basic test route
 app.get("/", (req, res) => {
