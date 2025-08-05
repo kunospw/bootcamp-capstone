@@ -15,8 +15,13 @@ const router = express.Router();
  * Base path: /api/v1/cv-analyzer
  */
 
-// Apply authentication middleware to all routes
-router.use(authenticateUser);
+// Apply authentication middleware to all routes except test endpoint
+router.use((req, res, next) => {
+  if (req.path === '/test-upload') {
+    return next(); // Skip authentication for test endpoint
+  }
+  return authenticateUser(req, res, next);
+});
 
 /**
  * @route   POST /api/v1/cv-analyzer/upload
@@ -121,6 +126,40 @@ router.get("/health", (req, res) => {
     }
   });
 });
+
+/**
+ * @route   POST /api/v1/cv-analyzer/test-upload
+ * @desc    Test file upload functionality (debug endpoint)
+ * @access  Public (for debugging)
+ */
+router.post(
+  "/test-upload",
+  uploadCV,
+  (req, res) => {
+    console.log('Test upload endpoint hit');
+    console.log('req.file:', req.file);
+    console.log('req.body:', req.body);
+
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "No file uploaded"
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "File uploaded successfully",
+      fileInfo: {
+        originalname: req.file.originalname,
+        filename: req.file.filename,
+        path: req.file.path,
+        size: req.file.size,
+        mimetype: req.file.mimetype
+      }
+    });
+  }
+);
 
 // Error handling middleware specific to CV analyzer routes
 router.use((error, req, res, next) => {

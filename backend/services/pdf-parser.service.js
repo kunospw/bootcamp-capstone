@@ -1,19 +1,7 @@
 import fs from 'fs/promises';
+import { readFileSync } from 'fs';
 import path from 'path';
-
-// Lazy load pdf-parse to avoid initialization errors
-let pdfParse = null;
-const loadPdfParse = async () => {
-  if (!pdfParse) {
-    try {
-      pdfParse = (await import('pdf-parse')).default;
-    } catch (error) {
-      console.error('Failed to load pdf-parse:', error.message);
-      throw new Error('PDF parsing library not available');
-    }
-  }
-  return pdfParse;
-};
+import pdfParse from 'pdf-parse';
 
 /**
  * Enterprise PDF Parser Service for CV text extraction
@@ -83,12 +71,26 @@ class PDFParserService {
    */
   async validateFile(filePath, fileInfo = {}) {
     try {
-      // Check if file exists
-      const stats = await fs.stat(filePath);
+      console.log('Validating file at path:', filePath);
       
-      // Validate file size
-      if (stats.size > this.maxFileSize) {
-        throw new Error(`File size ${stats.size} exceeds maximum allowed size ${this.maxFileSize}`);
+      // Check if file exists
+      try {
+        const stats = await fs.stat(filePath);
+        console.log('File stats:', { size: stats.size, isFile: stats.isFile() });
+        
+        // Validate file size
+        if (stats.size > this.maxFileSize) {
+          throw new Error(`File size ${stats.size} exceeds maximum allowed size ${this.maxFileSize}`);
+        }
+        
+        // Check for empty files
+        if (stats.size === 0) {
+          throw new Error('File is empty');
+        }
+        
+      } catch (statError) {
+        console.error('Failed to get file stats:', statError);
+        throw new Error(`File not accessible: ${statError.message}`);
       }
       
       // Validate file extension
@@ -103,9 +105,16 @@ class PDFParserService {
       }
       
       // Check if file is readable
-      await fs.access(filePath, fs.constants.R_OK);
+      try {
+        await fs.access(filePath, fs.constants.R_OK);
+        console.log('File validation passed for:', filePath);
+      } catch (accessError) {
+        console.error('File access check failed:', accessError);
+        throw new Error(`File is not readable: ${accessError.message}`);
+      }
       
     } catch (error) {
+      console.error('File validation failed:', error.message);
       throw new PDFParserError('File validation failed', error);
     }
   }
@@ -144,8 +153,7 @@ class PDFParserService {
       }, this.processingTimeout);
       
       try {
-        // Load pdf-parse dynamically
-        const pdfParser = await loadPdfParse();
+        console.log('Starting PDF parsing with pdf-parse...');
         
         // PDF parsing options for better text extraction
         const options = {
@@ -157,17 +165,14 @@ class PDFParserService {
           max: 20
         };
         
-        pdfParser(buffer, options)
-          .then(result => {
-            clearTimeout(timeout);
-            resolve(result);
-          })
-          .catch(error => {
-            clearTimeout(timeout);
-            reject(error);
-          });
+        const result = await pdfParse(buffer, options);
+        clearTimeout(timeout);
+        console.log('PDF parsing completed successfully');
+        resolve(result);
+        
       } catch (error) {
         clearTimeout(timeout);
+        console.error('PDF parsing failed:', error);
         reject(error);
       }
     });

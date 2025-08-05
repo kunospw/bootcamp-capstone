@@ -82,6 +82,7 @@ export const uploadCV = (req, res, next) => {
           message = err.message;
       }
       
+      console.error('Multer upload error:', err);
       return res.status(400).json({
         success: false,
         message,
@@ -89,10 +90,55 @@ export const uploadCV = (req, res, next) => {
       });
     } else if (err) {
       // Handle custom errors (e.g., from fileFilter)
+      console.error('File upload error:', err);
       return res.status(400).json({
         success: false,
         message: err.message
       });
+    }
+    
+    // Log successful upload details
+    if (req.file) {
+      console.log('File uploaded successfully:', {
+        originalname: req.file.originalname,
+        filename: req.file.filename,
+        path: req.file.path,
+        size: req.file.size,
+        mimetype: req.file.mimetype
+      });
+      
+      // Verify file exists on disk and add additional checks
+      if (fs.existsSync(req.file.path)) {
+        console.log('File confirmed to exist at:', req.file.path);
+        
+        // Check file size on disk
+        const stats = fs.statSync(req.file.path);
+        console.log('File size on disk:', stats.size, 'bytes');
+        
+        if (stats.size !== req.file.size) {
+          console.warn('File size mismatch! Expected:', req.file.size, 'Actual:', stats.size);
+        }
+        
+        // Check if file is readable
+        try {
+          fs.accessSync(req.file.path, fs.constants.R_OK);
+          console.log('File is readable');
+        } catch (readError) {
+          console.error('File is not readable:', readError);
+          return res.status(500).json({
+            success: false,
+            message: 'Uploaded file is not readable'
+          });
+        }
+      } else {
+        console.error('CRITICAL: File does not exist at path:', req.file.path);
+        return res.status(500).json({
+          success: false,
+          message: 'File upload failed - file not found on server'
+        });
+      }
+    } else {
+      console.log('No file in req.file after upload');
     }
     
     // File uploaded successfully

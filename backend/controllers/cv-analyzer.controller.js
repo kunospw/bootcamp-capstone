@@ -22,7 +22,7 @@ class CVAnalyzerController {
    */
   uploadAndAnalyzeCV = async (req, res) => {
     try {
-      const { experienceLevel, major, jobId } = req.body;
+      const { experienceLevel, major, targetJobTitle } = req.body;
       const userId = req.user._id;
       
       // Validate required fields
@@ -41,38 +41,45 @@ class CVAnalyzerController {
         });
       }
 
-      // Extract text from PDF
-      const extractedText = await this.pdfParserService.extractText(req.file.path);
-      
-      // Get job data if jobId is provided
+      console.log('Processing uploaded file:', {
+        originalname: req.file.originalname,
+        filename: req.file.filename,
+        path: req.file.path,
+        size: req.file.size,
+        mimetype: req.file.mimetype
+      });
+
+      // Get job data with target job title if provided
       let jobData = {
         experienceLevel,
         major
       };
 
-      if (jobId) {
-        const job = await Job.findById(jobId);
-        if (job) {
-          jobData.jobTitle = job.title;
-          jobData.jobDescription = job.description;
-          jobData.requirements = job.requirements;
-        }
+      if (targetJobTitle && targetJobTitle.trim()) {
+        jobData.targetJobTitle = targetJobTitle.trim();
       }
 
-      // Create initial analysis record
+      // Create initial analysis record WITHOUT extracting text yet
+      // We'll extract text during the actual analysis to avoid storing large text in DB
       const analysis = new CVAnalysis({
         userId,
         originalFilename: req.file.originalname,
         filePath: req.file.path,
         fileSize: req.file.size,
-        extractedText,
+        extractedText: "Processing...", // Placeholder - will be replaced during analysis
         jobData,
         processingStatus: 'processing'
       });
 
       await analysis.save();
+      console.log('Analysis record created with ID:', analysis._id);
+      console.log('File will be processed from:', req.file.path);
+
+      // Add a small delay to ensure file is fully written
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       // Start async analysis
+      console.log('Starting async analysis process...');
       this.performAnalysis(analysis._id).catch(error => {
         console.error(`Analysis failed for ${analysis._id}:`, error);
         this.markAnalysisAsFailed(analysis._id, error.message);
@@ -189,7 +196,7 @@ class CVAnalyzerController {
   reanalyzeCV = async (req, res) => {
     try {
       const { analysisId } = req.params;
-      const { experienceLevel, major, jobId } = req.body;
+      const { experienceLevel, major, targetJobTitle } = req.body;
       const userId = req.user._id;
 
       const analysis = await CVAnalysis.findOne({
@@ -205,18 +212,18 @@ class CVAnalyzerController {
       }
 
       // Update job data if provided
-      if (experienceLevel || major || jobId) {
+      if (experienceLevel || major || targetJobTitle) {
         let jobData = { ...analysis.jobData };
         
         if (experienceLevel) jobData.experienceLevel = experienceLevel;
         if (major) jobData.major = major;
         
-        if (jobId) {
-          const job = await Job.findById(jobId);
-          if (job) {
-            jobData.jobTitle = job.title;
-            jobData.jobDescription = job.description;
-            jobData.requirements = job.requirements;
+        if (targetJobTitle !== undefined) {
+          if (targetJobTitle && targetJobTitle.trim()) {
+            jobData.targetJobTitle = targetJobTitle.trim();
+          } else {
+            // Remove targetJobTitle if empty string is provided
+            delete jobData.targetJobTitle;
           }
         }
         
@@ -224,13 +231,15 @@ class CVAnalyzerController {
       }
 
       // Reset analysis status and clear previous results
-      analysis.status = 'processing';
-      analysis.aiAnalysis = undefined;
-      analysis.recommendations = undefined;
-      analysis.skillsAnalysis = undefined;
-      analysis.matchingScore = undefined;
-      analysis.analysisMetadata.processingStartedAt = new Date();
-      analysis.analysisMetadata.reanalyzedAt = new Date();
+      analysis.processingStatus = 'processing';
+      analysis.overallScore = undefined;
+      analysis.summary = undefined;
+      analysis.sections = {};
+      analysis.recommendations = [];
+      analysis.jobMatching = {};
+      analysis.marketInsights = {};
+      analysis.openaiProcessing = undefined;
+      analysis.errorMessage = undefined;
 
       await analysis.save();
 
@@ -245,7 +254,7 @@ class CVAnalyzerController {
         message: "CV reanalysis started successfully",
         data: {
           analysisId: analysis._id,
-          status: analysis.status
+          status: analysis.processingStatus
         }
       });
 
@@ -337,26 +346,69 @@ class CVAnalyzerController {
    */
   async performAnalysis(analysisId) {
     try {
+      console.log(`Starting analysis for ID: ${analysisId}`);
+      
       const analysis = await CVAnalysis.findById(analysisId);
       if (!analysis) {
         throw new Error("Analysis record not found");
       }
 
+      console.log(`Found analysis record, file path: ${analysis.filePath}`);
+
+      // Extract text from PDF file during analysis (not during upload)
+      console.log('Starting PDF text extraction during analysis...');
+      let extractedText;
+      
+      try {
+        const extractionResult = await this.pdfParserService.extractTextFromPDF(analysis.filePath, {
+          size: analysis.fileSize,
+          mimetype: 'application/pdf'
+        });
+        extractedText = extractionResult.text;
+        console.log('PDF text extraction completed, text length:', extractedText.length);
+        
+        // Update the analysis record with extracted text
+        analysis.extractedText = extractedText;
+        await analysis.save();
+        
+      } catch (extractionError) {
+        console.error('PDF extraction failed during analysis:', extractionError);
+        throw new Error(`Failed to extract text from CV: ${extractionError.message}`);
+      }
+
+      // Verify we have content to analyze
+      if (!extractedText || extractedText.trim().length === 0) {
+        throw new Error('No text content found in the uploaded CV');
+      }
+
+      console.log('Starting OpenAI analysis with text length:', extractedText.length);
+
       // Perform OpenAI analysis
       const aiResult = await this.openAIService.analyzeCV(
-        analysis.extractedText,
+        extractedText,
         analysis.jobData
       );
 
+      console.log('OpenAI analysis completed successfully');
+
       // Update analysis with results
-      analysis.status = 'completed';
-      analysis.overallScore = aiResult.analysis.overallScore;
-      analysis.summary = aiResult.analysis.summary;
-      analysis.sections = aiResult.analysis.sections;
-      analysis.recommendations = aiResult.recommendations;
-      analysis.jobMatching = aiResult.jobMatching;
-      analysis.marketInsights = aiResult.marketInsights;
-      analysis.openaiProcessing = aiResult.openaiProcessing;
+      analysis.overallScore = aiResult.analysis?.overallScore;
+      analysis.summary = aiResult.analysis?.summary;
+      if (aiResult.analysis?.sections) {
+        analysis.sections = aiResult.analysis.sections;
+      }
+      if (aiResult.recommendations) {
+        analysis.recommendations = aiResult.recommendations;
+      }
+      if (aiResult.jobMatching) {
+        analysis.jobMatching = aiResult.jobMatching;
+      }
+      if (aiResult.marketInsights) {
+        analysis.marketInsights = aiResult.marketInsights;
+      }
+      if (aiResult.openaiProcessing) {
+        analysis.openaiProcessing = aiResult.openaiProcessing;
+      }
       analysis.processingStatus = 'completed';
 
       await analysis.save();
@@ -376,11 +428,12 @@ class CVAnalyzerController {
    */
   async markAnalysisAsFailed(analysisId, errorMessage) {
     try {
+      console.log(`Marking analysis ${analysisId} as failed with error: ${errorMessage}`);
       await CVAnalysis.findByIdAndUpdate(analysisId, {
-        status: 'failed',
-        'analysisMetadata.failedAt': new Date(),
-        'analysisMetadata.errorMessage': errorMessage
+        processingStatus: 'failed',
+        errorMessage: errorMessage
       });
+      console.log(`Analysis ${analysisId} marked as failed`);
     } catch (updateError) {
       console.error(`Failed to update analysis status for ${analysisId}:`, updateError);
     }
