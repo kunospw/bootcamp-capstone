@@ -307,7 +307,7 @@ const JobList = () => {
                         {/* Search Bar and Filters */}
                         <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between mb-6">
                             {/* Search Bar */}
-                            <div className="relative flex-1 max-w-md">
+                            <div className="relative flex-1 max-w-md w-full">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <FaSearch className="h-4 w-4 text-gray-400" />
                                 </div>

@@ -149,6 +149,33 @@ router.get("/company-applications", authenticateCompany, async(req, res) => {
     }
 });
 
+// Get application status counts for company
+router.get("/company-applications/status-counts", authenticateCompany, async(req, res) => {
+    try {
+        // Get company's jobs
+        const companyJobs = await Job.find({ companyId: req.company._id }).select("_id");
+        const jobIds = companyJobs.map(job => job._id);
+
+        // Get status counts using aggregation
+        const statusCounts = await Application.aggregate([
+            { $match: { jobId: { $in: jobIds } } },
+            { $group: { _id: "$status", count: { $sum: 1 } } }
+        ]);
+
+        // Convert to object format
+        const counts = {};
+        statusCounts.forEach(item => {
+            counts[item._id] = item.count;
+        });
+
+        res.json({
+            statusCounts: counts
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 // Update application status (Company only)
 router.patch("/:id/status", authenticateCompany, async(req, res) => {
     try {

@@ -1,54 +1,104 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 
-const FloatingDecorations = ({ variant = "jobList", mobile = false }) => {
+const FloatingDecorations = ({ variant = "jobList", mobile = false, seed = null }) => {
+    // Generate random decorations on each component mount or when seed changes
+    const randomDecorations = useMemo(() => {
+        // Use seed for deterministic randomness if provided, otherwise use current time
+        const randomSeed = seed || Date.now();
+        
+        // Simple seeded random function
+        const seededRandom = (seed) => {
+            const x = Math.sin(seed) * 10000;
+            return x - Math.floor(x);
+        };
+        
+        let seedCounter = randomSeed;
+        const getRandom = () => {
+            seedCounter++;
+            return seededRandom(seedCounter);
+        };
+        
+        const generateRandomElements = (count, isAuth = false, isMobile = false) => {
+            const elements = [];
+            const animations = ['animate-float-1', 'animate-float-2', 'animate-float-3', 'animate-float-4', 'animate-float-5', 'animate-float-6', 'animate-float-7', 'animate-float-8', 'animate-float-9', 'animate-float-10'];
+            const colors = ['bg-[#F4B400]', 'bg-white/25', 'bg-white/20', 'bg-white/15', 'bg-white/30'];
+            
+            // Different size ranges based on context
+            const sizes = isMobile 
+                ? ['w-6 h-6', 'w-8 h-8', 'w-10 h-10', 'w-12 h-12', 'w-14 h-14', 'w-16 h-16']
+                : ['w-8 h-8', 'w-10 h-10', 'w-12 h-12', 'w-14 h-14', 'w-16 h-16', 'w-18 h-18', 'w-20 h-20', 'w-22 h-22', 'w-24 h-24', 'w-28 h-28'];
+            
+            for (let i = 0; i < count; i++) {
+                // Random positioning
+                const positions = [
+                    'top-12', 'top-16', 'top-20', 'top-24', 'top-28', 'top-32', 'top-40',
+                    'top-1/4', 'top-1/3', 'top-1/2', 'top-2/3', 'top-3/4',
+                    'bottom-12', 'bottom-16', 'bottom-20', 'bottom-24', 'bottom-32', 'bottom-40',
+                    'bottom-1/4', 'bottom-1/3', 'bottom-1/2'
+                ];
+                
+                const horizontalPositions = [
+                    'left-8', 'left-12', 'left-16', 'left-20',
+                    'left-1/4', 'left-1/3', 'left-1/2',
+                    'right-8', 'right-12', 'right-16', 'right-20',
+                    'right-1/4', 'right-1/3', 'right-1/2'
+                ];
+                
+                // Random selections using seeded random
+                const randomPosition = positions[Math.floor(getRandom() * positions.length)];
+                const randomHorizontal = horizontalPositions[Math.floor(getRandom() * horizontalPositions.length)];
+                const randomSize = sizes[Math.floor(getRandom() * sizes.length)];
+                const randomColor = colors[Math.floor(getRandom() * colors.length)];
+                const randomAnimation = animations[Math.floor(getRandom() * animations.length)];
+                
+                // Generate random opacity and animation delay
+                const randomOpacity = (getRandom() * 0.4 + 0.45).toFixed(2); // 0.45 to 0.85
+                const randomDelay = (getRandom() * 5).toFixed(1); // 0 to 5 seconds delay
+                
+                // Ensure no z-index conflicts and proper layering
+                const zIndex = isAuth ? 'z-10' : 'z-20';
+                
+                elements.push(
+                    <div 
+                        key={i}
+                        className={`absolute ${randomPosition} ${randomHorizontal} ${randomSize} ${randomColor} rounded-full ${randomAnimation} ${zIndex}`}
+                        style={{ 
+                            opacity: randomOpacity,
+                            animationDelay: `${randomDelay}s`
+                        }}
+                    />
+                );
+            }
+            
+            return elements;
+        };
+        
+        // Generate different sets based on variant
+        if (variant === "jobList") {
+            return generateRandomElements(mobile ? 8 : 15, false, mobile);
+        } else if (variant === "auth" && mobile) {
+            return generateRandomElements(8, true, true);
+        } else {
+            return generateRandomElements(12, true, false);
+        }
+    }, [variant, mobile, seed]);
+
     // Different decorative patterns for different pages
     const jobListDecorations = (
         <>
-            {/* Job List page decorations - positioned below navbar */}
-            <div className='absolute top-20 right-16 w-24 h-24 bg-[#F4B400] rounded-full animate-float-1 opacity-75 z-20'></div>
-            <div className='absolute bottom-20 left-16 w-28 h-28 bg-[#F4B400] rounded-full animate-float-2 opacity-80 z-20'></div>
-            <div className='absolute top-1/3 right-1/3 w-14 h-14 bg-[#F4B400] rounded-full animate-float-3 opacity-85 z-20'></div>
-            <div className='absolute bottom-1/4 right-1/4 w-18 h-18 bg-white/25 rounded-full animate-float-4 opacity-65 z-20'></div>
-            <div className='absolute top-1/4 left-8 w-20 h-20 bg-white/20 rounded-full animate-float-5 opacity-55 z-20'></div>
-            <div className='absolute bottom-1/3 right-8 w-10 h-10 bg-[#F4B400] rounded-full animate-float-6 opacity-70 z-20'></div>
-            <div className='absolute top-2/3 left-1/4 w-16 h-16 bg-white/15 rounded-full animate-float-7 opacity-60 z-20'></div>
-            <div className='absolute top-24 left-1/2 w-12 h-12 bg-[#F4B400] rounded-full animate-float-8 opacity-80 z-20'></div>
-            <div className='absolute bottom-16 left-1/3 w-22 h-22 bg-white/20 rounded-full animate-float-9 opacity-50 z-20'></div>
-            <div className='absolute top-28 right-1/4 w-8 h-8 bg-[#F4B400] rounded-full animate-float-10 opacity-90 z-20'></div>
-            
-            {/* Additional decorative elements to fill the space better */}
-            <div className='absolute top-32 left-20 w-16 h-16 bg-[#F4B400] rounded-full animate-float-3 opacity-70 z-20'></div>
-            <div className='absolute bottom-32 right-20 w-20 h-20 bg-white/30 rounded-full animate-float-5 opacity-60 z-20'></div>
-            <div className='absolute top-40 right-12 w-14 h-14 bg-[#F4B400] rounded-full animate-float-7 opacity-75 z-20'></div>
-            <div className='absolute bottom-40 left-12 w-18 h-18 bg-white/25 rounded-full animate-float-2 opacity-55 z-20'></div>
+            {randomDecorations}
         </>
     );
 
     const authPageDecorations = (
         <>
-            {/* Auth pages decorations - full screen coverage */}
-            <div className='absolute top-16 right-16 w-24 h-24 bg-[#F4B400] rounded-full animate-float-1 opacity-75'></div>
-            <div className='absolute bottom-20 left-16 w-28 h-28 bg-[#F4B400] rounded-full animate-float-2 opacity-80'></div>
-            <div className='absolute top-1/3 right-1/3 w-14 h-14 bg-[#F4B400] rounded-full animate-float-3 opacity-85'></div>
-            <div className='absolute bottom-1/4 right-1/4 w-18 h-18 bg-white/25 rounded-full animate-float-4 opacity-65'></div>
-            <div className='absolute top-1/4 left-8 w-20 h-20 bg-white/20 rounded-full animate-float-5 opacity-55'></div>
-            <div className='absolute bottom-1/3 right-8 w-10 h-10 bg-[#F4B400] rounded-full animate-float-6 opacity-70'></div>
-            <div className='absolute top-2/3 left-1/4 w-16 h-16 bg-white/15 rounded-full animate-float-7 opacity-60'></div>
-            <div className='absolute top-12 left-1/2 w-12 h-12 bg-[#F4B400] rounded-full animate-float-8 opacity-80'></div>
+            {randomDecorations}
         </>
     );
 
     const authMobileDecorations = (
         <>
-            {/* Auth pages mobile decorations - smaller and fewer elements */}
-            <div className='absolute top-12 right-12 w-18 h-18 bg-[#F4B400] rounded-full animate-float-1 opacity-65'></div>
-            <div className='absolute bottom-12 left-12 w-22 h-22 bg-[#F4B400] rounded-full animate-float-2 opacity-55'></div>
-            <div className='absolute top-1/4 left-1/3 w-10 h-10 bg-[#F4B400] rounded-full animate-float-3 opacity-75'></div>
-            <div className='absolute top-20 left-8 w-6 h-6 bg-white/25 rounded-full animate-float-4 opacity-45'></div>
-            <div className='absolute bottom-1/3 right-1/4 w-16 h-16 bg-white/20 rounded-full animate-float-5 opacity-40'></div>
-            <div className='absolute top-3/4 right-8 w-8 h-8 bg-[#F4B400] rounded-full animate-float-6 opacity-60'></div>
-            <div className='absolute bottom-20 left-1/3 w-12 h-12 bg-white/15 rounded-full animate-float-7 opacity-35'></div>
-            <div className='absolute top-16 right-1/3 w-14 h-14 bg-[#F4B400] rounded-full animate-float-8 opacity-70'></div>
+            {randomDecorations}
         </>
     );
 
@@ -65,84 +115,6 @@ const FloatingDecorations = ({ variant = "jobList", mobile = false }) => {
     return (
         <>
             {getDecorations()}
-
-            {/* Floating animations styles */}
-            <style jsx>{`
-                @keyframes float-1 {
-                    0%, 100% { transform: translateY(0px) translateX(0px) rotate(0deg); }
-                    25% { transform: translateY(-15px) translateX(-12px) rotate(90deg); }
-                    50% { transform: translateY(-5px) translateX(18px) rotate(180deg); }
-                    75% { transform: translateY(-20px) translateX(-8px) rotate(270deg); }
-                }
-                
-                @keyframes float-2 {
-                    0%, 100% { transform: translateY(0px) translateX(0px) rotate(0deg); }
-                    33% { transform: translateY(12px) translateX(25px) rotate(120deg); }
-                    66% { transform: translateY(-15px) translateX(-12px) rotate(240deg); }
-                }
-                
-                @keyframes float-3 {
-                    0%, 100% { transform: translateY(0px) translateX(0px) scale(1); }
-                    50% { transform: translateY(-25px) translateX(-15px) scale(1.15); }
-                }
-                
-                @keyframes float-4 {
-                    0%, 100% { transform: translateY(0px) translateX(0px) rotate(0deg); }
-                    25% { transform: translateY(18px) translateX(12px) rotate(-90deg); }
-                    50% { transform: translateY(-8px) translateX(-20px) rotate(-180deg); }
-                    75% { transform: translateY(-12px) translateX(8px) rotate(-270deg); }
-                }
-                
-                @keyframes float-5 {
-                    0%, 100% { transform: translateY(0px) translateX(0px) scale(1) rotate(0deg); }
-                    20% { transform: translateY(-8px) translateX(-12px) scale(0.85) rotate(72deg); }
-                    40% { transform: translateY(12px) translateX(18px) scale(1.2) rotate(144deg); }
-                    60% { transform: translateY(-18px) translateX(-5px) scale(0.9) rotate(216deg); }
-                    80% { transform: translateY(8px) translateX(10px) scale(1.1) rotate(288deg); }
-                }
-                
-                @keyframes float-6 {
-                    0%, 100% { transform: translateY(0px) translateX(0px); }
-                    33% { transform: translateY(-20px) translateX(-18px); }
-                    66% { transform: translateY(15px) translateX(12px); }
-                }
-                
-                @keyframes float-7 {
-                    0%, 100% { transform: translateY(0px) translateX(0px) rotate(0deg) scale(1); }
-                    25% { transform: translateY(-10px) translateX(15px) rotate(45deg) scale(1.1); }
-                    50% { transform: translateY(8px) translateX(-10px) rotate(90deg) scale(0.9); }
-                    75% { transform: translateY(-15px) translateX(5px) rotate(135deg) scale(1.05); }
-                }
-                
-                @keyframes float-8 {
-                    0%, 100% { transform: translateY(0px) translateX(0px) rotate(0deg); }
-                    50% { transform: translateY(-30px) translateX(0px) rotate(180deg); }
-                }
-                
-                @keyframes float-9 {
-                    0%, 100% { transform: translateY(0px) translateX(0px) scale(1) rotate(0deg); }
-                    25% { transform: translateY(-12px) translateX(10px) scale(1.1) rotate(45deg); }
-                    50% { transform: translateY(8px) translateX(-15px) scale(0.9) rotate(90deg); }
-                    75% { transform: translateY(-18px) translateX(8px) scale(1.05) rotate(135deg); }
-                }
-                
-                @keyframes float-10 {
-                    0%, 100% { transform: translateY(0px) translateX(0px) rotate(0deg); }
-                    33% { transform: translateY(-22px) translateX(-10px) rotate(120deg); }
-                    66% { transform: translateY(10px) translateX(20px) rotate(240deg); }
-                }
-                
-                .animate-float-1 { animation: float-1 9s ease-in-out infinite; }
-                .animate-float-2 { animation: float-2 11s ease-in-out infinite; }
-                .animate-float-3 { animation: float-3 7s ease-in-out infinite; }
-                .animate-float-4 { animation: float-4 13s ease-in-out infinite; }
-                .animate-float-5 { animation: float-5 16s ease-in-out infinite; }
-                .animate-float-6 { animation: float-6 8s ease-in-out infinite; }
-                .animate-float-7 { animation: float-7 14s ease-in-out infinite; }
-                .animate-float-8 { animation: float-8 6s ease-in-out infinite; }
-                .animate-float-9 { animation: float-9 12s ease-in-out infinite; }
-                .animate-float-10 { animation: float-10 10s ease-in-out infinite; }
-            `}</style>
         </>
     );
 };
