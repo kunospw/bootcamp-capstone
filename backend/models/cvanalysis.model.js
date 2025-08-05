@@ -49,6 +49,11 @@ const cvAnalysisSchema = new mongoose.Schema({
       trim: true,
       maxlength: [100, 'Major cannot exceed 100 characters']
     },
+    targetJobTitle: {
+      type: String,
+      trim: true,
+      maxlength: [200, 'Target job title cannot exceed 200 characters']
+    },
     targetJobDescriptions: [{
       title: {
         type: String,
@@ -73,161 +78,49 @@ const cvAnalysisSchema = new mongoose.Schema({
     }]
   },
   
-  // Analysis Results
+  // Analysis Results (populated after AI analysis)
   overallScore: {
     type: Number,
-    required: [true, 'Overall score is required'],
     min: [0, 'Score cannot be negative'],
     max: [100, 'Score cannot exceed 100']
   },
   
-  // Summary Analysis
+  // Summary Analysis (populated after AI analysis)
   summary: {
     strengths: {
       type: String,
       trim: true,
-      maxlength: [500, 'Strengths summary cannot exceed 500 characters']
+      maxlength: [1000, 'Strengths summary cannot exceed 1000 characters']
     },
     areasOfImprovement: {
       type: String,
       trim: true,
-      maxlength: [500, 'Areas of improvement summary cannot exceed 500 characters']
+      maxlength: [1000, 'Areas of improvement summary cannot exceed 1000 characters']
+    },
+    keyFindings: {
+      type: String,
+      trim: true,
+      maxlength: [1000, 'Key findings cannot exceed 1000 characters']
     }
   },
   
+  // Simplified sections structure (optional)
   sections: {
-    atsCompatibility: {
-      score: {
-        type: Number,
-        required: true,
-        min: [0, 'Score cannot be negative'],
-        max: [100, 'Score cannot exceed 100']
-      },
-      issues: [{
-        type: String,
-        trim: true
-      }],
-      recommendations: [{
-        type: String,
-        trim: true
-      }],
-      details: {
-        type: Object,
-        default: {}
-      }
-    },
-    
-    skillsAlignment: {
-      score: {
-        type: Number,
-        required: true,
-        min: [0, 'Score cannot be negative'],
-        max: [100, 'Score cannot exceed 100']
-      },
-      missing: [{
-        skill: String,
-        importance: {
-          type: String,
-          enum: ['low', 'medium', 'high', 'critical'],
-          default: 'medium'
-        }
-      }],
-      present: [{
-        skill: String,
-        proficiency: {
-          type: String,
-          enum: ['beginner', 'intermediate', 'advanced', 'expert'],
-          default: 'intermediate'
-        }
-      }],
-      suggestions: [{
-        type: String,
-        trim: true
-      }]
-    },
-    
-    experienceRelevance: {
-      score: {
-        type: Number,
-        required: true,
-        min: [0, 'Score cannot be negative'],
-        max: [100, 'Score cannot exceed 100']
-      },
-      strengths: [{
-        type: String,
-        trim: true
-      }],
-      weaknesses: [{
-        type: String,
-        trim: true
-      }],
-      careerProgression: {
-        type: String,
-        enum: ['excellent', 'good', 'fair', 'needs-improvement'],
-        default: 'fair'
-      }
-    },
-    
-    achievementQuantification: {
-      score: {
-        type: Number,
-        required: true,
-        min: [0, 'Score cannot be negative'],
-        max: [100, 'Score cannot exceed 100']
-      },
-      quantifiedAchievements: [{
-        type: String,
-        trim: true
-      }],
-      improvements: [{
-        section: String,
-        suggestion: String,
-        example: String
-      }]
-    },
-    
-    marketPositioning: {
-      score: {
-        type: Number,
-        required: true,
-        min: [0, 'Score cannot be negative'],
-        max: [100, 'Score cannot exceed 100']
-      },
-      competitiveAnalysis: {
-        salaryRange: {
-          min: Number,
-          max: Number,
-          currency: {
-            type: String,
-            enum: ['USD', 'IDR', 'SGD', 'MYR', 'PHP', 'THB'],
-            default: 'USD'
-          }
-        },
-        demandLevel: {
-          type: String,
-          enum: ['very-low', 'low', 'moderate', 'high', 'very-high'],
-          default: 'moderate'
-        },
-        competitionLevel: {
-          type: String,
-          enum: ['very-low', 'low', 'moderate', 'high', 'very-high'],
-          default: 'moderate'
-        }
-      }
-    }
+    type: Object,
+    default: {}
   },
   
-  // Recommendations
+  // Recommendations (populated after AI analysis)
   recommendations: [{
     priority: {
       type: String,
-      required: true,
-      enum: ['low', 'medium', 'high', 'critical']
+      enum: ['low', 'medium', 'high', 'critical'],
+      default: 'medium'
     },
     category: {
       type: String,
-      required: true,
-      enum: ['skills', 'experience', 'format', 'content', 'keywords', 'achievements']
+      trim: true,
+      maxlength: [100, 'Category cannot exceed 100 characters']
     },
     suggestion: {
       type: String,
@@ -239,74 +132,19 @@ const cvAnalysisSchema = new mongoose.Schema({
       type: String,
       trim: true,
       maxlength: [500, 'Impact description cannot exceed 500 characters']
-    },
-    difficulty: {
-      type: String,
-      enum: ['easy', 'medium', 'hard'],
-      default: 'medium'
-    },
-    estimatedTimeToImplement: {
-      type: String,
-      enum: ['immediate', 'hours', 'days', 'weeks'],
-      default: 'hours'
     }
   }],
   
-  // Job Matching Results
+  // Job Matching Results (populated after AI analysis)
   jobMatching: {
-    averageCompatibility: {
-      type: Number,
-      min: [0, 'Compatibility cannot be negative'],
-      max: [100, 'Compatibility cannot exceed 100']
-    },
-    bestMatches: [{
-      jobIndex: Number,
-      compatibilityScore: Number,
-      matchingSkills: [String],
-      missingSkills: [String],
-      recommendations: [String]
-    }],
-    improvementPotential: {
-      type: String,
-      trim: true
-    }
+    type: Object,
+    default: {}
   },
   
-  // Market Insights
+  // Market Insights (populated after AI analysis)
   marketInsights: {
-    salaryRange: {
-      min: Number,
-      max: Number,
-      currency: {
-        type: String,
-        enum: ['USD', 'IDR', 'SGD', 'MYR', 'PHP', 'THB'],
-        default: 'USD'
-      },
-      confidence: {
-        type: String,
-        enum: ['low', 'medium', 'high'],
-        default: 'medium'
-      }
-    },
-    demandLevel: {
-      type: String,
-      enum: ['very-low', 'low', 'moderate', 'high', 'very-high'],
-      default: 'moderate'
-    },
-    competitionLevel: {
-      type: String,
-      enum: ['very-low', 'low', 'moderate', 'high', 'very-high'],
-      default: 'moderate'
-    },
-    growthProjection: {
-      type: String,
-      enum: ['declining', 'stable', 'growing', 'rapidly-growing'],
-      default: 'stable'
-    },
-    keyTrends: [{
-      type: String,
-      trim: true
-    }]
+    type: Object,
+    default: {}
   },
   
   // Processing Information
@@ -317,21 +155,25 @@ const cvAnalysisSchema = new mongoose.Schema({
     index: true
   },
   
+  // Error handling
+  errorMessage: {
+    type: String,
+    trim: true,
+    maxlength: [500, 'Error message cannot exceed 500 characters']
+  },
+  
+  // Processing stages (optional detailed tracking)
   processingStages: [{
     stage: {
       type: String,
-      enum: ['upload', 'parsing', 'extraction', 'analysis', 'completion'],
-      required: true
+      enum: ['upload', 'parsing', 'extraction', 'analysis', 'completion']
     },
     status: {
       type: String,
       enum: ['pending', 'in-progress', 'completed', 'failed'],
       default: 'pending'
     },
-    startTime: {
-      type: Date,
-      default: Date.now
-    },
+    startTime: Date,
     endTime: Date,
     error: String
   }],
@@ -512,15 +354,9 @@ cvAnalysisSchema.statics.getAnalyticsData = function(startDate, endDate) {
 
 // Pre-save middleware
 cvAnalysisSchema.pre('save', function(next) {
-  if (this.isNew) {
-    // Initialize processing stages
-    this.processingStages = [
-      { stage: 'upload', status: 'completed', startTime: new Date(), endTime: new Date() },
-      { stage: 'parsing', status: 'pending' },
-      { stage: 'extraction', status: 'pending' },
-      { stage: 'analysis', status: 'pending' },
-      { stage: 'completion', status: 'pending' }
-    ];
+  // Simple validation - no automatic processing stages creation
+  if (this.isNew && !this.processingStatus) {
+    this.processingStatus = 'pending';
   }
   next();
 });

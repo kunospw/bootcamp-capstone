@@ -1,31 +1,56 @@
 import React, { useState, useEffect } from 'react'
 import NavBar from '../../Components/NavBar'
+import { cvAnalyzerAPI } from '../../services/api'
 
 const CvAnalyzer = () => {
   const [uploadedFile, setUploadedFile] = useState(null);
-  const [preferredRole, setPreferredRole] = useState('');
+  const [experienceLevel, setExperienceLevel] = useState('');
+  const [major, setMajor] = useState('');
+  const [targetJobTitle, setTargetJobTitle] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState(null);
+  const [analysisId, setAnalysisId] = useState(null);
   const [dragActive, setDragActive] = useState(false);
   const [pdfUrl, setPdfUrl] = useState(null);
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState(false);
+  const [error, setError] = useState(null);
+  const [analysisHistory, setAnalysisHistory] = useState([]);
+  const [showHistory, setShowHistory] = useState(false);
+
+  // Load analysis history
+  useEffect(() => {
+    const loadHistory = async () => {
+      try {
+        const response = await cvAnalyzerAPI.getAnalysisHistory({ limit: 10 });
+        setAnalysisHistory(response.data?.docs || []);
+      } catch (error) {
+        console.error('Failed to load analysis history:', error);
+      }
+    };
+    
+    loadHistory();
+  }, []);
 
   const handleFileUpload = (file) => {
-    if (file && (file.type === 'application/pdf' || file.type.startsWith('image/'))) {
+    if (file && file.type === 'application/pdf') {
+      // Check file size (5MB limit)
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (file.size > maxSize) {
+        setError('File size must be less than 5MB');
+        return;
+      }
+      
       setUploadedFile(file);
+      setError(null);
       
       // Create URL for PDF preview
-      if (file.type === 'application/pdf') {
-        setPdfLoading(true);
-        setPdfError(false);
-        const url = URL.createObjectURL(file);
-        setPdfUrl(url);
-      } else {
-        setPdfUrl(null);
-        setPdfLoading(false);
-        setPdfError(false);
-      }
+      setPdfLoading(true);
+      setPdfError(false);
+      const url = URL.createObjectURL(file);
+      setPdfUrl(url);
+    } else {
+      setError('Please upload a PDF file only');
     }
   };
 
@@ -58,39 +83,43 @@ const CvAnalyzer = () => {
   };
 
   const handleAnalyze = async () => {
-    if (!uploadedFile || !preferredRole) return;
+    if (!uploadedFile || !experienceLevel || !major) {
+      setError('Please fill in all required fields');
+      return;
+    }
     
     setIsAnalyzing(true);
-    // Simulate analysis delay
-    setTimeout(() => {
-      setAnalysisResult({
-        score: 85,
-        strengths: [
-          "Strong technical skills section",
-          "Relevant work experience",
-          "Good education background",
-          "Professional formatting"
-        ],
-        improvements: [
-          "Add more quantifiable achievements",
-          "Include relevant keywords for the role",
-          "Optimize summary section",
-          "Add more project details"
-        ],
-        executiveSummary: "Your CV demonstrates strong technical leadership but lacks market-relevant keywords and quantified achievements. Priority focus: Results documentation and ATS optimization.",
-        immediateImpacts: [
-          'Add "Kubernetes" and "DevOps" (found in 78% of target roles)',
-          'Quantify team leadership: "Led team of X engineers"',
-          'Fix ATS parsing issues in contact section'
-        ],
-        marketPositioning: {
-          competitiveFor: "89% of Senior Developer roles in Jakarta",
-          salaryPotential: "$85K-$120K (current CV suggests $70K-$95K)",
-          strongMatch: "Google, Shopee, Gojek (87% compatibility)"
-        }
-      });
+    setError(null);
+    
+    try {
+      // Create FormData for file upload
+      const formData = new FormData();
+      formData.append('cv', uploadedFile);
+      formData.append('experienceLevel', experienceLevel);
+      formData.append('major', major);
+      if (targetJobTitle.trim()) {
+        formData.append('targetJobTitle', targetJobTitle.trim());
+      }
+
+      // Upload and start analysis
+      const uploadResponse = await cvAnalyzerAPI.uploadAndAnalyze(formData);
+      const newAnalysisId = uploadResponse.data.analysisId;
+      setAnalysisId(newAnalysisId);
+
+      // Poll for results
+      const result = await cvAnalyzerAPI.pollAnalysisStatus(newAnalysisId);
+      setAnalysisResult(result.data);
+      
+      // Refresh history
+      const historyResponse = await cvAnalyzerAPI.getAnalysisHistory({ limit: 10 });
+      setAnalysisHistory(historyResponse.data?.docs || []);
+      
+    } catch (error) {
+      console.error('Analysis failed:', error);
+      setError(error.message || 'Analysis failed. Please try again.');
+    } finally {
       setIsAnalyzing(false);
-    }, 3000);
+    }
   };
 
   return (
@@ -158,11 +187,11 @@ const CvAnalyzer = () => {
                       </div>
                       <div>
                         <p className="text-sm font-medium text-gray-900">Drop your CV here</p>
-                        <p className="text-xs text-gray-500">PDF only up to 10MB</p>
+                        <p className="text-xs text-gray-500">PDF only up to 5MB</p>
                       </div>
                       <input
                         type="file"
-                        accept=".pdf,.jpg,.jpeg,.png"
+                        accept=".pdf"
                         onChange={(e) => e.target.files[0] && handleFileUpload(e.target.files[0])}
                         className="hidden"
                         id="cv-upload"
@@ -177,35 +206,79 @@ const CvAnalyzer = () => {
                   )}
                 </div>
 
-                {/* Preferred Role - moved under upload */}
+                {/* Job Information Form */}
                 <div className="mt-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Target Position</h3>
-                  <div className="space-y-3">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Job Information</h3>
+                  <div className="space-y-4">
+                    {/* Experience Level */}
                     <div>
-                      <label htmlFor="preferred-role" className="block text-sm font-medium text-gray-700 mb-2">
-                        What role are you applying for?
+                      <label htmlFor="experience-level" className="block text-sm font-medium text-gray-700 mb-2">
+                        Experience Level *
+                      </label>
+                      <select
+                        id="experience-level"
+                        value={experienceLevel}
+                        onChange={(e) => setExperienceLevel(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                        required
+                      >
+                        <option value="">Select your experience level</option>
+                        <option value="entry">Entry Level (0-2 years)</option>
+                        <option value="mid">Mid Level (2-5 years)</option>
+                        <option value="senior">Senior Level (5-10 years)</option>
+                        <option value="executive">Executive Level (10+ years)</option>
+                      </select>
+                    </div>
+
+                    {/* Major/Field */}
+                    <div>
+                      <label htmlFor="major" className="block text-sm font-medium text-gray-700 mb-2">
+                        Field of Study/Major *
                       </label>
                       <input
                         type="text"
-                        id="preferred-role"
-                        value={preferredRole}
-                        onChange={(e) => setPreferredRole(e.target.value)}
-                        placeholder="e.g., Frontend Developer"
+                        id="major"
+                        value={major}
+                        onChange={(e) => setMajor(e.target.value)}
+                        placeholder="e.g., Computer Science, Software Engineering"
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                        required
                       />
                     </div>
-                    <p className="text-xs text-gray-500">
-                      This helps us provide more targeted analysis
-                    </p>
+
+                    {/* Target Job (Optional) */}
+                    <div>
+                      <label htmlFor="target-job" className="block text-sm font-medium text-gray-700 mb-2">
+                        Target Job Title (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        id="target-job"
+                        value={targetJobTitle}
+                        onChange={(e) => setTargetJobTitle(e.target.value)}
+                        placeholder="e.g., Software Engineer, Data Scientist, Product Manager"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Specifying a target job title provides more targeted analysis
+                      </p>
+                    </div>
                   </div>
                 </div>
+
+                {/* Error Display */}
+                {error && (
+                  <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-sm text-red-600">{error}</p>
+                  </div>
+                )}
 
                 {/* Analyze Button */}
                 <button
                   onClick={handleAnalyze}
-                  disabled={!uploadedFile || !preferredRole || isAnalyzing}
+                  disabled={!uploadedFile || !experienceLevel || !major || isAnalyzing}
                   className={`w-full mt-6 py-3 px-6 rounded-lg font-medium transition-colors ${
-                    !uploadedFile || !preferredRole || isAnalyzing
+                    !uploadedFile || !experienceLevel || !major || isAnalyzing
                       ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                       : 'bg-blue-600 text-white hover:bg-blue-700'
                   }`}
@@ -295,7 +368,7 @@ const CvAnalyzer = () => {
             </div>
           </div>
 
-          {/* Analysis Results - moved to bottom */}
+          {/* Analysis Results */}
           {analysisResult && (
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h2 className="text-2xl font-semibold text-gray-900 mb-6">Analysis Results</h2>
@@ -306,142 +379,251 @@ const CvAnalyzer = () => {
                   <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-6 text-center">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">CV Score</h3>
                     <div className="mb-4">
-                      <span className="text-4xl font-bold text-blue-600">{analysisResult.score}%</span>
+                      <span className="text-4xl font-bold text-blue-600">{analysisResult.overallScore}%</span>
                     </div>
                     <div className="w-full bg-white rounded-full h-3 mb-4">
                       <div 
                         className="bg-blue-600 h-3 rounded-full transition-all duration-500"
-                        style={{ width: `${analysisResult.score}%` }}
+                        style={{ width: `${analysisResult.overallScore}%` }}
                       ></div>
                     </div>
                     <p className="text-sm text-gray-600">
-                      {analysisResult.score >= 90 ? 'Excellent CV!' : 
-                       analysisResult.score >= 75 ? 'Good CV with room for improvement' :
-                       analysisResult.score >= 60 ? 'Needs improvement' : 'Significant improvements needed'}
+                      {analysisResult.overallScore >= 90 ? 'Excellent CV!' : 
+                       analysisResult.overallScore >= 75 ? 'Good CV with room for improvement' :
+                       analysisResult.overallScore >= 60 ? 'Needs improvement' : 'Significant improvements needed'}
                     </p>
                   </div>
                 </div>
 
-                {/* Strengths and Improvements */}
-                <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Strengths */}
-                  <div>
-                    <h3 className="text-lg font-semibold text-green-700 mb-4 flex items-center">
-                      <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                      Strengths
-                    </h3>
-                    <ul className="space-y-3">
-                      {analysisResult.strengths.map((strength, index) => (
-                        <li key={index} className="flex items-start">
-                          <div className="w-2 h-2 bg-green-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                          <span className="text-sm text-gray-700">{strength}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                {/* Summary Section */}
+                <div className="lg:col-span-2">
+                  {analysisResult.summary && (
+                    <div className="space-y-4">
+                      {/* Strengths */}
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <h3 className="text-lg font-semibold text-green-700 mb-2 flex items-center">
+                          <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          </svg>
+                          Strengths
+                        </h3>
+                        <p className="text-sm text-gray-700">{analysisResult.summary.strengths}</p>
+                      </div>
 
-                  {/* Improvements */}
-                  <div>
-                    <h3 className="text-lg font-semibold text-orange-700 mb-4 flex items-center">
-                      <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                      </svg>
-                      Areas for Improvement
-                    </h3>
-                    <ul className="space-y-3">
-                      {analysisResult.improvements.map((improvement, index) => (
-                        <li key={index} className="flex items-start">
-                          <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                          <span className="text-sm text-gray-700">{improvement}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                      {/* Areas of Improvement */}
+                      <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                        <h3 className="text-lg font-semibold text-orange-700 mb-2 flex items-center">
+                          <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                          Areas for Improvement
+                        </h3>
+                        <p className="text-sm text-gray-700">{analysisResult.summary.areasOfImprovement}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
+              
+              {/* Detailed Analysis Sections */}
+              {analysisResult.sections && (
+                <div className="mt-8 pt-6 border-t border-gray-200 space-y-6">
+                  {/* ATS Compatibility */}
+                  {analysisResult.sections.atsCompatibility && (
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                        <svg className="w-5 h-5 mr-2 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" clipRule="evenodd" />
+                        </svg>
+                        ATS Compatibility ({analysisResult.sections.atsCompatibility.score}%)
+                      </h3>
+                      <div className="bg-blue-50 rounded-lg p-4 border-l-4 border-blue-500">
+                        {analysisResult.sections.atsCompatibility.recommendations && (
+                          <ul className="space-y-2">
+                            {analysisResult.sections.atsCompatibility.recommendations.map((rec, index) => (
+                              <li key={index} className="text-sm text-gray-700 flex items-start">
+                                <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                                {rec}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
-              {/* Keywords Analysis */}
-              <div className="mt-8 pt-6 border-t border-gray-200 space-y-6">
-                {/* Executive Summary */}
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
-                    <svg className="w-5 h-5 mr-2 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                    </svg>
-                    EXECUTIVE SUMMARY
-                  </h3>
-                  <div className="bg-blue-50 rounded-lg p-4 border-l-4 border-blue-500">
-                    <p className="text-sm text-gray-700 leading-relaxed">
-                      {analysisResult.executiveSummary}
-                    </p>
-                  </div>
+                  {/* Skills Alignment */}
+                  {analysisResult.sections.skillsAlignment && (
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                        <svg className="w-5 h-5 mr-2 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Skills Alignment ({analysisResult.sections.skillsAlignment.score}%)
+                      </h3>
+                      <div className="bg-purple-50 rounded-lg p-4 border-l-4 border-purple-500">
+                        {analysisResult.sections.skillsAlignment.suggestions && (
+                          <ul className="space-y-2">
+                            {analysisResult.sections.skillsAlignment.suggestions.map((suggestion, index) => (
+                              <li key={index} className="text-sm text-gray-700 flex items-start">
+                                <span className="w-2 h-2 bg-purple-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                                {suggestion}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
+              )}
 
-                {/* Immediate Impact Opportunities */}
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
-                    <svg className="w-5 h-5 mr-2 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
+              {/* Recommendations */}
+              {analysisResult.recommendations && analysisResult.recommendations.length > 0 && (
+                <div className="mt-8 pt-6 border-t border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                    <svg className="w-5 h-5 mr-2 text-green-600" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
                     </svg>
-                    IMMEDIATE IMPACT OPPORTUNITIES
+                    Priority Recommendations
                   </h3>
-                  <div className="bg-orange-50 rounded-lg p-4 border-l-4 border-orange-500">
-                    <ol className="space-y-2">
-                      {analysisResult.immediateImpacts.map((impact, index) => (
-                        <li key={index} className="flex items-start">
-                          <span className="inline-flex items-center justify-center w-6 h-6 bg-orange-100 text-orange-800 text-xs font-bold rounded-full mr-3 flex-shrink-0 mt-0.5">
-                            {index + 1}
-                          </span>
-                          <span className="text-sm text-gray-700">{impact}</span>
-                        </li>
-                      ))}
-                    </ol>
+                  <div className="space-y-3">
+                    {analysisResult.recommendations.slice(0, 5).map((recommendation, index) => (
+                      <div key={index} className="bg-green-50 rounded-lg p-4 border-l-4 border-green-500">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center mb-2">
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mr-2 ${
+                                recommendation.priority === 'critical' ? 'bg-red-100 text-red-800' :
+                                recommendation.priority === 'high' ? 'bg-orange-100 text-orange-800' :
+                                recommendation.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-gray-100 text-gray-800'
+                              }`}>
+                                {recommendation.priority} priority
+                              </span>
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                {recommendation.category}
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-700 mb-2">{recommendation.suggestion}</p>
+                            {recommendation.impact && (
+                              <p className="text-xs text-gray-500">Impact: {recommendation.impact}</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
+              )}
 
-                {/* Market Positioning */}
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
-                    <svg className="w-5 h-5 mr-2 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+              {/* Market Insights */}
+              {analysisResult.marketInsights && (
+                <div className="mt-8 pt-6 border-t border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                    <svg className="w-5 h-5 mr-2 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" />
                     </svg>
-                    MARKET POSITIONING
+                    Market Insights
                   </h3>
-                  <div className="bg-green-50 rounded-lg p-4 border-l-4 border-green-500">
-                    <div className="space-y-3">
-                      <div className="flex items-start">
-                        <div className="w-2 h-2 bg-green-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                        <div>
-                          <span className="text-sm font-medium text-gray-900">Competitive for: </span>
-                          <span className="text-sm text-gray-700">{analysisResult.marketPositioning.competitiveFor}</span>
-                        </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {analysisResult.marketInsights.salaryRange && (
+                      <div className="bg-indigo-50 rounded-lg p-4 border-l-4 border-indigo-500">
+                        <h4 className="font-medium text-gray-900 mb-2">Salary Range</h4>
+                        <p className="text-sm text-gray-700">
+                          {analysisResult.marketInsights.salaryRange.min?.toLocaleString()} - {analysisResult.marketInsights.salaryRange.max?.toLocaleString()} {analysisResult.marketInsights.salaryRange.currency}
+                        </p>
                       </div>
-                      <div className="flex items-start">
-                        <div className="w-2 h-2 bg-green-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                        <div>
-                          <span className="text-sm font-medium text-gray-900">Salary potential: </span>
-                          <span className="text-sm text-gray-700">{analysisResult.marketPositioning.salaryPotential}</span>
-                        </div>
-                      </div>
-                      <div className="flex items-start">
-                        <div className="w-2 h-2 bg-green-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                        <div>
-                          <span className="text-sm font-medium text-gray-900">Strong match for: </span>
-                          <span className="text-sm text-gray-700">{analysisResult.marketPositioning.strongMatch}</span>
-                        </div>
-                      </div>
+                    )}
+                    <div className="bg-indigo-50 rounded-lg p-4 border-l-4 border-indigo-500">
+                      <h4 className="font-medium text-gray-900 mb-2">Market Demand</h4>
+                      <p className="text-sm text-gray-700 capitalize">{analysisResult.marketInsights.demandLevel}</p>
                     </div>
                   </div>
                 </div>
+              )}
+            </div>
+          )}
+
+          {/* Analysis History */}
+          {showHistory && analysisHistory.length > 0 && (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-semibold text-gray-900">Analysis History</h2>
+                <button
+                  onClick={() => setShowHistory(false)}
+                  className="text-gray-400 hover:text-gray-500"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
+              
+              <div className="space-y-4">
+                {analysisHistory.map((analysis) => (
+                  <div key={analysis._id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-medium text-gray-900">{analysis.originalFilename}</h3>
+                        <p className="text-sm text-gray-500">
+                          {analysis.jobData.experienceLevel} • {analysis.jobData.major}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          {new Date(analysis.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        {analysis.overallScore && (
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                            {analysis.overallScore}%
+                          </span>
+                        )}
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          analysis.processingStatus === 'completed' ? 'bg-green-100 text-green-800' :
+                          analysis.processingStatus === 'processing' ? 'bg-yellow-100 text-yellow-800' :
+                          analysis.processingStatus === 'failed' ? 'bg-red-100 text-red-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {analysis.processingStatus}
+                        </span>
+                        {analysis.processingStatus === 'completed' && (
+                          <button
+                            onClick={() => {
+                              setAnalysisResult(analysis);
+                              setShowHistory(false);
+                            }}
+                            className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                          >
+                            View Results
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Show History Button */}
+          {!showHistory && analysisHistory.length > 0 && (
+            <div className="text-center">
+              <button
+                onClick={() => setShowHistory(true)}
+                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                View Analysis History ({analysisHistory.length})
+              </button>
             </div>
           )}
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default CvAnalyzer
+export default CvAnalyzer;

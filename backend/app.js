@@ -9,6 +9,7 @@ import companyRouter from "./routers/company.js";
 import jobRouter from "./routers/job.js";
 import applicationRouter from "./routers/application.js";
 import cvAnalyzerRouter from "./routers/cv-analyzer.js";
+import savedJobRouter from "./routers/savedjob.js";
 
 dotenv.config();
 
@@ -16,6 +17,11 @@ const app = express();
 
 // Serve uploaded files
 app.use("/uploads", express.static("uploads"));
+
+// Serve test files (development only)
+if (process.env.NODE_ENV !== 'production') {
+  app.use(express.static('.')); // Serve files from root directory for testing
+}
 
 app.use(cookieParser());
 app.use(
@@ -47,8 +53,10 @@ app.use(passport.session());
 // Routes - back to original structure with saved jobs added
 app.use("/auth", userRouter);
 app.use("/company", companyRouter);
-app.use("/api/jobs", jobRouter);
+app.use("/api/jobs", jobRouter); // Legacy route for backward compatibility
+app.use("/api/v1/jobs", jobRouter); // New versioned route
 app.use("/api/applications", applicationRouter);
+app.use("/api/saved-jobs", savedJobRouter);
 app.use("/api/v1/cv-analyzer", cvAnalyzerRouter);
 
 // Basic test route
