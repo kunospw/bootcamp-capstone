@@ -226,12 +226,12 @@ const SavedJobs = () => {
                     ) : (
                         <div className="bg-white rounded-lg shadow-lg border border-gray-200 relative z-10">
                             <div className="p-6">
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 items-stretch">
                                     {visibleSavedJobs.map((savedJob) => (
-                                        <div key={savedJob._id} className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-                                            <div className="p-6">
+                                        <div key={savedJob._id} className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow flex flex-col h-full">
+                                            <div className="p-6 flex flex-col flex-1">
                                                 {/* Company Logo and Basic Info */}
-                                                <div className="flex items-start space-x-4 mb-4">
+                                                <div className="flex items-start space-x-4 mb-4 min-h-[4rem]">
                                                     {savedJob.jobId.companyId?.profilePicture && (
                                                         <img
                                                             src={`http://localhost:3000/${savedJob.jobId.companyId.profilePicture}`}
@@ -250,7 +250,7 @@ const SavedJobs = () => {
                                                     </div>
                                                     <button
                                                         onClick={() => handleRemoveSavedJob(savedJob._id)}
-                                                        className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                                                        className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors flex-shrink-0"
                                                         title="Remove from saved"
                                                     >
                                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -260,12 +260,12 @@ const SavedJobs = () => {
                                                 </div>
 
                                                 {/* Location and Salary */}
-                                                <div className="mb-4">
+                                                <div className="mb-4 min-h-[3rem]">
                                                     <div className="flex items-center text-sm text-gray-500 mb-2">
-                                                        <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                        <svg className="w-4 h-4 mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                                             <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                                                         </svg>
-                                                        <span>{savedJob.jobId.location}</span>
+                                                        <span className="truncate">{savedJob.jobId.location}</span>
                                                     </div>
                                                     <div className="text-sm text-green-600 font-medium">
                                                         {formatSalary(savedJob.jobId.salary)}
@@ -273,14 +273,14 @@ const SavedJobs = () => {
                                                 </div>
 
                                                 {/* Priority */}
-                                                <div className="mb-4">
+                                                <div className="mb-4 min-h-[1.75rem]">
                                                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${getPriorityColor(savedJob.priority)}`}>
                                                         {savedJob.priority} priority
                                                     </span>
                                                 </div>
                                                 
                                                 {/* Job Type Tags */}
-                                                <div className="flex flex-wrap gap-1 mb-4">
+                                                <div className="flex flex-wrap gap-1 mb-4 min-h-[1.75rem]">
                                                     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                                         {savedJob.jobId.type}
                                                     </span>
@@ -293,16 +293,18 @@ const SavedJobs = () => {
                                                 </div>
 
                                                 {/* Personal Note */}
-                                                {savedJob.note && (
-                                                    <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                                                {savedJob.note ? (
+                                                    <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-100 flex-1 min-h-[4rem]">
                                                         <p className="text-xs text-gray-600 mb-1">Your note:</p>
                                                         <p className="text-sm text-gray-800 leading-relaxed line-clamp-2">{savedJob.note}</p>
                                                     </div>
+                                                ) : (
+                                                    <div className="mb-4 flex-1"></div>
                                                 )}
                                                 
                                                 {/* Tags */}
-                                                {savedJob.tags && savedJob.tags.length > 0 && (
-                                                    <div className="flex flex-wrap gap-1 mb-4">
+                                                {savedJob.tags && savedJob.tags.length > 0 ? (
+                                                    <div className="flex flex-wrap gap-1 mb-4 min-h-[2rem]">
                                                         {savedJob.tags.slice(0, 3).map((tag, index) => (
                                                             <span key={index} className="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
                                                                 #{tag}
@@ -314,16 +316,18 @@ const SavedJobs = () => {
                                                             </span>
                                                         )}
                                                     </div>
+                                                ) : (
+                                                    <div className="mb-4"></div>
                                                 )}
                                                 
                                                 {/* Footer */}
-                                                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                                                <div className="flex items-center justify-between pt-4 border-t border-gray-100 mt-auto min-h-[3rem]">
                                                     <div className="text-xs text-gray-500">
                                                         <span>Saved {new Date(savedJob.dateSaved).toLocaleDateString()}</span>
                                                     </div>
                                                     <button 
                                                         onClick={() => navigate(`/job/${savedJob.jobId._id}`)}
-                                                        className="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded hover:bg-blue-700 transition-colors"
+                                                        className="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded hover:bg-blue-700 transition-colors flex-shrink-0"
                                                     >
                                                         View Job
                                                     </button>

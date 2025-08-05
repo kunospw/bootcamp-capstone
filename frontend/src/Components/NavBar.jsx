@@ -4,6 +4,7 @@ import logo from '../assets/logo.svg'; // Adjust the path as necessary
 
 const NavBar = () => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [userData, setUserData] = useState(null);
     const dropdownRef = useRef(null);
@@ -12,6 +13,10 @@ const NavBar = () => {
 
     const toggleDropdown = () => {
         setIsDropdownOpen(!isDropdownOpen);
+    };
+
+    const toggleMobileMenu = () => {
+        setIsMobileMenuOpen(!isMobileMenuOpen);
     };
 
     // Helper function to check if a link is active
@@ -24,7 +29,7 @@ const NavBar = () => {
 
     // Helper function to get link classes
     const getLinkClasses = (path) => {
-        const baseClasses = "block py-2 px-3 rounded-sm md:p-0 cursor-pointer transition-colors";
+        const baseClasses = "block py-2 px-3 rounded-sm md:p-0 cursor-pointer transition-colors w-full text-left";
         const activeClasses = "text-white border-b-2 border-white md:border-b-2";
         const inactiveClasses = "text-white/80 hover:bg-white/10 md:hover:bg-transparent md:hover:text-white";
         
@@ -108,10 +113,24 @@ const NavBar = () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, []);
+
+    // Close mobile menu when screen size changes to desktop
+    useEffect(() => {
+        const handleResize = () => {
+            if (window.innerWidth >= 768) { // md breakpoint
+                setIsMobileMenuOpen(false);
+            }
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => {
+            window.removeEventListener('resize', handleResize);
+        };
+    }, []);
     return (
         <div>
             <nav className="bg-[#0D6EFD]/90 backdrop-blur-md border-none fixed top-0 left-0 right-0 z-50">
-                <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
+                <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4 relative">
                     <button 
                         onClick={() => navigate('/')}
                         className="flex items-center space-x-3 rtl:space-x-reverse cursor-pointer hover:opacity-80 transition-opacity"
@@ -243,34 +262,60 @@ const NavBar = () => {
                                 </ul>
                             )}
                         </div>
-                        <button data-collapse-toggle="navbar-user" type="button" className="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-white/80 rounded-lg md:hidden hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/20" aria-controls="navbar-user" aria-expanded="false">
+                        <button 
+                            data-collapse-toggle="navbar-user" 
+                            type="button" 
+                            className="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-white/80 rounded-lg md:hidden hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/20 transition-all duration-300" 
+                            aria-controls="navbar-user" 
+                            aria-expanded={isMobileMenuOpen}
+                            onClick={toggleMobileMenu}
+                        >
                             <span className="sr-only">Open main menu</span>
-                            <svg className="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14">
-                                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M1 1h15M1 7h15M1 13h15" />
-                            </svg>
+                            <div className="w-5 h-5 flex flex-col justify-center space-y-1">
+                                <span className={`block h-0.5 w-5 bg-current transition-all duration-300 ${
+                                    isMobileMenuOpen ? 'rotate-45 translate-y-1.5' : ''
+                                }`}></span>
+                                <span className={`block h-0.5 w-5 bg-current transition-all duration-300 ${
+                                    isMobileMenuOpen ? 'opacity-0' : ''
+                                }`}></span>
+                                <span className={`block h-0.5 w-5 bg-current transition-all duration-300 ${
+                                    isMobileMenuOpen ? '-rotate-45 -translate-y-1.5' : ''
+                                }`}></span>
+                            </div>
                         </button>
                     </div>
-                    <div className="items-center justify-between hidden w-full md:flex md:w-auto md:order-1" id="navbar-user">
-                        <ul className="flex flex-col font-medium p-4 md:p-0 mt-4 border border-white/20 rounded-lg bg-white/10 md:space-x-8 rtl:space-x-reverse md:flex-row md:mt-0 md:border-0 md:bg-transparent">
-                            <li>
+                    <div className={`absolute top-full left-0 right-0 md:relative md:top-auto md:left-auto md:right-auto items-center justify-between w-full md:flex md:w-auto md:order-1 transition-all duration-300 ease-in-out ${
+                        isMobileMenuOpen ? 'block' : 'hidden'
+                    }`} id="navbar-user">
+                        <ul className="flex flex-col font-medium p-4 md:p-0 mt-0 border border-white/20 rounded-b-lg bg-[#0D6EFD]/90 backdrop-blur-md md:space-x-8 rtl:space-x-reverse md:flex-row md:border-0 md:bg-transparent md:rounded-none">
+                            <li className="w-full md:w-auto">
                                 <button 
-                                    onClick={() => navigate('/')}
+                                    onClick={() => {
+                                        navigate('/');
+                                        setIsMobileMenuOpen(false);
+                                    }}
                                     className={getLinkClasses('/')}
                                 >
                                     Vacancy
                                 </button>
                             </li>
-                            <li>
+                            <li className="w-full md:w-auto">
                                 <button 
-                                    onClick={() => navigate('/companies')}
+                                    onClick={() => {
+                                        navigate('/companies');
+                                        setIsMobileMenuOpen(false);
+                                    }}
                                     className={getLinkClasses('/companies')}
                                 >
                                     Company
                                 </button>
                             </li>
-                            <li>
+                            <li className="w-full md:w-auto">
                                 <button 
-                                    onClick={() => navigate('/cv-analyzer')}
+                                    onClick={() => {
+                                        navigate('/cv-analyzer');
+                                        setIsMobileMenuOpen(false);
+                                    }}
                                     className={getLinkClasses('/cv-analyzer')}
                                 >
                                     CV Analyzer

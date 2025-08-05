@@ -258,11 +258,11 @@ export default function Login() {
             </div>
 
             {/* Forgot Password Link */}
-            <div className='text-right'>
+            {/* <div className='text-right'>
               <a href='#' className='text-sm text-blue-600 hover:text-blue-700 font-medium'>
                 Forgot Password?
               </a>
-            </div>
+            </div> */}
 
             {/* Submit Button */}
             <button

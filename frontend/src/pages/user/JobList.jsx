@@ -264,6 +264,62 @@ const JobList = () => {
         }
     };
 
+    // Handle unsave job (remove from saved jobs)
+    const handleUnsaveJob = async (jobId) => {
+        try {
+            const token = localStorage.getItem('token');
+            const savedJobDetail = savedJobDetails.get(jobId);
+            
+            if (!savedJobDetail) {
+                showNotification('error', 'Saved job not found.');
+                return;
+            }
+
+            const response = await fetch(`http://localhost:3000/api/saved-jobs/${savedJobDetail._id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                // Remove from saved jobs state
+                setSavedJobs(prev => {
+                    const newSet = new Set(prev);
+                    newSet.delete(jobId);
+                    return newSet;
+                });
+                
+                // Remove from saved job details
+                setSavedJobDetails(prev => {
+                    const newMap = new Map(prev);
+                    newMap.delete(jobId);
+                    return newMap;
+                });
+
+                // Close any open forms for this job
+                setSaveJobForms(prev => {
+                    const newSet = new Set(prev);
+                    newSet.delete(jobId);
+                    return newSet;
+                });
+                
+                setEditingJobs(prev => {
+                    const newMap = new Map(prev);
+                    newMap.delete(jobId);
+                    return newMap;
+                });
+
+                showNotification('success', 'Job removed from saved list!');
+            } else {
+                throw new Error('Failed to remove saved job');
+            }
+        } catch (error) {
+            console.error('Error removing saved job:', error);
+            showNotification('error', 'Failed to remove job. Please try again.');
+        }
+    };
+
     // Helper function for notifications 
     const showNotification = (type, message) => {
         const colors = {
@@ -466,7 +522,7 @@ const JobList = () => {
                         </p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
                         {jobs.length === 0 && !loading ? (
                             <div className="col-span-full text-center py-12">
                                 <div className="max-w-md mx-auto">
@@ -494,10 +550,10 @@ const JobList = () => {
                             </div>
                         ) : (
                             jobs.map((job) => (
-                                <div key={job._id} className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-                                    {/* Existing job card content */}
-                                    <div className={`p-4 ${!job.canApply ? 'opacity-75' : ''}`}>
-                                        <div className="flex items-start justify-between mb-4">
+                                <div key={job._id} className="job-card bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow flex flex-col h-full">
+                                    {/* Main job card content */}
+                                    <div className={`p-4 flex-1 flex flex-col ${!job.canApply ? 'opacity-75' : ''}`}>
+                                        <div className="flex items-start justify-between mb-4 min-h-[3rem]">
                                             <div className="flex items-start space-x-3 flex-1">
                                                 {job.companyId?.profilePicture && (
                                                     <img
@@ -519,13 +575,13 @@ const JobList = () => {
                                             
                                             {/* Job Status Badge */}
                                             {!job.canApply && (
-                                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 ml-2">
+                                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 ml-2 flex-shrink-0">
                                                     {job.isExpired ? 'Expired' : 'Inactive'}
                                                 </span>
                                             )}
                                         </div>
 
-                                        <div className="mb-3">
+                                        <div className="mb-3 min-h-[2.75rem]">
                                             <p className="text-sm text-gray-500 flex items-center">
                                                 <svg className="w-4 h-4 mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                                     <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
@@ -535,7 +591,7 @@ const JobList = () => {
                                             <p className="text-sm font-medium text-gray-900 mt-1">{formatSalary(job.salary)}</p>
                                         </div>
 
-                                        <div className="flex flex-wrap gap-1 mb-3">
+                                        <div className="flex flex-wrap gap-1 mb-3 min-h-[1.75rem]">
                                             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                                 {job.type}
                                             </span>
@@ -547,12 +603,12 @@ const JobList = () => {
                                             </span>
                                         </div>
 
-                                        <div className="mb-4">
-                                            <p className="text-gray-600 text-sm line-clamp-3">{job.description.substring(0, 150)}...</p>
+                                        <div className="mb-4 flex-1">
+                                            <p className="text-gray-600 text-sm line-clamp-3 min-h-[3.75rem]">{job.description.substring(0, 150)}...</p>
                                         </div>
 
-                                        {job.skills && job.skills.length > 0 && (
-                                            <div className="flex flex-wrap gap-1 mb-4">
+                                        {job.skills && job.skills.length > 0 ? (
+                                            <div className="flex flex-wrap gap-1 mb-4 min-h-[2rem]">
                                                 {job.skills.slice(0, 3).map((skill, index) => (
                                                     <span key={index} className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-800">
                                                         {skill}
@@ -564,9 +620,12 @@ const JobList = () => {
                                                     </span>
                                                 )}
                                             </div>
+                                        ) : (
+                                            <div className="mb-4"></div>
                                         )}
 
-                                        <div className="border-t border-gray-100 pt-3">
+                                        {/* Job Status - Always at bottom of main content */}
+                                        <div className="job-status border-t border-gray-100 pt-3 mt-auto min-h-[4.5rem]">
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center space-x-3 text-xs text-gray-500">
                                                     <span className="flex items-center">
@@ -618,18 +677,22 @@ const JobList = () => {
                                         </div>
                                     </div>
 
-                                    {/* Inline Save Job Form */}
-                                    <SaveJobForm
-                                        job={job}
-                                        onSave={handleSaveJobSubmit}
-                                        onCancel={() => handleCancelSaveJob(job._id)}
-                                        existingSave={editingJobs.get(job._id)}
-                                        isVisible={saveJobForms.has(job._id)}
-                                    />
+                                    {/* Inline Save Job Form - Fixed at card bottom */}
+                                    {saveJobForms.has(job._id) && (
+                                        <div className="border-t border-gray-100">
+                                            <SaveJobForm
+                                                job={job}
+                                                onSave={handleSaveJobSubmit}
+                                                onCancel={() => handleCancelSaveJob(job._id)}
+                                                existingSave={editingJobs.get(job._id)}
+                                                isVisible={saveJobForms.has(job._id)}
+                                            />
+                                        </div>
+                                    )}
 
-                                    {/* Personal Note Comment Section (for saved jobs with notes) */}
+                                    {/* Personal Note Comment Section - Fixed at card bottom */}
                                     {savedJobs.has(job._id) && savedJobDetails.has(job._id) && !saveJobForms.has(job._id) && (
-                                        <div className="border-t border-gray-100 bg-blue-50 px-4 py-3">
+                                        <div className="notes border-t border-gray-100 bg-blue-50 px-4 py-3">
                                             <div className="flex items-start space-x-3">
                                                 <div className="flex-shrink-0">
                                                     <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
