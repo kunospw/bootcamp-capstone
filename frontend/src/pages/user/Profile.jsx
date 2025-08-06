@@ -172,7 +172,7 @@ const Profile = () => {
               <div className="w-32 h-32 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden">
                 {user.profilePicture ? (
                   <img 
-                    src={user.profilePicture} 
+                    src={user.profilePicture.startsWith('http') ? user.profilePicture : `http://localhost:3000/${user.profilePicture}`} 
                     alt="Profile" 
                     className="w-full h-full object-cover"
                   />

@@ -263,13 +263,28 @@ const SavedJobs = () => {
                                             <div className="p-6 flex flex-col flex-1">
                                                 {/* Company Logo and Basic Info */}
                                                 <div className="flex items-start space-x-4 mb-4 min-h-[4rem]">
-                                                    {savedJob.jobId.companyId?.profilePicture && (
-                                                        <img
-                                                            src={`http://localhost:3000/${savedJob.jobId.companyId.profilePicture}`}
-                                                            alt={savedJob.jobId.companyId.companyName}
-                                                            className="w-12 h-12 rounded-lg object-cover border border-gray-200 flex-shrink-0"
-                                                        />
-                                                    )}
+                                                    <div className="w-12 h-12 rounded-lg border border-gray-200 flex-shrink-0 overflow-hidden bg-gray-50 flex items-center justify-center">
+                                                        {savedJob.jobId.companyId?.profilePicture ? (
+                                                            <img
+                                                                src={`http://localhost:3000/${savedJob.jobId.companyId.profilePicture}`}
+                                                                alt={savedJob.jobId.companyId.companyName}
+                                                                className="w-full h-full object-cover"
+                                                                onError={(e) => {
+                                                                    e.target.style.display = 'none';
+                                                                    e.target.nextSibling.style.display = 'flex';
+                                                                }}
+                                                            />
+                                                        ) : null}
+                                                        <div 
+                                                            className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-semibold text-sm"
+                                                            style={{ display: savedJob.jobId.companyId?.profilePicture ? 'none' : 'flex' }}
+                                                        >
+                                                            {savedJob.jobId.companyId?.companyName ? 
+                                                                savedJob.jobId.companyId.companyName.charAt(0).toUpperCase() : 
+                                                                'C'
+                                                            }
+                                                        </div>
+                                                    </div>
                                                     <div className="flex-1 min-w-0">
                                                         <h3
                                                             onClick={() => navigate(`/job/${savedJob.jobId._id}`)}
