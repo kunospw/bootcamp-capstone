@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { FaBuilding, FaUser } from "react-icons/fa";
+import { FaBuilding, FaUser, FaEye, FaEyeSlash } from "react-icons/fa";
 import FloatingDecorations from "../Components/FloatingDecorations";
 
 export default function Login() {
@@ -28,6 +28,7 @@ export default function Login() {
     password: "",
   });
   const [message, setMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   // Handle Google OAuth redirect
   useEffect(() => {
@@ -71,6 +72,10 @@ export default function Login() {
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
 
   const handleTypeChange = (e) => {
@@ -245,16 +250,29 @@ export default function Login() {
               <label htmlFor='password' className='block text-sm font-medium text-gray-700 mb-1'>
                 Password
               </label>
-              <input
-                type='password'
-                id='password'
-                name='password'
-                value={form.password}
-                onChange={handleChange}
-                className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200'
-                placeholder='Enter your password'
-                required
-              />
+              <div className='relative'>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  id='password'
+                  name='password'
+                  value={form.password}
+                  onChange={handleChange}
+                  className='w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200'
+                  placeholder='Enter your password'
+                  required
+                />
+                <button
+                  type='button'
+                  onClick={togglePasswordVisibility}
+                  className='absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-gray-600 transition-colors duration-200'
+                >
+                  {showPassword ? (
+                    <FaEyeSlash className='w-4 h-4' />
+                  ) : (
+                    <FaEye className='w-4 h-4' />
+                  )}
+                </button>
+              </div>
             </div>
 
             {/* Forgot Password Link */}
