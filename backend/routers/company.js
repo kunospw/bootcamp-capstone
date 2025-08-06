@@ -22,6 +22,14 @@ function validatePhone(phone) {
     return /^\d{8,15}$/.test(phone);
 }
 
+function validatePassword(password) {
+    // At least 6 characters, one uppercase, one lowercase, one number
+    return password.length >= 6 &&
+        /[A-Z]/.test(password) &&
+        /[a-z]/.test(password) &&
+        /\d/.test(password);
+}
+
 // Middleware to verify JWT token
 const verifyToken = (req, res, next) => {
     const token = (req.header("Authorization") || "").replace("Bearer ", "");
@@ -34,7 +42,7 @@ const verifyToken = (req, res, next) => {
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.company = decoded; // or req.user depending on your use case
+        req.company = decoded;
         next();
     } catch (error) {
         return res.status(400).json({ message: "Invalid token." });
@@ -54,13 +62,16 @@ router.post("/register", upload.single("credentialFile"), async(req, res) => {
         if (!validateEmail(email)) {
             return res.status(400).json({ message: "Invalid email format." });
         }
+
         if (phoneNumber && !validatePhone(phoneNumber)) {
-            return res.status(400).json({ message: "Invalid phone number format." });
+            return res.status(400).json({ message: "Invalid phone number format. Must be 8-15 digits." });
         }
 
-        // Check if password is at least 3 characters
-        if (password.length < 3) {
-            return res.status(400).json({ message: "Password must be at least 3 characters long." });
+        // Enhanced password validation
+        if (!validatePassword(password)) {
+            return res.status(400).json({
+                message: "Password must be at least 6 characters long and contain at least one uppercase letter, one lowercase letter, and one number."
+            });
         }
 
         // Check if company already exists
@@ -69,15 +80,26 @@ router.post("/register", upload.single("credentialFile"), async(req, res) => {
             return res.status(409).json({ message: "Company with this email already exists." });
         }
 
+        // Create company - password will be hashed by the pre-save middleware
         const company = new Company({
             companyName,
             email,
-            password, // Store password as plain text
+            password, // Will be hashed automatically
             phoneNumber,
         });
+
         await company.save();
-        res.status(201).json({ message: "Company registered successfully." });
+
+        res.status(201).json({
+            message: "Company registered successfully.",
+            company: {
+                _id: company._id,
+                companyName: company.companyName,
+                email: company.email
+            }
+        });
     } catch (err) {
+        console.error("Company registration error:", err);
         if (err.code === 11000) {
             res.status(409).json({ message: "Company with this email already exists." });
         } else {
@@ -98,23 +120,32 @@ router.post("/login", async(req, res) => {
                 .json({ message: "Email and password are required." });
         }
 
-        // Find company (no need to select password since it's not hidden now)
-        const company = await Company.findOne({ email });
+        console.log("Company login attempt for email:", email);
+
+        // Find company and explicitly select password field
+        const company = await Company.findOne({ email }).select('+password');
         if (!company) {
+            console.log("Company not found for email:", email);
             return res.status(401).json({ message: "Invalid credentials." });
         }
 
-        // Simple password comparison (plain text)
-        if (company.password !== password) {
+        console.log("Company found:", company.email);
+
+        // Use the matchPassword method to compare hashed password
+        const isPasswordMatch = await company.matchPassword(password);
+        if (!isPasswordMatch) {
+            console.log("Password comparison failed for company:", email);
             return res.status(401).json({ message: "Invalid credentials." });
         }
+
+        console.log("Company login successful for:", email);
 
         // Update last login
         await company.updateLastLogin();
 
         // Issue JWT for company
         const token = jwt.sign({ companyId: company._id, email: company.email, type: "company" },
-            process.env.JWT_SECRET, { expiresIn: "1d" }
+            process.env.JWT_SECRET, { expiresIn: "7d" } // Extended to 7 days
         );
 
         res.json({
@@ -129,16 +160,57 @@ router.post("/login", async(req, res) => {
         });
     } catch (err) {
         console.error("Company login error:", err);
-        res.status(400).json({ message: err.message });
+        res.status(500).json({ message: "Internal server error. Please try again." });
     }
 });
+
+// Change password endpoint for companies
+router.put("/change-password", verifyToken, async(req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ message: "Current password and new password are required." });
+        }
+
+        // Validate new password
+        if (!validatePassword(newPassword)) {
+            return res.status(400).json({
+                message: "New password must be at least 6 characters long and contain at least one uppercase letter, one lowercase letter, and one number."
+            });
+        }
+
+        // Find company with password
+        const company = await Company.findById(req.company.companyId).select('+password');
+        if (!company) {
+            return res.status(404).json({ message: "Company not found." });
+        }
+
+        // Check current password
+        const isCurrentPasswordMatch = await company.matchPassword(currentPassword);
+        if (!isCurrentPasswordMatch) {
+            return res.status(401).json({ message: "Current password is incorrect." });
+        }
+
+        // Update password (will be hashed by pre-save middleware)
+        company.password = newPassword;
+        await company.save();
+
+        res.json({ message: "Password changed successfully." });
+    } catch (err) {
+        console.error("Change password error:", err);
+        res.status(500).json({ message: "Internal server error. Please try again." });
+    }
+});
+
+// Company validation endpoint (admin only)
 router.post("/validate/:id", async(req, res) => {
     const adminToken = process.env.ADMIN_TOKEN;
     if (req.headers.authorization !== `Bearer ${adminToken}`) {
         return res.status(403).json({ message: "Forbidden" });
     }
     try {
-        const { status, adminNotes } = req.body; // status: "approved" or "rejected"
+        const { status, adminNotes } = req.body;
         if (!["approved", "rejected"].includes(status)) {
             return res.status(400).json({ message: "Invalid status value." });
         }
@@ -148,7 +220,8 @@ router.post("/validate/:id", async(req, res) => {
                 credentialReviewDate: new Date(),
                 adminNotes: adminNotes || "",
             }, { new: true }
-        );
+        ).select("-password");
+
         if (!company)
             return res.status(404).json({ message: "Company not found." });
         res.json({ message: `Company credential ${status}.`, company });
@@ -166,7 +239,7 @@ router.get("/profile/:id", verifyToken, async(req, res) => {
         }
         res.json(company);
     } catch (err) {
-        res.status(400).json({ message: err.message });
+        res.status(500).json({ message: "Internal server error. Please try again." });
     }
 });
 
@@ -260,7 +333,7 @@ router.get("/", async(req, res) => {
         });
     } catch (err) {
         console.error('Error fetching companies:', err);
-        res.status(500).json({ message: err.message });
+        res.status(500).json({ message: "Internal server error. Please try again." });
     }
 });
 
@@ -280,7 +353,7 @@ router.get("/:id", async(req, res) => {
         if (err.name === 'CastError') {
             return res.status(400).json({ message: "Invalid company ID format." });
         }
-        res.status(500).json({ message: err.message });
+        res.status(500).json({ message: "Internal server error. Please try again." });
     }
 });
 

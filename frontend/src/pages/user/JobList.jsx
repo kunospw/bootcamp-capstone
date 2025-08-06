@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react'; // Add useCallback
 import { useNavigate } from 'react-router-dom';
 import NavBar from '../../Components/NavBar';
 import FloatingDecorations from '../../Components/FloatingDecorations';
-import SaveJobForm from '../../Components/SaveJobForm'; // Change from SaveJobModal
+import SaveJobForm from '../../Components/SaveJobForm';
 
 const JobList = () => {
     const navigate = useNavigate();
@@ -16,7 +16,7 @@ const JobList = () => {
         workLocation: '',
         experienceLevel: '',
     });
-    const [showInactive, setShowInactive] = useState(true); // Show inactive jobs by default
+    const [showInactive, setShowInactive] = useState(true);
     const [pagination, setPagination] = useState({
         currentPage: 1,
         totalPages: 1,
@@ -24,11 +24,16 @@ const JobList = () => {
         hasMore: true,
     });
     
-    // Save job functionality
-    const [saveJobForms, setSaveJobForms] = useState(new Set()); // Track which jobs have forms open
-    const [editingJobs, setEditingJobs] = useState(new Map()); // Track which jobs are being edited
+    // Debounce state for search
+    const [searchDebounceTimer, setSearchDebounceTimer] = useState(null);
+    
+    // Save job functionality states...
+    const [saveJobForms, setSaveJobForms] = useState(new Set());
+    const [editingJobs, setEditingJobs] = useState(new Map());
     const [savedJobs, setSavedJobs] = useState(new Set());
+    const [savedJobDetails, setSavedJobDetails] = useState(new Map());
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [tempVisibleNotes, setTempVisibleNotes] = useState(new Set());
 
     // Check authentication status
     useEffect(() => {
@@ -36,98 +41,42 @@ const JobList = () => {
         setIsAuthenticated(!!token);
     }, []);
 
-    // Load saved jobs status when authenticated
-    useEffect(() => {
-        if (isAuthenticated && jobs.length > 0) {
-            checkSavedJobsStatus();
-        }
-    }, [isAuthenticated, jobs]);
-
-    // Check which jobs are already saved and get their details
-    const checkSavedJobsStatus = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            if (!token) return;
-
-            const savedJobsMap = new Map();
-            
-            // Check each job to see if it's saved and get the saved job details
-            for (const job of jobs) {
-                try {
-                    const response = await fetch(`http://localhost:3000/api/saved-jobs/check/${job._id}`, {
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        }
-                    });
-                    
-                    if (response.ok) {
-                        const data = await response.json();
-                        if (data.isSaved && data.savedJob) {
-                            savedJobsMap.set(job._id, data.savedJob);
-                        }
-                    }
-                } catch (error) {
-                    console.error(`Error checking saved status for job ${job._id}:`, error);
-                }
-            }
-            
-            setSavedJobs(new Set(savedJobsMap.keys()));
-            setSavedJobDetails(savedJobsMap); // New state to store saved job details
-        } catch (error) {
-            console.error('Error checking saved jobs status:', error);
-        }
-    };
-
-    // Add new state for saved job details
-    const [savedJobDetails, setSavedJobDetails] = useState(new Map());
-
-    // Load jobs on component mount
-    useEffect(() => {
-        const loadJobs = async () => {
-            try {
-                setLoading(true);
-                const queryParams = new URLSearchParams({
-                    page: '1',
-                    limit: '15',
-                    includeInactive: 'true'
-                });
-
-                const response = await fetch(`http://localhost:3000/api/jobs?${queryParams}`);
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const data = await response.json();
-                setJobs(data.jobs);
-                setPagination({
-                    currentPage: data.currentPage,
-                    totalPages: data.totalPages,
-                    total: data.total,
-                    hasMore: data.currentPage < data.totalPages,
-                });
-                setError(null);
-            } catch (err) {
-                console.error('Error fetching jobs:', err);
-                setError(err.message || 'Failed to fetch jobs');
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        loadJobs();
-    }, []);
-
-    // Fetch jobs from the API
-    const fetchJobs = async (page = 1, append = false) => {
+    // Main fetch function with proper query building
+    const fetchJobs = useCallback(async (page = 1, append = false, customFilters = null, customShowInactive = null) => {
         try {
             setLoading(true);
+            
+            // Use custom filters if provided, otherwise use current state
+            const activeFilters = customFilters || filters;
+            const activeShowInactive = customShowInactive !== null ? customShowInactive : showInactive;
+            
+            // Build query parameters
             const queryParams = new URLSearchParams({
                 page: page.toString(),
                 limit: '15',
-                includeInactive: 'true',
-                ...Object.fromEntries(Object.entries(filters).filter(([, value]) => value))
+                includeInactive: activeShowInactive.toString()
             });
+
+            // Add search parameters - use 'search' for general text search
+            if (activeFilters.search && activeFilters.search.trim()) {
+                queryParams.set('search', activeFilters.search.trim());
+            }
+
+            // Add specific filter parameters
+            if (activeFilters.location && activeFilters.location.trim()) {
+                queryParams.set('location', activeFilters.location.trim());
+            }
+            if (activeFilters.type) {
+                queryParams.set('type', activeFilters.type);
+            }
+            if (activeFilters.workLocation) {
+                queryParams.set('workLocation', activeFilters.workLocation);
+            }
+            if (activeFilters.experienceLevel) {
+                queryParams.set('experienceLevel', activeFilters.experienceLevel);
+            }
+
+            console.log('Fetching with params:', queryParams.toString()); // Debug log
 
             const response = await fetch(`http://localhost:3000/api/jobs?${queryParams}`);
 
@@ -156,6 +105,148 @@ const JobList = () => {
         } finally {
             setLoading(false);
         }
+    }, [filters, showInactive]); // Dependencies for useCallback
+
+    // Initial load
+    useEffect(() => {
+        fetchJobs(1);
+    }, []); // Only run on mount
+
+    // Auto-search with debounce for search field
+    useEffect(() => {
+        // Clear existing timer
+        if (searchDebounceTimer) {
+            clearTimeout(searchDebounceTimer);
+        }
+
+        // Set new timer for search debounce (500ms delay)
+        const timer = setTimeout(() => {
+            if (filters.search !== '') { // Only auto-search when there's text
+                console.log('Auto-searching for:', filters.search);
+                fetchJobs(1);
+            }
+        }, 500);
+
+        setSearchDebounceTimer(timer);
+
+        // Cleanup timer on unmount or dependency change
+        return () => {
+            if (timer) {
+                clearTimeout(timer);
+            }
+        };
+    }, [filters.search]); // Only trigger on search changes
+
+    // Immediate fetch for other filter changes
+    useEffect(() => {
+        fetchJobs(1);
+    }, [filters.location, filters.type, filters.workLocation, filters.experienceLevel]);
+
+    // Refetch when showInactive changes
+    useEffect(() => {
+        fetchJobs(1);
+    }, [showInactive]);
+
+    // Load saved jobs status when authenticated
+    useEffect(() => {
+        if (isAuthenticated && jobs.length > 0) {
+            checkSavedJobsStatus();
+        }
+    }, [isAuthenticated, jobs]);
+
+    // Check which jobs are already saved and get their details
+    const checkSavedJobsStatus = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            const savedJobsMap = new Map();
+            
+            for (const job of jobs) {
+                try {
+                    const response = await fetch(`http://localhost:3000/api/saved-jobs/check/${job._id}`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.isSaved && data.savedJob) {
+                            savedJobsMap.set(job._id, data.savedJob);
+                        }
+                    }
+                } catch (error) {
+                    console.error(`Error checking saved status for job ${job._id}:`, error);
+                }
+            }
+            
+            setSavedJobs(new Set(savedJobsMap.keys()));
+            setSavedJobDetails(savedJobsMap);
+        } catch (error) {
+            console.error('Error checking saved jobs status:', error);
+        }
+    };
+
+    // Handle filter changes with immediate effect for dropdowns
+    const handleFilterChange = (e) => {
+        const { name, value } = e.target;
+        console.log(`Filter changed: ${name} = ${value}`); // Debug log
+        
+        setFilters(prev => ({
+            ...prev,
+            [name]: value
+        }));
+
+        // Reset pagination when filters change
+        setPagination(prev => ({
+            ...prev,
+            currentPage: 1,
+            hasMore: true
+        }));
+    };
+
+    // Handle search form submit (for manual search)
+    const handleSearch = (e) => {
+        e.preventDefault();
+        console.log('Manual search triggered:', filters.search);
+        fetchJobs(1);
+    };
+
+    // Clear all filters
+    const handleClearFilters = () => {
+        const clearedFilters = {
+            search: '',
+            location: '',
+            type: '',
+            workLocation: '',
+            experienceLevel: '',
+        };
+        setFilters(clearedFilters);
+        setShowInactive(true);
+        
+        // Fetch jobs with cleared filters
+        fetchJobs(1, false, clearedFilters, true);
+    };
+
+    // Handle load more
+    const handleLoadMore = () => {
+        if (pagination.hasMore && !loading) {
+            fetchJobs(pagination.currentPage + 1, true);
+        }
+    };
+
+    // Function to temporarily show a note
+    const showNoteTemporarily = (jobId, duration = 3000) => {
+        setTempVisibleNotes(prev => new Set([...prev, jobId]));
+        
+        setTimeout(() => {
+            setTempVisibleNotes(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(jobId);
+                return newSet;
+            });
+        }, duration);
     };
 
     // Handle save job - show inline form
@@ -166,7 +257,6 @@ const JobList = () => {
             return;
         }
 
-        // Toggle form visibility
         setSaveJobForms(prev => {
             const newSet = new Set(prev);
             if (newSet.has(job._id)) {
@@ -211,7 +301,6 @@ const JobList = () => {
             
             let response;
             if (existingSave) {
-                // Update existing saved job
                 response = await fetch(`http://localhost:3000/api/saved-jobs/${existingSave._id}`, {
                     method: 'PUT',
                     headers: {
@@ -221,7 +310,6 @@ const JobList = () => {
                     body: JSON.stringify(saveData)
                 });
             } else {
-                // Create new saved job
                 response = await fetch('http://localhost:3000/api/saved-jobs', {
                     method: 'POST',
                     headers: {
@@ -238,7 +326,6 @@ const JobList = () => {
                 setSavedJobs(prev => new Set([...prev, saveData.jobId]));
                 setSavedJobDetails(prev => new Map([...prev, [saveData.jobId, result.savedJob]]));
                 
-                // Hide the form
                 setSaveJobForms(prev => {
                     const newSet = new Set(prev);
                     newSet.delete(saveData.jobId);
@@ -250,7 +337,10 @@ const JobList = () => {
                     return newMap;
                 });
                 
-                // Success notification
+                if (result.savedJob?.note) {
+                    showNoteTemporarily(saveData.jobId, 4000);
+                }
+                
                 showNotification('success', existingSave ? 'Note updated successfully!' : 'Job saved successfully!');
             } else {
                 if (response.status === 409) {
@@ -265,7 +355,7 @@ const JobList = () => {
         }
     };
 
-    // Handle unsave job (remove from saved jobs)
+    // Handle unsave job
     const handleUnsaveJob = async (jobId) => {
         try {
             const token = localStorage.getItem('token');
@@ -284,21 +374,18 @@ const JobList = () => {
             });
 
             if (response.ok) {
-                // Remove from saved jobs state
                 setSavedJobs(prev => {
                     const newSet = new Set(prev);
                     newSet.delete(jobId);
                     return newSet;
                 });
                 
-                // Remove from saved job details
                 setSavedJobDetails(prev => {
                     const newMap = new Map(prev);
                     newMap.delete(jobId);
                     return newMap;
                 });
 
-                // Close any open forms for this job
                 setSaveJobForms(prev => {
                     const newSet = new Set(prev);
                     newSet.delete(jobId);
@@ -318,6 +405,62 @@ const JobList = () => {
         } catch (error) {
             console.error('Error removing saved job:', error);
             showNotification('error', 'Failed to remove job. Please try again.');
+        }
+    };
+
+    // Handle clear note
+    const handleClearNote = async (jobId) => {
+        try {
+            const token = localStorage.getItem('token');
+            const savedJobDetail = savedJobDetails.get(jobId);
+            
+            if (!savedJobDetail) {
+                showNotification('error', 'Saved job not found.');
+                return;
+            }
+
+            const response = await fetch(`http://localhost:3000/api/saved-jobs/${savedJobDetail._id}/clear-note`, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                
+                setSavedJobDetails(prev => {
+                    const newMap = new Map(prev);
+                    newMap.set(jobId, result.savedJob);
+                    return newMap;
+                });
+
+                setTempVisibleNotes(prev => {
+                    const newSet = new Set(prev);
+                    newSet.delete(jobId);
+                    return newSet;
+                });
+
+                showNotification('success', 'Note cleared successfully!');
+            } else {
+                throw new Error('Failed to clear note');
+            }
+        } catch (error) {
+            console.error('Error clearing note:', error);
+            showNotification('error', 'Failed to clear note. Please try again.');
+        }
+    };
+
+    // Handle show note
+    const handleShowNote = (jobId) => {
+        if (tempVisibleNotes.has(jobId)) {
+            setTempVisibleNotes(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(jobId);
+                return newSet;
+            });
+        } else {
+            showNoteTemporarily(jobId, 5000);
         }
     };
 
@@ -347,33 +490,13 @@ const JobList = () => {
         `;
         document.body.appendChild(notification);
         setTimeout(() => {
-            document.body.removeChild(notification);
+            if (document.body.contains(notification)) {
+                document.body.removeChild(notification);
+            }
         }, 3000);
     };
 
-    // Handle filter changes
-    const handleFilterChange = (e) => {
-        const { name, value } = e.target;
-        setFilters(prev => ({
-            ...prev,
-            [name]: value
-        }));
-    };
-
-    // Handle search submit
-    const handleSearch = (e) => {
-        e.preventDefault();
-        fetchJobs(1);
-    };
-
-    // Handle load more
-    const handleLoadMore = () => {
-        if (pagination.hasMore && !loading) {
-            fetchJobs(pagination.currentPage + 1, true);
-        }
-    };
-
-    // Format salary
+    // Format salary and date functions remain the same...
     const formatSalary = (salary) => {
         if (!salary || (!salary.min && !salary.max)) return 'Salary not specified';
 
@@ -389,7 +512,6 @@ const JobList = () => {
         }
     };
 
-    // Format date
     const formatDate = (dateString) => {
         const now = new Date();
         const jobDate = new Date(dateString);
@@ -400,10 +522,6 @@ const JobList = () => {
         if (diffDays <= 7) return `Posted ${diffDays} days ago`;
         return jobDate.toLocaleDateString();
     };
-
-    if (loading && jobs.length === 0) {
-        return <div>Loading jobs...</div>;
-    }
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -423,17 +541,26 @@ const JobList = () => {
                         <form onSubmit={handleSearch}>
                             <div className="mb-4">
                                 <div className="flex gap-2">
-                                    <input
-                                        type="text"
-                                        name="search"
-                                        placeholder="Search jobs, companies, or skills..."
-                                        value={filters.search}
-                                        onChange={handleFilterChange}
-                                        className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                                    />
+                                    <div className="flex-1 relative">
+                                        <input
+                                            type="text"
+                                            name="search"
+                                            placeholder="Search jobs, companies, or skills... (auto-search enabled)"
+                                            value={filters.search}
+                                            onChange={handleFilterChange}
+                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                                        />
+                                        {/* Search loading indicator */}
+                                        {loading && filters.search && (
+                                            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                                <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent"></div>
+                                            </div>
+                                        )}
+                                    </div>
                                     <button 
                                         type="submit"
-                                        className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                                        className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50"
+                                        disabled={loading}
                                     >
                                         Search
                                     </button>
@@ -444,7 +571,7 @@ const JobList = () => {
                                 <input
                                     type="text"
                                     name="location"
-                                    placeholder="Location"
+                                    placeholder="Location (e.g., Jakarta, Singapore)"
                                     value={filters.location}
                                     onChange={handleFilterChange}
                                     className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
@@ -491,8 +618,8 @@ const JobList = () => {
                                 </select>
                             </div>
                             
-                            {/* Toggle for showing inactive jobs */}
-                            <div className="mt-4 pt-4 border-t border-gray-200">
+                            {/* Filter controls */}
+                            <div className="mt-4 pt-4 border-t border-gray-200 flex items-center justify-between">
                                 <label className="flex items-center text-sm text-gray-600 cursor-pointer">
                                     <input
                                         type="checkbox"
@@ -505,12 +632,103 @@ const JobList = () => {
                                         <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                                     </svg>
                                 </label>
-                                <p className="text-xs text-gray-500 mt-1 ml-6">
-                                    Inactive jobs are no longer accepting applications but may still be viewed for reference.
-                                </p>
+                                
+                                {/* Clear filters button */}
+                                <button 
+                                    type="button"
+                                    onClick={handleClearFilters}
+                                    className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+                                >
+                                    Clear All Filters
+                                </button>
                             </div>
+                            
+                            <p className="text-xs text-gray-500 mt-2">
+                                Search is dynamic - results update as you type. Other filters apply immediately.
+                            </p>
                         </form>
                     </div>
+
+                    {/* Active filters display */}
+                    {(filters.search || filters.location || filters.type || filters.workLocation || filters.experienceLevel || !showInactive) && (
+                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+                            <div className="flex items-center flex-wrap gap-2">
+                                <span className="text-sm font-medium text-gray-700">Active filters:</span>
+                                
+                                {filters.search && (
+                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
+                                        Search: "{filters.search}"
+                                        <button 
+                                            onClick={() => setFilters(prev => ({ ...prev, search: '' }))}
+                                            className="ml-2 text-blue-600 hover:text-blue-800"
+                                        >
+                                            ×
+                                        </button>
+                                    </span>
+                                )}
+                                
+                                {filters.location && (
+                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800">
+                                        Location: {filters.location}
+                                        <button 
+                                            onClick={() => setFilters(prev => ({ ...prev, location: '' }))}
+                                            className="ml-2 text-green-600 hover:text-green-800"
+                                        >
+                                            ×
+                                        </button>
+                                    </span>
+                                )}
+                                
+                                {filters.type && (
+                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-purple-100 text-purple-800">
+                                        Type: {filters.type}
+                                        <button 
+                                            onClick={() => setFilters(prev => ({ ...prev, type: '' }))}
+                                            className="ml-2 text-purple-600 hover:text-purple-800"
+                                        >
+                                            ×
+                                        </button>
+                                    </span>
+                                )}
+                                
+                                {filters.workLocation && (
+                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-yellow-100 text-yellow-800">
+                                        Work: {filters.workLocation}
+                                        <button 
+                                            onClick={() => setFilters(prev => ({ ...prev, workLocation: '' }))}
+                                            className="ml-2 text-yellow-600 hover:text-yellow-800"
+                                        >
+                                            ×
+                                        </button>
+                                    </span>
+                                )}
+                                
+                                {filters.experienceLevel && (
+                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-indigo-100 text-indigo-800">
+                                        Level: {filters.experienceLevel}
+                                        <button 
+                                            onClick={() => setFilters(prev => ({ ...prev, experienceLevel: '' }))}
+                                            className="ml-2 text-indigo-600 hover:text-indigo-800"
+                                        >
+                                            ×
+                                        </button>
+                                    </span>
+                                )}
+                                
+                                {!showInactive && (
+                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-gray-100 text-gray-800">
+                                        Active jobs only
+                                        <button 
+                                            onClick={() => setShowInactive(true)}
+                                            className="ml-2 text-gray-600 hover:text-gray-800"
+                                        >
+                                            ×
+                                        </button>
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    )}
 
                     {error && (
                         <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
@@ -526,7 +744,7 @@ const JobList = () => {
                                 </div>
                                 <div className="ml-auto">
                                     <button 
-                                        onClick={() => fetchJobs()}
+                                        onClick={() => fetchJobs(1)}
                                         className="px-3 py-1 bg-red-100 text-red-800 rounded-md hover:bg-red-200 transition-colors text-sm"
                                     >
                                         Retry
@@ -539,6 +757,11 @@ const JobList = () => {
                     <div className="flex justify-between items-center mb-6">
                         <p className="text-gray-600">
                             Found <span className="font-semibold text-gray-900">{pagination.total}</span> jobs
+                            {(filters.search || filters.location || filters.type || filters.workLocation || filters.experienceLevel) && (
+                                <span className="text-sm text-gray-500 ml-2">
+                                    (filtered results)
+                                </span>
+                            )}
                         </p>
                     </div>
 
@@ -550,21 +773,17 @@ const JobList = () => {
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                     </svg>
                                     <h3 className="mt-4 text-lg font-medium text-gray-900">No jobs found</h3>
-                                    <p className="mt-2 text-gray-500">We couldn't find any jobs matching your criteria.</p>
+                                    <p className="mt-2 text-gray-500">
+                                        {Object.values(filters).some(f => f) || !showInactive 
+                                            ? "Try adjusting your filters to see more results."
+                                            : "We couldn't find any jobs matching your criteria."
+                                        }
+                                    </p>
                                     <button 
-                                        onClick={() => {
-                                            setFilters({
-                                                search: '',
-                                                location: '',
-                                                type: '',
-                                                workLocation: '',
-                                                experienceLevel: '',
-                                            });
-                                            fetchJobs(1);
-                                        }}
+                                        onClick={handleClearFilters}
                                         className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                                     >
-                                        Clear Filters
+                                        Clear All Filters
                                     </button>
                                 </div>
                             </div>
@@ -596,7 +815,7 @@ const JobList = () => {
                                             {/* Job Status Badge */}
                                             {!job.canApply && (
                                                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 ml-2 flex-shrink-0">
-                                                    {job.isExpired ? 'Expired' : 'Inactive'}
+                                                    Inactive
                                                 </span>
                                             )}
                                         </div>
@@ -664,19 +883,38 @@ const JobList = () => {
                                                 </div>
                                                 <div className="flex items-center gap-2">
                                                     {isAuthenticated && (
-                                                        <button
-                                                            onClick={() => savedJobs.has(job._id) ? handleUnsaveJob(job._id) : handleSaveJob(job)}
-                                                            className={`p-1 rounded-md transition-colors ${
-                                                                savedJobs.has(job._id)
-                                                                    ? 'text-yellow-600 hover:text-yellow-700'
-                                                                    : 'text-gray-400 hover:text-yellow-600'
-                                                            }`}
-                                                            title={savedJobs.has(job._id) ? 'Remove from saved' : 'Save job'}
-                                                        >
-                                                            <svg className="w-4 h-4" fill={savedJobs.has(job._id) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                                                            </svg>
-                                                        </button>
+                                                        <>
+                                                            <button
+                                                                onClick={() => savedJobs.has(job._id) ? handleUnsaveJob(job._id) : handleSaveJob(job)}
+                                                                className={`p-1 rounded-md transition-colors ${
+                                                                    savedJobs.has(job._id)
+                                                                        ? 'text-yellow-600 hover:text-yellow-700'
+                                                                        : 'text-gray-400 hover:text-yellow-600'
+                                                                }`}
+                                                                title={savedJobs.has(job._id) ? 'Remove from saved' : 'Save job'}
+                                                            >
+                                                                <svg className="w-4 h-4" fill={savedJobs.has(job._id) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                                                                </svg>
+                                                            </button>
+                                                            
+                                                            {/* Show note button - only if job is saved and has a note */}
+                                                            {savedJobs.has(job._id) && savedJobDetails.has(job._id) && savedJobDetails.get(job._id)?.note && (
+                                                                <button
+                                                                    onClick={() => handleShowNote(job._id)}
+                                                                    className={`p-1 rounded-md transition-colors ${
+                                                                        tempVisibleNotes.has(job._id)
+                                                                            ? 'text-blue-700 bg-blue-100'
+                                                                            : 'text-blue-600 hover:text-blue-700 hover:bg-blue-50'
+                                                                    }`}
+                                                                    title={tempVisibleNotes.has(job._id) ? 'Hide note' : 'Show note'}
+                                                                >
+                                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10m0 0V6a2 2 0 00-2-2H9a2 2 0 00-2 2v2m10 0v10a2 2 0 01-2 2H9a2 2 0 01-2-2V8m0 0V6a2 2 0 012-2h8a2 2 0 012 2v2" />
+                                                                    </svg>
+                                                                </button>
+                                                            )}
+                                                        </>
                                                     )}
                                                     <button 
                                                         onClick={() => navigate(`/job/${job._id}`)}
@@ -710,9 +948,9 @@ const JobList = () => {
                                         </div>
                                     )}
 
-                                    {/* Personal Note Comment Section - Fixed at card bottom */}
-                                    {savedJobs.has(job._id) && savedJobDetails.has(job._id) && !saveJobForms.has(job._id) && (
-                                        <div className="notes border-t border-gray-100 bg-blue-50 px-4 py-3">
+                                    {/* Personal Note Comment Section - Only show temporarily */}
+                                    {savedJobs.has(job._id) && savedJobDetails.has(job._id) && !saveJobForms.has(job._id) && tempVisibleNotes.has(job._id) && (
+                                        <div className="border-t border-gray-100 bg-blue-50 px-4 py-3 animate-fadeIn">
                                             <div className="flex items-start space-x-3">
                                                 <div className="flex-shrink-0">
                                                     <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
@@ -722,24 +960,40 @@ const JobList = () => {
                                                     </div>
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center space-x-2 mb-1">
-                                                        <p className="text-sm font-medium text-gray-900">You</p>
-                                                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                                                            savedJobDetails.get(job._id)?.priority === 'high' ? 'bg-red-100 text-red-800' :
-                                                            savedJobDetails.get(job._id)?.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                                                            'bg-gray-100 text-gray-800'
-                                                        }`}>
-                                                            {savedJobDetails.get(job._id)?.priority || 'medium'} priority
-                                                        </span>
-                                                        <span className="text-xs text-gray-500">
-                                                            • {new Date(savedJobDetails.get(job._id)?.dateSaved).toLocaleDateString()}
-                                                        </span>
+                                                    <div className="flex items-center justify-between mb-1">
+                                                        <div className="flex items-center space-x-2">
+                                                            <p className="text-sm font-medium text-gray-900">You</p>
+                                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                                                savedJobDetails.get(job._id)?.priority === 'high' ? 'bg-red-100 text-red-800' :
+                                                                savedJobDetails.get(job._id)?.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                                                                'bg-gray-100 text-gray-800'
+                                                            }`}>
+                                                                {savedJobDetails.get(job._id)?.priority || 'medium'} priority
+                                                            </span>
+                                                            <span className="text-xs text-gray-500">
+                                                                • {new Date(savedJobDetails.get(job._id)?.dateSaved).toLocaleDateString()}
+                                                            </span>
+                                                        </div>
+                                                        
+                                                        {/* Auto-hide timer indicator */}
+                                                        <div className="flex items-center text-xs text-gray-400">
+                                                            <svg className="w-3 h-3 mr-1 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                            </svg>
+                                                            Auto-hiding...
+                                                        </div>
                                                     </div>
                                                     
-                                                    {savedJobDetails.get(job._id)?.note && (
+                                                    {savedJobDetails.get(job._id)?.note ? (
                                                         <div className="bg-white rounded-lg p-3 shadow-sm border">
                                                             <p className="text-sm text-gray-700 leading-relaxed">
                                                                 {savedJobDetails.get(job._id).note}
+                                                            </p>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="bg-white rounded-lg p-3 shadow-sm border border-dashed border-gray-300">
+                                                            <p className="text-sm text-gray-400 italic">
+                                                                No note added yet
                                                             </p>
                                                         </div>
                                                     )}
@@ -759,13 +1013,31 @@ const JobList = () => {
                                                             onClick={() => handleEditSavedJob(job, savedJobDetails.get(job._id))}
                                                             className="hover:text-blue-600 transition-colors"
                                                         >
-                                                            Edit note
+                                                            {savedJobDetails.get(job._id)?.note ? 'Edit note' : 'Add note'}
                                                         </button>
+                                                        
+                                                        {/* Show clear note button only if there's a note */}
+                                                        {savedJobDetails.get(job._id)?.note && (
+                                                            <button 
+                                                                onClick={() => handleClearNote(job._id)}
+                                                                className="hover:text-orange-600 transition-colors"
+                                                            >
+                                                                Clear note
+                                                            </button>
+                                                        )}
+                                                        
                                                         <button 
                                                             onClick={() => handleUnsaveJob(job._id)}
                                                             className="hover:text-red-600 transition-colors"
                                                         >
-                                                            Remove
+                                                            Unsave job
+                                                        </button>
+                                                        
+                                                        <button 
+                                                            onClick={() => handleShowNote(job._id)}
+                                                            className="hover:text-gray-700 transition-colors"
+                                                        >
+                                                            Hide
                                                         </button>
                                                     </div>
                                                 </div>

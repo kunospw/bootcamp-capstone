@@ -63,6 +63,36 @@ const SavedJobs = () => {
         }
     };
 
+    const handleClearNote = async (savedJobId) => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`http://localhost:3000/api/saved-jobs/${savedJobId}/clear-note`, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                
+                // Update the saved jobs list with cleared note
+                setSavedJobs(prev => prev.map(savedJob => 
+                    savedJob._id === savedJobId 
+                        ? { ...savedJob, note: '', tags: result.savedJob.tags }
+                        : savedJob
+                ));
+
+                showNotification('success', 'Note cleared successfully!');
+            } else {
+                throw new Error('Failed to clear note');
+            }
+        } catch (error) {
+            console.error('Error clearing note:', error);
+            showNotification('error', 'Failed to clear note. Please try again.');
+        }
+    };
+
     const getPriorityColor = (priority) => {
         switch (priority) {
             case 'high': return 'bg-red-100 text-red-800';
@@ -294,12 +324,42 @@ const SavedJobs = () => {
 
                                                 {/* Personal Note */}
                                                 {savedJob.note ? (
-                                                    <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-100 flex-1 min-h-[4rem]">
-                                                        <p className="text-xs text-gray-600 mb-1">Your note:</p>
-                                                        <p className="text-sm text-gray-800 leading-relaxed line-clamp-2">{savedJob.note}</p>
+                                                    <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
+                                                        <div className="flex items-start space-x-3">
+                                                            <div className="flex-shrink-0">
+                                                                <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                                                                    <svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                                    </svg>
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex-1">
+                                                                <div className="flex items-center justify-between mb-1">
+                                                                    <p className="text-xs text-gray-600">Your note:</p>
+                                                                    <button 
+                                                                        onClick={() => handleClearNote(savedJob._id)}
+                                                                        className="text-xs text-orange-600 hover:text-orange-800 transition-colors"
+                                                                    >
+                                                                        Clear note
+                                                                    </button>
+                                                                </div>
+                                                                <p className="text-sm text-gray-800 leading-relaxed">{savedJob.note}</p>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 ) : (
-                                                    <div className="mb-4 flex-1"></div>
+                                                    <div className="mb-4 p-4 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                                                        <div className="flex items-center space-x-3">
+                                                            <div className="flex-shrink-0">
+                                                                <div className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center">
+                                                                    <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                                    </svg>
+                                                                </div>
+                                                            </div>
+                                                            <p className="text-sm text-gray-400 italic">No note added yet</p>
+                                                        </div>
+                                                    </div>
                                                 )}
                                                 
                                                 {/* Tags */}

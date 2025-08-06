@@ -33,6 +33,17 @@ export default function SignUp() {
   const [credentialFile, setCredentialFile] = useState(null);
   const [message, setMessage] = useState("");
 
+  // Password validation state
+  const [passwordValidation, setPasswordValidation] = useState({
+    isValid: false,
+    errors: {
+      minLength: false,
+      hasUpperCase: false,
+      hasLowerCase: false,
+      hasNumber: false
+    }
+  });
+
   // Update type when URL changes
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
@@ -44,7 +55,13 @@ export default function SignUp() {
   }, [location.search]);
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: value });
+    
+    // Validate password as user types
+    if (name === 'password') {
+      setPasswordValidation(validatePassword(value));
+    }
   };
 
   const handleTypeChange = (e) => {
@@ -133,6 +150,24 @@ export default function SignUp() {
         setMessage("Registration failed.");
       }
     }
+  };
+
+  // Password validation function
+  const validatePassword = (password) => {
+    const minLength = password.length >= 6;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumber = /\d/.test(password);
+    
+    return {
+      isValid: minLength && hasUpperCase && hasLowerCase && hasNumber,
+      errors: {
+        minLength,
+        hasUpperCase,
+        hasLowerCase,
+        hasNumber
+      }
+    };
   };
 
   return (
@@ -364,12 +399,42 @@ export default function SignUp() {
                 placeholder='Create a password'
                 required
               />
+              
+              {/* Password Requirements Indicator */}
+              {form.password && (
+                <div className='mt-2 space-y-1'>
+                  <p className='text-xs text-gray-600 mb-1'>Password must contain:</p>
+                  <div className='space-y-1'>
+                    <div className={`text-xs flex items-center ${passwordValidation.errors.minLength ? 'text-green-600' : 'text-red-500'}`}>
+                      <span className='mr-1'>{passwordValidation.errors.minLength ? '✓' : '✗'}</span>
+                      At least 6 characters
+                    </div>
+                    <div className={`text-xs flex items-center ${passwordValidation.errors.hasUpperCase ? 'text-green-600' : 'text-red-500'}`}>
+                      <span className='mr-1'>{passwordValidation.errors.hasUpperCase ? '✓' : '✗'}</span>
+                      One uppercase letter
+                    </div>
+                    <div className={`text-xs flex items-center ${passwordValidation.errors.hasLowerCase ? 'text-green-600' : 'text-red-500'}`}>
+                      <span className='mr-1'>{passwordValidation.errors.hasLowerCase ? '✓' : '✗'}</span>
+                      One lowercase letter
+                    </div>
+                    <div className={`text-xs flex items-center ${passwordValidation.errors.hasNumber ? 'text-green-600' : 'text-red-500'}`}>
+                      <span className='mr-1'>{passwordValidation.errors.hasNumber ? '✓' : '✗'}</span>
+                      One number
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Submit Button */}
             <button
               type='submit'
-              className='w-full bg-blue-600 text-white py-3 px-4 rounded-xl hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 font-medium'
+              disabled={form.password && !passwordValidation.isValid}
+              className={`w-full py-3 px-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 font-medium ${
+                form.password && !passwordValidation.isValid 
+                  ? 'bg-gray-400 text-gray-200 cursor-not-allowed' 
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
             >
               Create Account
             </button>

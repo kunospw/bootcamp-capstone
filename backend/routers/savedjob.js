@@ -148,7 +148,46 @@ router.put("/:id", authenticateUser, async(req, res) => {
     }
 });
 
-// Delete a saved job
+// Clear note from saved job (without removing the saved job)
+router.patch("/:id/clear-note", authenticateUser, async(req, res) => {
+    try {
+        const userId = req.user._id;
+        const { id } = req.params;
+
+        console.log('Clearing note from saved job:', { id, userId }); // Debug log
+
+        const savedJob = await SavedJob.findOne({ _id: id, userId });
+        if (!savedJob) {
+            return res.status(404).json({ message: "Saved job not found" });
+        }
+
+        // Clear the note but keep the job saved
+        savedJob.note = '';
+        // Optionally also clear tags if you want
+        // savedJob.tags = [];
+
+        await savedJob.save();
+        await savedJob.populate({
+            path: 'jobId',
+            populate: {
+                path: 'companyId',
+                select: 'companyName profilePicture'
+            }
+        });
+
+        console.log('Note cleared from saved job successfully'); // Debug log
+
+        res.json({
+            message: "Note cleared successfully",
+            savedJob
+        });
+    } catch (error) {
+        console.error('Error clearing note from saved job:', error);
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// Delete a saved job (completely remove from saved list)
 router.delete("/:id", authenticateUser, async(req, res) => {
     try {
         const userId = req.user._id;

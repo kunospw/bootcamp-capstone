@@ -14,6 +14,14 @@ function validatePhone(phone) {
     return /^\d{8,15}$/.test(phone);
 }
 
+function validatePassword(password) {
+    // At least 6 characters, one uppercase, one lowercase, one number
+    return password.length >= 6 &&
+        /[A-Z]/.test(password) &&
+        /[a-z]/.test(password) &&
+        /\d/.test(password);
+}
+
 // Register
 router.post("/register", async(req, res) => {
     try {
@@ -29,12 +37,14 @@ router.post("/register", async(req, res) => {
         }
 
         if (phoneNumber && !validatePhone(phoneNumber)) {
-            return res.status(400).json({ message: "Invalid phone number format." });
+            return res.status(400).json({ message: "Invalid phone number format. Must be 8-15 digits." });
         }
 
-        // Check if password is at least 3 characters
-        if (password.length < 3) {
-            return res.status(400).json({ message: "Password must be at least 3 characters long." });
+        // Enhanced password validation
+        if (!validatePassword(password)) {
+            return res.status(400).json({
+                message: "Password must be at least 6 characters long and contain at least one uppercase letter, one lowercase letter, and one number."
+            });
         }
 
         // Check if user already exists
@@ -44,19 +54,26 @@ router.post("/register", async(req, res) => {
         }
 
         console.log("Registering user:", email);
-        console.log("Password received:", password);
 
+        // Create user - password will be hashed by the pre-save middleware
         const user = new User({
             fullName,
             email,
-            password: password, // Store password as plain text
+            password, // Will be hashed automatically
             phoneNumber: phoneNumber || undefined
         });
 
         await user.save();
         console.log("User saved successfully:", email);
 
-        res.status(201).json({ message: "User registered successfully." });
+        res.status(201).json({
+            message: "User registered successfully.",
+            user: {
+                _id: user._id,
+                fullName: user.fullName,
+                email: user.email
+            }
+        });
     } catch (err) {
         console.error("Registration error:", err);
         if (err.code === 11000) {
@@ -79,27 +96,30 @@ router.post("/login", async(req, res) => {
 
         console.log("Login attempt for email:", email);
 
-        const user = await User.findOne({ email });
+        // Find user and explicitly select password field
+        const user = await User.findOne({ email }).select('+password');
         if (!user) {
             console.log("User not found for email:", email);
             return res.status(401).json({ message: "Invalid credentials." });
         }
 
         console.log("User found:", user.email);
-        console.log("User password:", user.password);
-        console.log("Password from request:", password);
 
-        // Simple password comparison (plain text)
-        if (user.password !== password) {
-            console.log("Password comparison failed");
+        // Use the matchPassword method to compare hashed password
+        const isPasswordMatch = await user.matchPassword(password);
+        if (!isPasswordMatch) {
+            console.log("Password comparison failed for user:", email);
             return res.status(401).json({ message: "Invalid credentials." });
         }
 
         console.log("Login successful for:", email);
 
+        // Update last login
+        await user.updateLastLogin();
+
         // Issue JWT
         const token = jwt.sign({ userId: user._id, email: user.email, type: "user" },
-            process.env.JWT_SECRET, { expiresIn: "1d" }
+            process.env.JWT_SECRET, { expiresIn: "7d" } // Extended to 7 days
         );
 
         res.json({
@@ -114,7 +134,7 @@ router.post("/login", async(req, res) => {
         });
     } catch (err) {
         console.error("Login error:", err);
-        res.status(400).json({ message: err.message });
+        res.status(500).json({ message: "Internal server error. Please try again." });
     }
 });
 
@@ -132,7 +152,7 @@ router.get("/profile", authenticateUser, async(req, res) => {
         });
     } catch (err) {
         console.error("Get profile error:", err);
-        res.status(400).json({ message: err.message });
+        res.status(500).json({ message: "Internal server error. Please try again." });
     }
 });
 
@@ -170,6 +190,45 @@ router.put("/profile", authenticateUser, async(req, res) => {
     }
 });
 
+// Change password endpoint
+router.put("/change-password", authenticateUser, async(req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ message: "Current password and new password are required." });
+        }
+
+        // Validate new password
+        if (!validatePassword(newPassword)) {
+            return res.status(400).json({
+                message: "New password must be at least 6 characters long and contain at least one uppercase letter, one lowercase letter, and one number."
+            });
+        }
+
+        // Find user with password
+        const user = await User.findById(req.user._id).select('+password');
+        if (!user) {
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        // Check current password
+        const isCurrentPasswordMatch = await user.matchPassword(currentPassword);
+        if (!isCurrentPasswordMatch) {
+            return res.status(401).json({ message: "Current password is incorrect." });
+        }
+
+        // Update password (will be hashed by pre-save middleware)
+        user.password = newPassword;
+        await user.save();
+
+        res.json({ message: "Password changed successfully." });
+    } catch (err) {
+        console.error("Change password error:", err);
+        res.status(500).json({ message: "Internal server error. Please try again." });
+    }
+});
+
 // Google OAuth start
 router.get(
     "/google",
@@ -183,12 +242,11 @@ router.get(
         failureRedirect: "http://localhost:5173/signin",
     }),
     (req, res) => {
-        // You can issue a JWT here if you want
-        // Example:
+        // Issue JWT for Google OAuth users
         const token = jwt.sign({ userId: req.user._id, email: req.user.email, type: "user" },
-            process.env.JWT_SECRET, { expiresIn: "1d" }
+            process.env.JWT_SECRET, { expiresIn: "7d" }
         );
-        // Redirect to frontend with token (or set cookie)
+        // Redirect to frontend with token
         res.redirect(`http://localhost:5173/signin?token=${token}`);
     }
 );
