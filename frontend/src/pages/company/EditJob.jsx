@@ -927,7 +927,7 @@ const EditJob = () => {
                                         <button
                                             onClick={handleCancel}
                                             disabled={loading}
-                                            className='flex items-center gap-2 px-6 py-2 bg-gray-500 text-white cursor-pointer rounded-lg hover:bg-gray-600 transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed'
+                                            className='flex items-center gap-2 px-6 py-1 bg-gray-500 text-white cursor-pointer rounded-lg hover:bg-gray-600 transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed'
                                         >
                                             <FaTimes className='w-4 h-4' />
                                             Cancel
@@ -935,7 +935,7 @@ const EditJob = () => {
                                         <button
                                             onClick={handleUpdate}
                                             disabled={loading}
-                                            className='flex items-center gap-2 px-6 py-2 bg-blue-600 text-white cursor-pointer rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed'
+                                            className='flex items-center gap-2 px-6 py-1 bg-[#F4B400] text-black cursor-pointer rounded-lg hover:bg-[#E6A200] transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed'
                                         >
                                             {loading ? (
                                                 <>

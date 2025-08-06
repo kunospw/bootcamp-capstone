@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ApplicationForm from '../../components/ApplicationForm';
 import NavBar from '../../Components/NavBar';
+import Footer from '../../Components/Footer';
 import FloatingDecorations from '../../Components/FloatingDecorations';
 
 const JobDetail = () => {
@@ -537,6 +538,9 @@ const JobDetail = () => {
           onSuccess={handleApplicationSuccess}
         />
       )}
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 };

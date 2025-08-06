@@ -60,7 +60,7 @@ const companySchema = new mongoose.Schema({
     // credentialFile: String,
     // credentialStatus: {
     //   type: String,
-    //   enum: ["pending", "approved", "rejected"],
+    // ,
     //   default: "pending",
     // },
     // credentialReviewDate: Date,

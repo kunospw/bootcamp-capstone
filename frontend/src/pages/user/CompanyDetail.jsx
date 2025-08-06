@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import NavBar from '../../Components/NavBar';
+import Footer from '../../Components/Footer';
 
 const CompanyDetail = () => {
   const { id } = useParams();
@@ -455,6 +456,9 @@ const CompanyDetail = () => {
           </div>
         )}
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 };

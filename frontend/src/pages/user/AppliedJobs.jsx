@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NavBar from '../../Components/NavBar';
+import Footer from '../../Components/Footer';
 import FloatingDecorations from '../../Components/FloatingDecorations';
 
 const AppliedJobs = () => {
@@ -410,6 +411,9 @@ const AppliedJobs = () => {
           )}
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 };

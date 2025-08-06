@@ -1,7 +1,7 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import SideBar from '../../Components/SideBar'
-import { FaSave, FaTimes, FaBriefcase, FaMapMarkerAlt, FaDollarSign, FaClock, FaCalendarAlt, FaUsers, FaFileAlt, FaListUl, FaIndustry, FaPhone, FaEnvelope, FaTags } from 'react-icons/fa'
+import { FaSave, FaTimes, FaBriefcase, FaMapMarkerAlt, FaDollarSign, FaClock, FaCalendarAlt, FaUsers, FaFileAlt, FaListUl, FaIndustry, FaPhone, FaEnvelope, FaTags, FaChevronDown, FaSearch } from 'react-icons/fa'
 
 const AddJob = () => {
   const navigate = useNavigate();
@@ -11,7 +11,8 @@ const AddJob = () => {
     major: '',
     type: 'full-time',
     workLocation: 'onsite',
-    location: '',
+    country: '',
+    city: '',
     salary: {
       min: '',
       max: '',
@@ -31,6 +32,19 @@ const AddJob = () => {
     contactEmail: '',
     contactPhone: ''
   });
+
+  // Country and City states
+  const [countries, setCountries] = useState([]);
+  const [cities, setCities] = useState([]);
+  const [loadingCountries, setLoadingCountries] = useState(false);
+  
+  // Dropdown states
+  const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
+  const [cityDropdownOpen, setCityDropdownOpen] = useState(false);
+  const [countrySearch, setCountrySearch] = useState('');
+  const [citySearch, setCitySearch] = useState('');
+  const [filteredCountries, setFilteredCountries] = useState([]);
+  const [filteredCities, setFilteredCities] = useState([]);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -73,6 +87,100 @@ const AddJob = () => {
     { value: 'yearly', label: 'Per Year' }
   ];
 
+  // useEffect hooks
+  useEffect(() => {
+    fetchCountries();
+  }, []);
+
+  // Set cities when countries are loaded and country is already selected
+  useEffect(() => {
+    if (countries.length > 0 && formData.country) {
+      const selectedCountry = countries.find(country => country.country === formData.country);
+      if (selectedCountry) {
+        setCities(selectedCountry.cities);
+      }
+    }
+  }, [countries, formData.country]);
+
+  // Filter countries based on search
+  useEffect(() => {
+    if (countrySearch) {
+      const filtered = countries.filter(country => 
+        country.country.toLowerCase().includes(countrySearch.toLowerCase())
+      );
+      setFilteredCountries(filtered);
+    } else {
+      setFilteredCountries(countries);
+    }
+  }, [countries, countrySearch]);
+
+  // Filter cities based on search
+  useEffect(() => {
+    if (citySearch) {
+      const filtered = cities.filter(city => 
+        city.toLowerCase().includes(citySearch.toLowerCase())
+      );
+      setFilteredCities(filtered);
+    } else {
+      setFilteredCities(cities);
+    }
+  }, [cities, citySearch]);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('.dropdown-container')) {
+        setCountryDropdownOpen(false);
+        setCityDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const fetchCountries = async () => {
+    setLoadingCountries(true);
+    try {
+      const response = await fetch('https://countriesnow.space/api/v0.1/countries');
+      const data = await response.json();
+      if (data.error === false) {
+        setCountries(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching countries:', error);
+    } finally {
+      setLoadingCountries(false);
+    }
+  };
+
+  const handleCountrySelect = (country) => {
+    setFormData(prev => ({
+      ...prev,
+      country: country,
+      city: '' // Reset city when country changes
+    }));
+    
+    const selectedCountry = countries.find(c => c.country === country);
+    if (selectedCountry) {
+      setCities(selectedCountry.cities);
+    }
+    
+    setCountryDropdownOpen(false);
+    setCountrySearch('');
+  };
+
+  const handleCitySelect = (city) => {
+    setFormData(prev => ({
+      ...prev,
+      city: city
+    }));
+    setCityDropdownOpen(false);
+    setCitySearch('');
+  };
+
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     if (name.startsWith('salary.')) {
@@ -89,6 +197,18 @@ const AddJob = () => {
         ...prev,
         [name]: type === 'checkbox' ? checked : value
       }));
+
+      // If country is changed, update cities and reset city selection
+      if (name === 'country') {
+        const selectedCountry = countries.find(country => country.country === value);
+        if (selectedCountry) {
+          setCities(selectedCountry.cities);
+          setFormData(prev => ({
+            ...prev,
+            city: '' // Reset city when country changes
+          }));
+        }
+      }
     }
   };
 
@@ -135,7 +255,7 @@ const AddJob = () => {
 
     if (!formData.title.trim()) errors.push('Job title is required');
     if (!formData.major.trim()) errors.push('Job major/field is required');
-    if (!formData.location.trim()) errors.push('Location is required');
+    if (!formData.country.trim() && !formData.city.trim()) errors.push('Location (country or city) is required');
     if (!formData.description.trim()) errors.push('Job description is required');
     if (formData.requirements.filter(req => req.trim()).length === 0) {
       errors.push('At least one requirement is required');
@@ -175,12 +295,16 @@ const AddJob = () => {
       }
 
       // Prepare job data for API
+      const location = formData.country && formData.city 
+        ? `${formData.country}, ${formData.city}` 
+        : formData.country || formData.city || '';
+
       const jobData = {
         title: formData.title.trim(),
         major: formData.major.trim(),
         type: formData.type,
         workLocation: formData.workLocation,
-        location: formData.location.trim(),
+        location: location.trim(),
         salary: {
           min: formData.salary.min ? parseFloat(formData.salary.min) : undefined,
           max: formData.salary.max ? parseFloat(formData.salary.max) : undefined,
@@ -277,7 +401,7 @@ const AddJob = () => {
                     name="title"
                     value={formData.title}
                     onChange={handleInputChange}
-                    placeholder="e.g. Senior Frontend Developer"
+                    placeholder="Insert job title..."
                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   />
@@ -294,27 +418,147 @@ const AddJob = () => {
                     name="major"
                     value={formData.major}
                     onChange={handleInputChange}
-                    placeholder="e.g. Software Engineering, Marketing, Finance"
+                    placeholder="Insert job major or field of expertise..."
                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   />
                 </div>
 
-                {/* Location */}
-                <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                    <FaMapMarkerAlt className="text-red-500" />
-                    Location *
-                  </label>
-                  <input
-                    type="text"
-                    name="location"
-                    value={formData.location}
-                    onChange={handleInputChange}
-                    placeholder="e.g. Jakarta, Indonesia"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
-                  />
+                {/* Location - Country and City */}
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Country Dropdown */}
+                  <div>
+                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                      <FaMapMarkerAlt className="text-red-500" />
+                      Country *
+                    </label>
+                    <div className='relative w-full dropdown-container'>
+                      {/* Country Input Button */}
+                      <button
+                        type="button"
+                        onClick={() => setCountryDropdownOpen(!countryDropdownOpen)}
+                        disabled={loadingCountries}
+                        className='w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-600 bg-white text-left flex items-center justify-between disabled:bg-gray-100'
+                      >
+                        <span className='truncate'>
+                          {loadingCountries 
+                            ? 'Loading countries...' 
+                            : formData.country || 'Select Country'
+                          }
+                        </span>
+                        <FaChevronDown className={`w-3 h-3 text-gray-400 transition-transform duration-200 ${countryDropdownOpen ? 'rotate-180' : ''}`} />
+                      </button>
+
+                      {/* Country Dropdown Menu */}
+                      <div className={`absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-hidden transition-all duration-150 ease-in-out origin-top ${
+                        countryDropdownOpen 
+                          ? 'opacity-100 scale-y-100 translate-y-0' 
+                          : 'opacity-0 scale-y-0 -translate-y-2 pointer-events-none'
+                      }`}>
+                        {/* Search Input */}
+                        <div className='p-2 border-b border-gray-200'>
+                          <div className='relative'>
+                            <FaSearch className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-3 h-3' />
+                            <input
+                              type="text"
+                              placeholder="Search countries..."
+                              value={countrySearch}
+                              onChange={(e) => setCountrySearch(e.target.value)}
+                              className='w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm'
+                            />
+                          </div>
+                        </div>
+                        
+                        {/* Countries List */}
+                        <div className='max-h-44 overflow-y-auto'>
+                          {filteredCountries.length > 0 ? (
+                            filteredCountries.map((country) => (
+                              <button
+                                key={country.iso2}
+                                type="button"
+                                onClick={() => handleCountrySelect(country.country)}
+                                className='w-full px-3 py-2 text-left hover:bg-blue-50 focus:bg-blue-50 focus:outline-none text-sm transition-colors duration-150'
+                              >
+                                {country.country}
+                              </button>
+                            ))
+                          ) : (
+                            <div className='px-3 py-2 text-gray-500 text-sm'>
+                              No countries found
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* City Dropdown */}
+                  <div>
+                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                      <FaMapMarkerAlt className="text-red-500" />
+                      City
+                    </label>
+                    <div className='relative w-full dropdown-container'>
+                      {/* City Input Button */}
+                      <button
+                        type="button"
+                        onClick={() => setCityDropdownOpen(!cityDropdownOpen)}
+                        disabled={!formData.country || cities.length === 0}
+                        className='w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-600 bg-white text-left flex items-center justify-between disabled:bg-gray-100 disabled:cursor-not-allowed'
+                      >
+                        <span className='truncate'>
+                          {!formData.country 
+                            ? 'Select country first' 
+                            : cities.length === 0 
+                              ? 'No cities available' 
+                              : formData.city || 'Select City'
+                          }
+                        </span>
+                        <FaChevronDown className={`w-3 h-3 text-gray-400 transition-transform duration-200 ${cityDropdownOpen ? 'rotate-180' : ''}`} />
+                      </button>
+
+                      {/* City Dropdown Menu */}
+                      <div className={`absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-hidden transition-all duration-150 ease-in-out origin-top ${
+                        cityDropdownOpen && formData.country && cities.length > 0
+                          ? 'opacity-100 scale-y-100 translate-y-0' 
+                          : 'opacity-0 scale-y-0 -translate-y-2 pointer-events-none'
+                      }`}>
+                        {/* Search Input */}
+                        <div className='p-2 border-b border-gray-200'>
+                          <div className='relative'>
+                            <FaSearch className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-3 h-3' />
+                            <input
+                              type="text"
+                              placeholder="Search cities..."
+                              value={citySearch}
+                              onChange={(e) => setCitySearch(e.target.value)}
+                              className='w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm'
+                            />
+                          </div>
+                        </div>
+                        
+                        {/* Cities List */}
+                        <div className='max-h-44 overflow-y-auto'>
+                          {filteredCities.length > 0 ? (
+                            filteredCities.map((city, index) => (
+                              <button
+                                key={index}
+                                type="button"
+                                onClick={() => handleCitySelect(city)}
+                                className='w-full px-3 py-2 text-left hover:bg-blue-50 focus:bg-blue-50 focus:outline-none text-sm transition-colors duration-150'
+                              >
+                                {city}
+                              </button>
+                            ))
+                          ) : (
+                            <div className='px-3 py-2 text-gray-500 text-sm'>
+                              No cities found
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Job Type & Work Location */}
@@ -700,7 +944,12 @@ const AddJob = () => {
                     <div className="space-y-3">
                       <div className="flex items-center gap-2 text-sm text-gray-600">
                         <FaMapMarkerAlt className="text-red-500 w-4 h-4" />
-                        <span>{formData.location || 'Location'}</span>
+                        <span>
+                          {formData.country && formData.city 
+                            ? `${formData.country}, ${formData.city}` 
+                            : formData.country || formData.city || 'Location'
+                          }
+                        </span>
                       </div>
 
                       <div className="flex items-center gap-2 text-sm text-gray-600">
@@ -838,7 +1087,7 @@ const AddJob = () => {
                     <button
                       onClick={handleCancel}
                       disabled={loading}
-                      className='flex items-center gap-2 px-6 py-2 bg-gray-500 text-white cursor-pointer rounded-lg hover:bg-gray-600 transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed'
+                      className='flex items-center gap-2 px-6 py-1 bg-gray-500 text-white cursor-pointer rounded-lg hover:bg-gray-600 transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed'
                     >
                       <FaTimes className='w-4 h-4' />
                       Cancel
@@ -846,7 +1095,7 @@ const AddJob = () => {
                     <button
                       onClick={handleSave}
                       disabled={loading}
-                      className='flex items-center gap-2 px-6 py-2 bg-blue-600 text-white cursor-pointer rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed'
+                      className='flex items-center gap-2 px-6 py-1 bg-[#F4B400] text-black cursor-pointer rounded-lg hover:bg-[#E6A200] transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed'
                     >
                       {loading ? (
                         <>

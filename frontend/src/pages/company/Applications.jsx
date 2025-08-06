@@ -164,7 +164,7 @@ const Applications = () => {
                             </h2>
                             <div className="flex gap-2">
                                 <select 
-                                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                                    className="border border-gray-300 rounded-lg px-3 py-1 text-sm"
                                     value={filter}
                                     onChange={(e) => setFilter(e.target.value)}
                                 >
@@ -202,7 +202,7 @@ const Applications = () => {
                                 <p className="text-gray-600 mb-4">Applications will appear here when candidates apply to your job postings.</p>
                                 <button 
                                     onClick={() => navigate('/company/jobs')}
-                                    className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                                    className="bg-[#F4B400] text-black px-6 py-1 rounded-lg hover:bg-[#E6A200] transition-colors"
                                 >
                                     View Job Postings
                                 </button>

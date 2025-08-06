@@ -201,9 +201,21 @@ const Profile = () => {
                                     <p className='font-bold text-xl sm:text-3xl'>Overview: </p>
                                 </div>
                                 <div className='content'>
-                                    <p className='text-justify text-sm sm:text-base leading-relaxed'>
-                                        {company?.description || 'No company description available. Click Edit to add your company overview and description.'}
-                                    </p>
+                                    {company?.description ? (
+                                        <div className='text-justify text-sm sm:text-base leading-relaxed space-y-4'>
+                                            {company.description.split('\n').map((paragraph, index) => (
+                                                paragraph.trim() !== '' && (
+                                                    <p key={index} className='mb-4 last:mb-0'>
+                                                        {paragraph.trim()}
+                                                    </p>
+                                                )
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className='text-justify text-sm sm:text-base leading-relaxed text-gray-500 italic'>
+                                            No company description available. Click Edit to add your company overview and description.
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                         </div>

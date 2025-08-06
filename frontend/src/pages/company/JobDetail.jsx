@@ -509,7 +509,15 @@ const JobDetail = () => {
 
                                                 <div className="border-t border-gray-200 pt-4 mb-6">
                                                     <h3 className="text-lg font-semibold text-gray-900 mb-3">Description</h3>
-                                                    <p className="text-gray-700 leading-relaxed">{job.description}</p>
+                                                    <div className="text-gray-700 leading-relaxed space-y-3">
+                                                        {job.description.split('\n').map((paragraph, index) => (
+                                                            paragraph.trim() && (
+                                                                <p key={index} className="text-gray-700 leading-relaxed">
+                                                                    {paragraph.trim()}
+                                                                </p>
+                                                            )
+                                                        ))}
+                                                    </div>
                                                 </div>
 
                                                 {/* Requirements */}

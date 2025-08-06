@@ -3,16 +3,115 @@ import React, { useState, useEffect } from 'react';
 const EditProfileModal = ({ isOpen, onClose, user, onSave }) => {
     const [formData, setFormData] = useState({});
     const [loading, setLoading] = useState(false);
+    
+    // Country and City states
+    const [countries, setCountries] = useState([]);
+    const [cities, setCities] = useState([]);
+    const [loadingCountries, setLoadingCountries] = useState(false);
+    
+    // Dropdown states
+    const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
+    const [cityDropdownOpen, setCityDropdownOpen] = useState(false);
+    const [countrySearch, setCountrySearch] = useState('');
+    const [citySearch, setCitySearch] = useState('');
+    const [filteredCountries, setFilteredCountries] = useState([]);
+    const [filteredCities, setFilteredCities] = useState([]);
 
     // Initialize form data when modal opens
     useEffect(() => {
         if (isOpen && user) {
             setFormData({
                 ...user,
-                skillsInput: user.skills ? user.skills.join(', ') : ''
+                skillsInput: user.skills ? user.skills.join(', ') : '',
+                country: user.domicile ? user.domicile.split(', ')[1] || '' : '', // Extract country from domicile
+                city: user.domicile ? user.domicile.split(', ')[0] || '' : '' // Extract city from domicile
             });
         }
     }, [isOpen, user]);
+
+    // Fetch countries on modal open
+    useEffect(() => {
+        if (isOpen && countries.length === 0) {
+            fetchCountries();
+        }
+    }, [isOpen, countries.length]);
+
+    // Set cities when countries are loaded and country is already selected
+    useEffect(() => {
+        if (countries.length > 0 && formData.country) {
+            const selectedCountry = countries.find(c => c.country === formData.country);
+            if (selectedCountry) {
+                setCities(selectedCountry.cities || []);
+            }
+        }
+    }, [countries, formData.country]);
+
+    // Filter countries based on search
+    useEffect(() => {
+        const filtered = countries.filter(country =>
+            country.country.toLowerCase().includes(countrySearch.toLowerCase())
+        );
+        setFilteredCountries(filtered);
+    }, [countries, countrySearch]);
+
+    // Filter cities based on search
+    useEffect(() => {
+        const filtered = cities.filter(city =>
+            city.toLowerCase().includes(citySearch.toLowerCase())
+        );
+        setFilteredCities(filtered);
+    }, [cities, citySearch]);
+
+    // Close dropdowns when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (!event.target.closest('.dropdown-container')) {
+                setCountryDropdownOpen(false);
+                setCityDropdownOpen(false);
+            }
+        };
+
+        if (countryDropdownOpen || cityDropdownOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+            return () => document.removeEventListener('mousedown', handleClickOutside);
+        }
+    }, [countryDropdownOpen, cityDropdownOpen]);
+
+    const fetchCountries = async () => {
+        setLoadingCountries(true);
+        try {
+            const response = await fetch('https://countriesnow.space/api/v0.1/countries');
+            const data = await response.json();
+            if (data.error) {
+                throw new Error(data.msg || 'Failed to fetch countries');
+            }
+            setCountries(data.data);
+        } catch (error) {
+            console.error('Error fetching countries:', error);
+        } finally {
+            setLoadingCountries(false);
+        }
+    };
+
+    const handleCountrySelect = (country) => {
+        setFormData(prev => ({
+            ...prev,
+            country: country.country,
+            city: '' // Reset city when country changes
+        }));
+        setCities(country.cities || []);
+        setCountryDropdownOpen(false);
+        setCountrySearch('');
+    };
+
+    const handleCitySelect = (city) => {
+        setFormData(prev => ({
+            ...prev,
+            city: city
+        }));
+        setCityDropdownOpen(false);
+        setCitySearch('');
+    };
 
     // Handle form input changes
     const handleInputChange = (e) => {
@@ -115,16 +214,21 @@ const EditProfileModal = ({ isOpen, onClose, user, onSave }) => {
         setLoading(true);
 
         try {
-            // Process skills input into array
+            // Process skills input into array and combine country/city into domicile
             const processedData = {
                 ...formData,
                 skills: formData.skillsInput 
                     ? formData.skillsInput.split(',').map(skill => skill.trim()).filter(skill => skill)
-                    : []
+                    : [],
+                domicile: formData.country && formData.city 
+                    ? `${formData.city}, ${formData.country}`
+                    : formData.country || formData.city || ''
             };
             
-            // Remove the temporary skillsInput field
+            // Remove the temporary fields
             delete processedData.skillsInput;
+            delete processedData.country;
+            delete processedData.city;
             
             await onSave(processedData);
             onClose();
@@ -137,10 +241,17 @@ const EditProfileModal = ({ isOpen, onClose, user, onSave }) => {
 
     // Handle cancel
     const handleCancel = () => {
-        setFormData({
+        const resetData = {
             ...user,
-            skillsInput: user.skills ? user.skills.join(', ') : ''
-        });
+            skillsInput: user.skills ? user.skills.join(', ') : '',
+            country: user.domicile ? user.domicile.split(', ')[1] || '' : '',
+            city: user.domicile ? user.domicile.split(', ')[0] || '' : ''
+        };
+        setFormData(resetData);
+        setCountryDropdownOpen(false);
+        setCityDropdownOpen(false);
+        setCountrySearch('');
+        setCitySearch('');
         onClose();
     };
 
@@ -228,14 +339,126 @@ const EditProfileModal = ({ isOpen, onClose, user, onSave }) => {
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
                                     Location
                                 </label>
-                                <input
-                                    type="text"
-                                    name="domicile"
-                                    value={formData.domicile || ''}
-                                    onChange={handleInputChange}
-                                    placeholder="City, Country"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                />
+                                <div className="grid grid-cols-2 gap-4">
+                                    {/* Country Dropdown */}
+                                    <div className="relative dropdown-container">
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Country
+                                        </label>
+                                        <div className="relative">
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setCountryDropdownOpen(!countryDropdownOpen);
+                                                    setCityDropdownOpen(false);
+                                                }}
+                                                className="w-full px-4 py-2 text-left bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent flex items-center justify-between"
+                                            >
+                                                <span className={formData.country ? 'text-gray-900' : 'text-gray-500'}>
+                                                    {formData.country || 'Select country...'}
+                                                </span>
+                                                <svg className={`w-5 h-5 text-gray-400 transition-transform duration-150 ${countryDropdownOpen ? 'rotate-180' : ''}`} 
+                                                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </button>
+
+                                            {countryDropdownOpen && (
+                                                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                                                    <div className="p-2 border-b">
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Search countries..."
+                                                            value={countrySearch}
+                                                            onChange={(e) => setCountrySearch(e.target.value)}
+                                                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                            onClick={(e) => e.stopPropagation()}
+                                                        />
+                                                    </div>
+                                                    <div className="max-h-48 overflow-y-auto">
+                                                        {loadingCountries ? (
+                                                            <div className="p-4 text-center text-gray-500">Loading countries...</div>
+                                                        ) : filteredCountries.length > 0 ? (
+                                                            filteredCountries.map((country, index) => (
+                                                                <button
+                                                                    key={index}
+                                                                    type="button"
+                                                                    onClick={() => handleCountrySelect(country)}
+                                                                    className="w-full px-4 py-2 text-left hover:bg-gray-100 focus:bg-gray-100 focus:outline-none text-sm"
+                                                                >
+                                                                    {country.country}
+                                                                </button>
+                                                            ))
+                                                        ) : (
+                                                            <div className="p-4 text-center text-gray-500">No countries found</div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* City Dropdown */}
+                                    <div className="relative dropdown-container">
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            City
+                                        </label>
+                                        <div className="relative">
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    if (formData.country) {
+                                                        setCityDropdownOpen(!cityDropdownOpen);
+                                                        setCountryDropdownOpen(false);
+                                                    }
+                                                }}
+                                                disabled={!formData.country}
+                                                className={`w-full px-4 py-2 text-left bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent flex items-center justify-between ${
+                                                    !formData.country ? 'opacity-50 cursor-not-allowed' : ''
+                                                }`}
+                                            >
+                                                <span className={formData.city ? 'text-gray-900' : 'text-gray-500'}>
+                                                    {formData.city || (formData.country ? 'Select city...' : 'Select country first')}
+                                                </span>
+                                                <svg className={`w-5 h-5 text-gray-400 transition-transform duration-150 ${cityDropdownOpen ? 'rotate-180' : ''}`} 
+                                                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </button>
+
+                                            {cityDropdownOpen && formData.country && (
+                                                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                                                    <div className="p-2 border-b">
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Search cities..."
+                                                            value={citySearch}
+                                                            onChange={(e) => setCitySearch(e.target.value)}
+                                                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                            onClick={(e) => e.stopPropagation()}
+                                                        />
+                                                    </div>
+                                                    <div className="max-h-48 overflow-y-auto">
+                                                        {filteredCities.length > 0 ? (
+                                                            filteredCities.map((city, index) => (
+                                                                <button
+                                                                    key={index}
+                                                                    type="button"
+                                                                    onClick={() => handleCitySelect(city)}
+                                                                    className="w-full px-4 py-2 text-left hover:bg-gray-100 focus:bg-gray-100 focus:outline-none text-sm"
+                                                                >
+                                                                    {city}
+                                                                </button>
+                                                            ))
+                                                        ) : (
+                                                            <div className="p-4 text-center text-gray-500">No cities found</div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'; // Add useCallback
 import { useNavigate } from 'react-router-dom';
 import NavBar from '../../Components/NavBar';
+import Footer from '../../Components/Footer';
 import FloatingDecorations from '../../Components/FloatingDecorations';
 import SaveJobForm from '../../Components/SaveJobForm';
 
@@ -53,7 +54,7 @@ const JobList = () => {
             // Build query parameters
             const queryParams = new URLSearchParams({
                 page: page.toString(),
-                limit: '15',
+                limit: '9',
                 includeInactive: activeShowInactive.toString()
             });
 
@@ -1050,23 +1051,38 @@ const JobList = () => {
                     </div>
 
                     {pagination.hasMore && jobs.length > 0 && (
-                        <div className="flex justify-center mt-8">
+                        <div className="flex justify-center mt-12">
                             <button
                                 onClick={handleLoadMore}
                                 disabled={loading}
-                                className={`px-6 py-3 rounded-lg border transition-colors ${
+                                className={`group relative px-8 py-4 rounded-xl font-semibold text-sm transition-all duration-300 transform ${
                                     loading
-                                        ? 'border-gray-200 text-gray-400 cursor-not-allowed bg-gray-50'
-                                        : 'border-blue-600 text-blue-600 hover:bg-blue-50 bg-white'
-                                }`}
+                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed scale-95'
+                                        : 'bg-[#F4B400] text-black hover:bg-[#E6A200] hover:scale-105 hover:shadow-lg active:scale-95'
+                                } shadow-md min-w-[180px]`}
                             >
                                 {loading ? (
-                                    <div className="flex items-center">
-                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-                                        Loading more jobs...
+                                    <div className="flex items-center justify-center">
+                                        <div className="animate-spin rounded-full h-5 w-5 border-2 border-gray-300 border-t-gray-600 mr-3"></div>
+                                        <span>Loading...</span>
                                     </div>
                                 ) : (
-                                    'Load More Jobs'
+                                    <div className="flex items-center justify-center">
+                                        <span className="mr-2">Load More Jobs</span>
+                                        <svg 
+                                            className="w-4 h-4 transition-transform duration-300 group-hover:translate-y-0.5" 
+                                            fill="none" 
+                                            stroke="currentColor" 
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                                        </svg>
+                                    </div>
+                                )}
+                                
+                                {/* Subtle background animation on hover */}
+                                {!loading && (
+                                    <div className="absolute inset-0 rounded-xl bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
                                 )}
                             </button>
                         </div>
@@ -1088,6 +1104,9 @@ const JobList = () => {
                     )}
                 </div>
             </div>
+
+            {/* Footer */}
+            <Footer />
         </div>
     );
 };
