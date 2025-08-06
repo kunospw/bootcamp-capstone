@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FaBuilding, FaUser } from "react-icons/fa";
+import { FaBuilding, FaUser, FaEye, FaEyeSlash } from "react-icons/fa";
 import { useNavigate, useLocation } from "react-router-dom";
 import FloatingDecorations from "../Components/FloatingDecorations";
 
@@ -32,6 +32,7 @@ export default function SignUp() {
   });
   const [credentialFile, setCredentialFile] = useState(null);
   const [message, setMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   // Password validation state
   const [passwordValidation, setPasswordValidation] = useState({
@@ -87,6 +88,10 @@ export default function SignUp() {
 
   const handleFileChange = (e) => {
     setCredentialFile(e.target.files[0]);
+  };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
 
   const handleSubmit = async (e) => {
@@ -389,16 +394,29 @@ export default function SignUp() {
               <label htmlFor='password' className='block text-sm font-medium text-gray-700 mb-1'>
                 Password
               </label>
-              <input
-                type='password'
-                id='password'
-                name='password'
-                value={form.password}
-                onChange={handleChange}
-                className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200'
-                placeholder='Create a password'
-                required
-              />
+              <div className='relative'>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  id='password'
+                  name='password'
+                  value={form.password}
+                  onChange={handleChange}
+                  className='w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200'
+                  placeholder='Create a password'
+                  required
+                />
+                <button
+                  type='button'
+                  onClick={togglePasswordVisibility}
+                  className='absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-gray-600 transition-colors duration-200'
+                >
+                  {showPassword ? (
+                    <FaEyeSlash className='w-4 h-4' />
+                  ) : (
+                    <FaEye className='w-4 h-4' />
+                  )}
+                </button>
+              </div>
               
               {/* Password Requirements Indicator */}
               {form.password && (
