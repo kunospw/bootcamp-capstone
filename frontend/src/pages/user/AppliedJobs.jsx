@@ -10,7 +10,6 @@ const AppliedJobs = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [totalApplications, setTotalApplications] = useState(0);
   const [statusFilter, setStatusFilter] = useState('');
   const [displayCount, setDisplayCount] = useState(15);
@@ -51,7 +50,6 @@ const AppliedJobs = () => {
       const data = await response.json();
       setApplications(data.applications);
       setCurrentPage(data.currentPage);
-      setTotalPages(data.totalPages);
       setTotalApplications(data.total);
       setError(null);
     } catch (err) {
@@ -309,140 +307,153 @@ const AppliedJobs = () => {
           ) : (
             <div className="relative z-10">
               {/* Applications Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 {visibleApplications.map((application) => (
                   <div
                     key={application._id}
-                    className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg hover:border-blue-200 transition-all duration-300 group"
+                    className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow flex flex-col h-full"
                   >
-                    {/* Header with Company Logo and Status */}
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-start gap-4">
-                        {application.jobId?.companyId?.profilePicture ? (
-                          <img
-                            src={getImageUrl(application.jobId.companyId.profilePicture)}
-                            alt={application.jobId.companyId.companyName}
-                            className="w-12 h-12 rounded-xl object-cover flex-shrink-0 ring-2 ring-gray-100"
-                          />
-                        ) : (
-                          <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center flex-shrink-0">
-                            <span className="text-blue-600 font-bold text-sm">
-                              {application.jobId?.companyId?.companyName?.charAt(0).toUpperCase() || 'C'}
-                            </span>
+                    <div className="p-6 flex flex-col flex-1">
+                      {/* Company Logo and Basic Info */}
+                      <div className="flex items-start space-x-4 mb-4 min-h-[4rem]">
+                        <div className="w-12 h-12 rounded-lg border border-gray-200 flex-shrink-0 overflow-hidden bg-gray-50 flex items-center justify-center">
+                          {application.jobId?.companyId?.profilePicture ? (
+                            <img
+                              src={getImageUrl(application.jobId.companyId.profilePicture)}
+                              alt={application.jobId.companyId.companyName}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                                e.target.nextSibling.style.display = 'flex';
+                              }}
+                            />
+                          ) : null}
+                          <div 
+                            className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-semibold text-sm"
+                            style={{ display: application.jobId?.companyId?.profilePicture ? 'none' : 'flex' }}
+                          >
+                            {application.jobId?.companyId?.companyName ? 
+                              application.jobId.companyId.companyName.charAt(0).toUpperCase() : 
+                              'C'
+                            }
                           </div>
-                        )}
-                        
+                        </div>
                         <div className="flex-1 min-w-0">
-                          <button
+                          <h3
                             onClick={() => handleJobClick(application.jobId._id)}
-                            className="text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors text-left line-clamp-2 mb-1 group-hover:text-blue-600"
+                            className="text-lg font-semibold text-gray-900 hover:text-blue-600 cursor-pointer transition-colors line-clamp-2 mb-1"
                           >
                             {application.jobId.title}
-                          </button>
-                          <p className="text-sm text-gray-600 truncate font-medium">
-                            {application.jobId?.companyId?.companyName}
-                          </p>
+                          </h3>
+                          <p className="text-gray-600 text-sm">{application.jobId?.companyId?.companyName}</p>
                         </div>
-                      </div>
-
-                      {/* Status Badge */}
-                      <span className={`inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(application.status)} shadow-sm`}>
-                        {getStatusDisplayText(application.status)}
-                      </span>
-                    </div>
-
-                    {/* Job Details */}
-                    <div className="space-y-3 mb-4">
-                      {/* Location and Job Type */}
-                      <div className="flex flex-wrap items-center gap-3">
-                        <div className="flex items-center text-sm text-gray-600">
-                          <svg className="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                          </svg>
-                          <span className="truncate">{application.jobId.location}</span>
-                        </div>
-                        <span className="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-md font-medium">
-                          {application.jobId.type}
+                        {/* Status Badge */}
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(application.status)} flex-shrink-0`}>
+                          {getStatusDisplayText(application.status)}
                         </span>
                       </div>
 
-                      {/* Application Timeline */}
-                      <div className="bg-gray-50 rounded-lg p-3">
-                        <div className="flex items-center justify-between text-xs">
-                          <div className="flex items-center text-gray-600">
-                            <svg className="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            <span>Applied: {formatDate(application.applicationDate)}</span>
-                          </div>
-                          {application.updatedAt !== application.applicationDate && (
-                            <div className="flex items-center text-blue-600">
-                              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                              </svg>
-                              <span>Updated: {formatDate(application.updatedAt)}</span>
-                            </div>
+                      {/* Location and Job Type */}
+                      <div className="mb-4 min-h-[3rem]">
+                        <div className="flex items-center text-sm text-gray-500 mb-2">
+                          <svg className="w-4 h-4 mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                          </svg>
+                          <span className="truncate">{application.jobId.location}</span>
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            {application.jobId.type}
+                          </span>
+                          {application.jobId.workLocation && (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              {application.jobId.workLocation}
+                            </span>
+                          )}
+                          {application.jobId.experienceLevel && (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                              {application.jobId.experienceLevel}
+                            </span>
                           )}
                         </div>
                       </div>
-                    </div>
 
-                    {/* Application Details Preview */}
-                    {(application.coverLetter || application.personalStatement) && (
-                      <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
-                        <div className="flex items-center mb-2">
-                          <svg className="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      {/* Application Timeline */}
+                      <div className="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-100">
+                        <div className="flex items-center text-xs text-gray-600 mb-2">
+                          <svg className="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                           </svg>
-                          <span className="text-xs font-semibold text-blue-800">Application Details</span>
+                          <span>Applied: {formatDate(application.applicationDate)}</span>
                         </div>
-                        {application.coverLetter && (
-                          <p className="text-xs text-blue-700 line-clamp-2 mb-1">
-                            <span className="font-medium">Cover Letter: </span>
-                            {application.coverLetter.length > 60 
-                              ? `${application.coverLetter.substring(0, 60)}...` 
-                              : application.coverLetter
-                            }
-                          </p>
-                        )}
-                        {application.personalStatement && (
-                          <p className="text-xs text-blue-700 line-clamp-2">
-                            <span className="font-medium">Personal Statement: </span>
-                            {application.personalStatement.length > 60 
-                              ? `${application.personalStatement.substring(0, 60)}...` 
-                              : application.personalStatement
-                            }
-                          </p>
+                        {application.updatedAt !== application.applicationDate && (
+                          <div className="flex items-center text-xs text-blue-600">
+                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            <span>Updated: {formatDate(application.updatedAt)}</span>
+                          </div>
                         )}
                       </div>
-                    )}
 
-                    {/* Action Buttons */}
-                    <div className="flex flex-col gap-2">
-                      <button
-                        onClick={() => handleJobClick(application.jobId._id)}
-                        className="w-full bg-blue-600 text-white text-sm font-medium py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center group-hover:bg-blue-700"
-                      >
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
-                        View Job Details
-                      </button>
-                      {application.resume && (
-                        <a
-                          href={`http://localhost:3000/${application.resume}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-full text-gray-600 hover:text-gray-700 text-sm font-medium py-2 px-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-center flex items-center justify-center"
+                      {/* Application Details Preview */}
+                      {(application.coverLetter || application.personalStatement) ? (
+                        <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
+                          <div className="flex items-center mb-2">
+                            <svg className="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <span className="text-xs font-semibold text-blue-800">Application Details</span>
+                          </div>
+                          {application.coverLetter && (
+                            <p className="text-xs text-blue-700 line-clamp-2 mb-1">
+                              <span className="font-medium">Cover Letter: </span>
+                              {application.coverLetter.length > 60 
+                                ? `${application.coverLetter.substring(0, 60)}...` 
+                                : application.coverLetter
+                              }
+                            </p>
+                          )}
+                          {application.personalStatement && (
+                            <p className="text-xs text-blue-700 line-clamp-2">
+                              <span className="font-medium">Personal Statement: </span>
+                              {application.personalStatement.length > 60 
+                                ? `${application.personalStatement.substring(0, 60)}...` 
+                                : application.personalStatement
+                              }
+                            </p>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="mb-4"></div>
+                      )}
+
+                      {/* Footer */}
+                      <div className="flex flex-col gap-2 pt-4 border-t border-gray-100 mt-auto">
+                        <button
+                          onClick={() => handleJobClick(application.jobId._id)}
+                          className="w-full bg-blue-600 text-white text-sm font-medium py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
                         >
                           <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                           </svg>
-                          Download Resume
-                        </a>
-                      )}
+                          View Job Details
+                        </button>
+                        {application.resume && (
+                          <a
+                            href={`http://localhost:3000/${application.resume}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full text-gray-600 hover:text-gray-700 text-sm font-medium py-2 px-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-center flex items-center justify-center"
+                          >
+                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            Download Resume
+                          </a>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}

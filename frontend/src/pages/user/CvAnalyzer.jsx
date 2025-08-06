@@ -11,7 +11,6 @@ const CvAnalyzer = () => {
   const [targetJobTitle, setTargetJobTitle] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState(null);
-  const [analysisId, setAnalysisId] = useState(null);
   const [dragActive, setDragActive] = useState(false);
   const [pdfUrl, setPdfUrl] = useState(null);
   const [pdfLoading, setPdfLoading] = useState(false);
@@ -106,7 +105,6 @@ const CvAnalyzer = () => {
       // Upload and start analysis
       const uploadResponse = await cvAnalyzerAPI.uploadAndAnalyze(formData);
       const newAnalysisId = uploadResponse.data.analysisId;
-      setAnalysisId(newAnalysisId);
 
       // Poll for results
       const result = await cvAnalyzerAPI.pollAnalysisStatus(newAnalysisId);

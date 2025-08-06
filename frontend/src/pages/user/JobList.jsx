@@ -4,6 +4,7 @@ import NavBar from '../../Components/NavBar';
 import Footer from '../../Components/Footer';
 import FloatingDecorations from '../../Components/FloatingDecorations';
 import SaveJobForm from '../../Components/SaveJobForm';
+import ApplicationForm from '../../Components/ApplicationForm';
 
 const JobList = () => {
     const navigate = useNavigate();
@@ -35,6 +36,11 @@ const JobList = () => {
     const [savedJobDetails, setSavedJobDetails] = useState(new Map());
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [tempVisibleNotes, setTempVisibleNotes] = useState(new Set());
+
+    // Application form state
+    const [showApplicationForm, setShowApplicationForm] = useState(false);
+    const [selectedJob, setSelectedJob] = useState(null);
+    const [applicationStatuses, setApplicationStatuses] = useState(new Map());
 
     // Check authentication status
     useEffect(() => {
@@ -152,6 +158,7 @@ const JobList = () => {
     useEffect(() => {
         if (isAuthenticated && jobs.length > 0) {
             checkSavedJobsStatus();
+            checkApplicationStatuses();
         }
     }, [isAuthenticated, jobs]);
 
@@ -187,6 +194,72 @@ const JobList = () => {
         } catch (error) {
             console.error('Error checking saved jobs status:', error);
         }
+    };
+
+    // Check which jobs user has applied to
+    const checkApplicationStatuses = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            const response = await fetch('http://localhost:3000/api/applications/my-applications', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const statusMap = new Map();
+                data.applications.forEach(app => {
+                    if (app.jobId && app.jobId._id) {
+                        statusMap.set(app.jobId._id, app.status);
+                    }
+                });
+                setApplicationStatuses(statusMap);
+            }
+        } catch (error) {
+            console.error('Error checking application statuses:', error);
+        }
+    };
+
+    // Handle apply button click
+    const handleApply = (job) => {
+        if (!isAuthenticated) {
+            navigate('/signin');
+            return;
+        }
+        
+        // Check if already applied
+        if (applicationStatuses.has(job._id)) {
+            alert(`You have already applied to this job. Status: ${applicationStatuses.get(job._id)}`);
+            return;
+        }
+        
+        // Check application deadline
+        if (job.applicationDeadline && new Date() > new Date(job.applicationDeadline)) {
+            alert('The application deadline for this job has passed.');
+            return;
+        }
+        
+        // Show application form
+        setSelectedJob(job);
+        setShowApplicationForm(true);
+    };
+
+    // Handle successful application submission
+    const handleApplicationSuccess = () => {
+        setShowApplicationForm(false);
+        setSelectedJob(null);
+        setApplicationStatuses(prev => new Map([...prev, [selectedJob._id, 'pending']]));
+        alert('Application submitted successfully!');
+    };
+
+    // Handle application form close
+    const handleApplicationClose = () => {
+        setShowApplicationForm(false);
+        setSelectedJob(null);
     };
 
     // Handle filter changes with immediate effect for dropdowns
@@ -918,10 +991,26 @@ const JobList = () => {
                                                         </>
                                                     )}
                                                     <button 
-                                                        onClick={() => navigate(`/job/${job._id}`)}
-                                                        className="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-xs font-medium"
+                                                        onClick={() => handleApply(job)}
+                                                        disabled={applicationStatuses.has(job._id) || (job.applicationDeadline && new Date() > new Date(job.applicationDeadline)) || !job.canApply}
+                                                        className={`px-3 py-1 rounded-md transition-colors text-xs font-medium ${
+                                                            applicationStatuses.has(job._id)
+                                                                ? 'bg-gray-500 text-white cursor-not-allowed'
+                                                                : (job.applicationDeadline && new Date() > new Date(job.applicationDeadline)) || !job.canApply
+                                                                    ? 'bg-red-500 text-white cursor-not-allowed'
+                                                                    : !isAuthenticated
+                                                                        ? 'bg-blue-600 text-white hover:bg-blue-700'
+                                                                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                                                        }`}
                                                     >
-                                                        View
+                                                        {applicationStatuses.has(job._id) 
+                                                            ? `Applied (${applicationStatuses.get(job._id)})` 
+                                                            : (job.applicationDeadline && new Date() > new Date(job.applicationDeadline)) || !job.canApply
+                                                                ? 'Unavailable'
+                                                                : !isAuthenticated 
+                                                                    ? 'Login to Apply' 
+                                                                    : 'Apply'
+                                                        }
                                                     </button>
                                                 </div>
                                             </div>
@@ -1104,6 +1193,15 @@ const JobList = () => {
                     )}
                 </div>
             </div>
+
+            {/* Application Form Modal */}
+            {showApplicationForm && selectedJob && isAuthenticated && (
+                <ApplicationForm
+                    job={selectedJob}
+                    onClose={handleApplicationClose}
+                    onSuccess={handleApplicationSuccess}
+                />
+            )}
 
             {/* Footer */}
             <Footer />
