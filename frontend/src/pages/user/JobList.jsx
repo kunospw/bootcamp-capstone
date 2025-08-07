@@ -716,10 +716,6 @@ const JobList = () => {
                                     Clear All Filters
                                 </button>
                             </div>
-                            
-                            <p className="text-xs text-gray-500 mt-2">
-                                Search is dynamic - results update as you type. Other filters apply immediately.
-                            </p>
                         </form>
                     </div>
 
