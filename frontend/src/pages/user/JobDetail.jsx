@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import NavBar from '../../Components/NavBar';
 import Footer from '../../Components/Footer';
@@ -15,8 +15,18 @@ const JobDetail = () => {
   const [applicationStatus, setApplicationStatus] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+  // Save job functionality states
+  const [isSaved, setIsSaved] = useState(false);
+  const [savedJobId, setSavedJobId] = useState(null);
+  const [showSaveDropdown, setShowSaveDropdown] = useState(false);
+  const [saveJobForm, setSaveJobForm] = useState({
+    priority: 'medium',
+    note: '',
+    tags: ''
+  });
+
   // Fetch job details
-  const fetchJobDetails = async () => {
+  const fetchJobDetails = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`http://localhost:3000/api/jobs/${id}`);
@@ -34,7 +44,7 @@ const JobDetail = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
   // Format salary
   const formatSalary = (salary) => {
@@ -86,8 +96,175 @@ const JobDetail = () => {
     return false;
   };
 
+  // Check if job is already saved
+  const checkSavedJobStatus = useCallback(async () => {
+    try {
+      if (!isAuthenticated) return;
+      
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:3000/api/saved-jobs', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const savedJob = data.savedJobs.find(saved => saved.jobId._id === id);
+        if (savedJob) {
+          setIsSaved(true);
+          setSavedJobId(savedJob._id);
+          setSaveJobForm({
+            priority: savedJob.priority || 'medium',
+            note: savedJob.note || '',
+            tags: savedJob.tags ? savedJob.tags.join(', ') : ''
+          });
+        } else {
+          setIsSaved(false);
+          setSavedJobId(null);
+        }
+      }
+    } catch (err) {
+      console.error('Error checking saved job status:', err);
+    }
+  }, [isAuthenticated, id]);
+
+  // Handle save job
+  const handleSaveJob = async () => {
+    if (!checkAuthentication()) {
+      navigate('/signin');
+      return;
+    }
+
+    if (isSaved) {
+      // If already saved, toggle dropdown
+      setShowSaveDropdown(!showSaveDropdown);
+    } else {
+      // Save with default values
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('http://localhost:3000/api/saved-jobs', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            jobId: id,
+            priority: saveJobForm.priority,
+            note: saveJobForm.note,
+            tags: saveJobForm.tags.split(',').map(tag => tag.trim()).filter(tag => tag)
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setIsSaved(true);
+          setSavedJobId(data.savedJob._id);
+          showNotification('success', 'Job saved successfully!');
+          setShowSaveDropdown(true);
+        } else {
+          throw new Error('Failed to save job');
+        }
+      } catch (err) {
+        console.error('Error saving job:', err);
+        showNotification('error', 'Failed to save job. Please try again.');
+      }
+    }
+  };
+
+  // Handle update saved job
+  const handleUpdateSavedJob = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:3000/api/saved-jobs/${savedJobId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          priority: saveJobForm.priority,
+          note: saveJobForm.note,
+          tags: saveJobForm.tags.split(',').map(tag => tag.trim()).filter(tag => tag)
+        }),
+      });
+
+      if (response.ok) {
+        showNotification('success', 'Saved job updated successfully!');
+        setShowSaveDropdown(false);
+      } else {
+        throw new Error('Failed to update saved job');
+      }
+    } catch (err) {
+      console.error('Error updating saved job:', err);
+      showNotification('error', 'Failed to update saved job. Please try again.');
+    }
+  };
+
+  // Handle unsave job
+  const handleUnsaveJob = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:3000/api/saved-jobs/${savedJobId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        setIsSaved(false);
+        setSavedJobId(null);
+        setSaveJobForm({
+          priority: 'medium',
+          note: '',
+          tags: ''
+        });
+        setShowSaveDropdown(false);
+        showNotification('success', 'Job removed from saved list!');
+      } else {
+        throw new Error('Failed to unsave job');
+      }
+    } catch (err) {
+      console.error('Error unsaving job:', err);
+      showNotification('error', 'Failed to remove job. Please try again.');
+    }
+  };
+
+  // Helper function for notifications
+  const showNotification = (type, message) => {
+    const colors = {
+      success: 'bg-green-100 border-green-400 text-green-700',
+      error: 'bg-red-100 border-red-400 text-red-700',
+    };
+
+    const icons = {
+      success: 'M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z',
+      error: 'M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z',
+    };
+
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 ${colors[type]} px-4 py-3 rounded-lg shadow-lg z-50 border`;
+    notification.innerHTML = `
+      <div class="flex items-center">
+        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="${icons[type]}" clip-rule="evenodd" />
+        </svg>
+        ${message}
+      </div>
+    `;
+    document.body.appendChild(notification);
+    setTimeout(() => {
+      if (document.body.contains(notification)) {
+        document.body.removeChild(notification);
+      }
+    }, 3000);
+  };
+
   // Check if user has already applied to this job
-  const checkApplicationStatus = async () => {
+  const checkApplicationStatus = useCallback(async () => {
     try {
       if (!isAuthenticated) return;
       
@@ -113,7 +290,7 @@ const JobDetail = () => {
     } catch (err) {
       console.error('Error checking application status:', err);
     }
-  };
+  }, [isAuthenticated, id]);
 
   // Handle apply button click
   const handleApply = () => {
@@ -157,14 +334,29 @@ const JobDetail = () => {
       fetchJobDetails();
       checkAuthentication();
     }
-  }, [id]);
+  }, [id, fetchJobDetails]);
 
   // Check application status when authentication state changes
   useEffect(() => {
     if (isAuthenticated && id) {
       checkApplicationStatus();
+      checkSavedJobStatus();
     }
-  }, [isAuthenticated, id]);
+  }, [isAuthenticated, id, checkApplicationStatus, checkSavedJobStatus]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showSaveDropdown && !event.target.closest('.save-job-dropdown')) {
+        setShowSaveDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showSaveDropdown]);
 
   if (loading) {
     return <div>Loading job details...</div>;
@@ -240,21 +432,129 @@ const JobDetail = () => {
                 </div>
                 
                 <div className="mt-6 lg:mt-0 lg:ml-6">
-                  <button 
-                    onClick={handleApply}
-                    disabled={applicationStatus || (job.applicationDeadline && new Date() > new Date(job.applicationDeadline))}
-                    className={`px-8 py-3 rounded-lg font-semibold text-lg transition-all duration-200 transform hover:scale-105 ${
-                      applicationStatus 
-                        ? 'bg-gray-500 cursor-not-allowed' 
-                        : (job.applicationDeadline && new Date() > new Date(job.applicationDeadline)) 
-                          ? 'bg-red-500 cursor-not-allowed' 
-                          : 'bg-white text-blue-600 hover:bg-blue-50 shadow-lg'
-                    }`}
-                  >
-                    {applicationStatus ? `Applied (${applicationStatus})` : 
-                     (job.applicationDeadline && new Date() > new Date(job.applicationDeadline) ? 'Deadline Passed' : 
-                      (!isAuthenticated ? 'Login to Apply' : 'Apply Now'))}
-                  </button>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    {/* Save Job Dropdown */}
+                    {isAuthenticated && (
+                      <div className="relative save-job-dropdown">
+                        <button
+                          onClick={handleSaveJob}
+                          className={`w-full sm:w-auto px-4 sm:px-6 py-3 rounded-lg font-semibold text-base sm:text-lg transition-all duration-200 transform hover:scale-105 flex items-center justify-center gap-2 ${
+                            isSaved
+                              ? 'bg-yellow-500 text-black hover:bg-yellow-600'
+                              : 'bg-white text-blue-600 hover:bg-blue-50 border-2 border-blue-600'
+                          }`}
+                        >
+                          <svg className="w-5 h-5" fill={isSaved ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                          </svg>
+                          {isSaved ? 'Saved' : 'Save Job'}
+                          {isSaved && (
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          )}
+                        </button>
+
+                        {/* Dropdown Menu */}
+                        {showSaveDropdown && isSaved && (
+                          <div className="absolute top-full mt-2 right-0 sm:right-0 left-0 sm:left-auto w-full sm:w-80 max-w-sm bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+                            <div className="p-4">
+                              <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-base sm:text-lg font-semibold text-gray-900">Edit Saved Job</h3>
+                                <button
+                                  onClick={() => setShowSaveDropdown(false)}
+                                  className="text-gray-400 hover:text-gray-600 p-1"
+                                >
+                                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                  </svg>
+                                </button>
+                              </div>
+
+                              <div className="space-y-4">
+                                {/* Priority */}
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Priority
+                                  </label>
+                                  <select
+                                    value={saveJobForm.priority}
+                                    onChange={(e) => setSaveJobForm({...saveJobForm, priority: e.target.value})}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
+                                  >
+                                    <option value="high">High Priority</option>
+                                    <option value="medium">Medium Priority</option>
+                                    <option value="low">Low Priority</option>
+                                  </select>
+                                </div>
+
+                                {/* Note */}
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Personal Note
+                                  </label>
+                                  <textarea
+                                    value={saveJobForm.note}
+                                    onChange={(e) => setSaveJobForm({...saveJobForm, note: e.target.value})}
+                                    placeholder="Add your thoughts about this job..."
+                                    rows={3}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white text-gray-900 placeholder-gray-500"
+                                  />
+                                </div>
+
+                                {/* Tags */}
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Tags (comma separated)
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={saveJobForm.tags}
+                                    onChange={(e) => setSaveJobForm({...saveJobForm, tags: e.target.value})}
+                                    placeholder="e.g. remote, urgent, interested"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900 placeholder-gray-500"
+                                  />
+                                </div>
+
+                                {/* Buttons */}
+                                <div className="flex flex-col sm:flex-row gap-2 pt-2">
+                                  <button
+                                    onClick={handleUpdateSavedJob}
+                                    className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm sm:text-base"
+                                  >
+                                    Update
+                                  </button>
+                                  <button
+                                    onClick={handleUnsaveJob}
+                                    className="px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium text-sm sm:text-base"
+                                  >
+                                    Remove
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Apply Button */}
+                    <button 
+                      onClick={handleApply}
+                      disabled={applicationStatus || (job.applicationDeadline && new Date() > new Date(job.applicationDeadline))}
+                      className={`w-full sm:w-auto px-6 sm:px-8 py-3 rounded-lg font-semibold text-base sm:text-lg transition-all duration-200 transform hover:scale-105 ${
+                        applicationStatus 
+                          ? 'bg-gray-500 cursor-not-allowed text-white' 
+                          : (job.applicationDeadline && new Date() > new Date(job.applicationDeadline)) 
+                            ? 'bg-red-500 cursor-not-allowed text-white' 
+                            : 'bg-white text-blue-600 hover:bg-blue-50 shadow-lg'
+                      }`}
+                    >
+                      {applicationStatus ? `Applied (${applicationStatus})` : 
+                       (job.applicationDeadline && new Date() > new Date(job.applicationDeadline) ? 'Deadline Passed' : 
+                        (!isAuthenticated ? 'Login to Apply' : 'Apply Now'))}
+                    </button>
+                  </div>
                 </div>
               </div>
 

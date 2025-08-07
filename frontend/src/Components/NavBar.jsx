@@ -22,7 +22,13 @@ const NavBar = () => {
     // Helper function to check if a link is active
     const isActiveLink = (path) => {
         if (path === '/') {
-            return location.pathname === '/' || location.pathname === '/jobs';
+            return location.pathname === '/' || 
+                   location.pathname === '/jobs' || 
+                   location.pathname.startsWith('/job/');
+        }
+        if (path === '/companies') {
+            return location.pathname === '/companies' || 
+                   location.pathname.startsWith('/company/');
         }
         return location.pathname === path;
     };
