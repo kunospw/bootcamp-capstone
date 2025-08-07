@@ -3,8 +3,45 @@ import User from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 import passport from "../config/passport.js";
 import { authenticateUser } from "../middleware/auth.js";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
 
 const router = express.Router();
+
+// Configure multer for profile picture uploads
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        const uploadDir = 'uploads/profiles';
+        // Create directory if it doesn't exist
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        cb(null, uploadDir);
+    },
+    filename: function (req, file, cb) {
+        // Generate unique filename
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, 'profile-' + uniqueSuffix + path.extname(file.originalname));
+    }
+});
+
+// File filter for images only
+const fileFilter = (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+        cb(null, true);
+    } else {
+        cb(new Error('Only image files are allowed!'), false);
+    }
+};
+
+const upload = multer({ 
+    storage: storage,
+    limits: {
+        fileSize: 5 * 1024 * 1024 // 5MB limit
+    },
+    fileFilter: fileFilter
+});
 
 function validateEmail(email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -161,7 +198,7 @@ router.put("/profile", authenticateUser, async(req, res) => {
     try {
         const allowedUpdates = [
             'fullName', 'phoneNumber', 'bio', 'birthDate', 'gender',
-            'domicile', 'personalSummary', 'skills', 'experience', 'education'
+            'domicile', 'personalSummary', 'skills', 'experience', 'education', 'profilePicture'
         ];
 
         const updates = {};
@@ -225,6 +262,42 @@ router.put("/change-password", authenticateUser, async(req, res) => {
         res.json({ message: "Password changed successfully." });
     } catch (err) {
         console.error("Change password error:", err);
+        res.status(500).json({ message: "Internal server error. Please try again." });
+    }
+});
+
+// Upload profile picture
+router.post("/upload-profile-picture", authenticateUser, upload.single('profilePicture'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: "No file uploaded." });
+        }
+
+        // Update user's profile picture in database
+        const user = await User.findById(req.user._id);
+        if (!user) {
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        // Delete old profile picture if it exists
+        if (user.profilePicture) {
+            const oldFilePath = path.join(process.cwd(), user.profilePicture);
+            if (fs.existsSync(oldFilePath)) {
+                fs.unlinkSync(oldFilePath);
+            }
+        }
+
+        // Save new profile picture path
+        const profilePictureUrl = `uploads/profiles/${req.file.filename}`;
+        user.profilePicture = profilePictureUrl;
+        await user.save();
+
+        res.json({
+            message: "Profile picture uploaded successfully.",
+            profilePictureUrl: profilePictureUrl
+        });
+    } catch (err) {
+        console.error("Upload profile picture error:", err);
         res.status(500).json({ message: "Internal server error. Please try again." });
     }
 });

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NavBar from '../../Components/NavBar';
+import Footer from '../../Components/Footer';
 import FloatingDecorations from '../../Components/FloatingDecorations';
+import ApplicationForm from '../../Components/ApplicationForm';
 
 const SavedJobs = () => {
     const navigate = useNavigate();
@@ -10,9 +12,25 @@ const SavedJobs = () => {
     const [error, setError] = useState(null);
     const [displayCount, setDisplayCount] = useState(15); // Show 15 items initially
 
+    // Application form state
+    const [showApplicationForm, setShowApplicationForm] = useState(false);
+    const [selectedJob, setSelectedJob] = useState(null);
+    const [applicationStatuses, setApplicationStatuses] = useState(new Map());
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+
     useEffect(() => {
         fetchSavedJobs();
+        // Check authentication status
+        const token = localStorage.getItem('token');
+        setIsAuthenticated(!!token);
     }, []);
+
+    // Check application statuses when authenticated and jobs are loaded
+    useEffect(() => {
+        if (isAuthenticated && savedJobs.length > 0) {
+            checkApplicationStatuses();
+        }
+    }, [isAuthenticated, savedJobs]);
 
     const fetchSavedJobs = async () => {
         try {
@@ -39,6 +57,74 @@ const SavedJobs = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    // Check which jobs user has applied to
+    const checkApplicationStatuses = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            const response = await fetch('http://localhost:3000/api/applications/my-applications', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const statusMap = new Map();
+                data.applications.forEach(app => {
+                    if (app.jobId && app.jobId._id) {
+                        statusMap.set(app.jobId._id, app.status);
+                    }
+                });
+                setApplicationStatuses(statusMap);
+            }
+        } catch (error) {
+            console.error('Error checking application statuses:', error);
+        }
+    };
+
+    // Handle apply button click
+    const handleApply = (job) => {
+        if (!isAuthenticated) {
+            navigate('/signin');
+            return;
+        }
+        
+        // Check if already applied
+        if (applicationStatuses.has(job._id)) {
+            alert(`You have already applied to this job. Status: ${applicationStatuses.get(job._id)}`);
+            return;
+        }
+        
+        // Check application deadline
+        if (job.applicationDeadline && new Date() > new Date(job.applicationDeadline)) {
+            alert('The application deadline for this job has passed.');
+            return;
+        }
+        
+        // Show application form
+        setSelectedJob(job);
+        setShowApplicationForm(true);
+    };
+
+    // Handle successful application submission
+    const handleApplicationSuccess = () => {
+        setShowApplicationForm(false);
+        setSelectedJob(null);
+        if (selectedJob) {
+            setApplicationStatuses(prev => new Map([...prev, [selectedJob._id, 'pending']]));
+        }
+        alert('Application submitted successfully!');
+    };
+
+    // Handle application form close
+    const handleApplicationClose = () => {
+        setShowApplicationForm(false);
+        setSelectedJob(null);
     };
 
     const handleRemoveSavedJob = async (savedJobId) => {
@@ -262,13 +348,28 @@ const SavedJobs = () => {
                                             <div className="p-6 flex flex-col flex-1">
                                                 {/* Company Logo and Basic Info */}
                                                 <div className="flex items-start space-x-4 mb-4 min-h-[4rem]">
-                                                    {savedJob.jobId.companyId?.profilePicture && (
-                                                        <img
-                                                            src={`http://localhost:3000/${savedJob.jobId.companyId.profilePicture}`}
-                                                            alt={savedJob.jobId.companyId.companyName}
-                                                            className="w-12 h-12 rounded-lg object-cover border border-gray-200 flex-shrink-0"
-                                                        />
-                                                    )}
+                                                    <div className="w-12 h-12 rounded-lg border border-gray-200 flex-shrink-0 overflow-hidden bg-gray-50 flex items-center justify-center">
+                                                        {savedJob.jobId.companyId?.profilePicture ? (
+                                                            <img
+                                                                src={`http://localhost:3000/${savedJob.jobId.companyId.profilePicture}`}
+                                                                alt={savedJob.jobId.companyId.companyName}
+                                                                className="w-full h-full object-cover"
+                                                                onError={(e) => {
+                                                                    e.target.style.display = 'none';
+                                                                    e.target.nextSibling.style.display = 'flex';
+                                                                }}
+                                                            />
+                                                        ) : null}
+                                                        <div 
+                                                            className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-semibold text-sm"
+                                                            style={{ display: savedJob.jobId.companyId?.profilePicture ? 'none' : 'flex' }}
+                                                        >
+                                                            {savedJob.jobId.companyId?.companyName ? 
+                                                                savedJob.jobId.companyId.companyName.charAt(0).toUpperCase() : 
+                                                                'C'
+                                                            }
+                                                        </div>
+                                                    </div>
                                                     <div className="flex-1 min-w-0">
                                                         <h3
                                                             onClick={() => navigate(`/job/${savedJob.jobId._id}`)}
@@ -386,10 +487,26 @@ const SavedJobs = () => {
                                                         <span>Saved {new Date(savedJob.dateSaved).toLocaleDateString()}</span>
                                                     </div>
                                                     <button 
-                                                        onClick={() => navigate(`/job/${savedJob.jobId._id}`)}
-                                                        className="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded hover:bg-blue-700 transition-colors flex-shrink-0"
+                                                        onClick={() => handleApply(savedJob.jobId)}
+                                                        disabled={applicationStatuses.has(savedJob.jobId._id) || (savedJob.jobId.applicationDeadline && new Date() > new Date(savedJob.jobId.applicationDeadline)) || !savedJob.jobId.canApply}
+                                                        className={`px-3 py-1.5 rounded text-xs font-medium transition-colors flex-shrink-0 ${
+                                                            applicationStatuses.has(savedJob.jobId._id)
+                                                                ? 'bg-gray-500 text-white cursor-not-allowed'
+                                                                : (savedJob.jobId.applicationDeadline && new Date() > new Date(savedJob.jobId.applicationDeadline)) || !savedJob.jobId.canApply
+                                                                    ? 'bg-red-500 text-white cursor-not-allowed'
+                                                                    : !isAuthenticated
+                                                                        ? 'bg-blue-600 text-white hover:bg-blue-700'
+                                                                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                                                        }`}
                                                     >
-                                                        View Job
+                                                        {applicationStatuses.has(savedJob.jobId._id) 
+                                                            ? `Applied (${applicationStatuses.get(savedJob.jobId._id)})` 
+                                                            : (savedJob.jobId.applicationDeadline && new Date() > new Date(savedJob.jobId.applicationDeadline)) || !savedJob.jobId.canApply
+                                                                ? 'Unavailable'
+                                                                : !isAuthenticated 
+                                                                    ? 'Login to Apply' 
+                                                                    : 'Apply'
+                                                        }
                                                     </button>
                                                 </div>
                                             </div>
@@ -418,6 +535,18 @@ const SavedJobs = () => {
                     )}
                 </div>
             </div>
+
+            {/* Application Form Modal */}
+            {showApplicationForm && selectedJob && isAuthenticated && (
+                <ApplicationForm
+                    job={selectedJob}
+                    onClose={handleApplicationClose}
+                    onSuccess={handleApplicationSuccess}
+                />
+            )}
+
+            {/* Footer */}
+            <Footer />
         </div>
     );
 };

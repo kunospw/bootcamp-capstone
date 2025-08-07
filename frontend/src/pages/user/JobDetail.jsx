@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import ApplicationForm from '../../components/ApplicationForm';
 import NavBar from '../../Components/NavBar';
+import Footer from '../../Components/Footer';
 import FloatingDecorations from '../../Components/FloatingDecorations';
+import ApplicationForm from '../../Components/ApplicationForm';
 
 const JobDetail = () => {
   const { id } = useParams();
@@ -139,7 +140,7 @@ const JobDetail = () => {
   };
 
   // Handle successful application submission
-  const handleApplicationSuccess = (result) => {
+  const handleApplicationSuccess = () => {
     setShowApplicationForm(false);
     setApplicationStatus('pending');
     alert('Application submitted successfully!');
@@ -537,6 +538,9 @@ const JobDetail = () => {
           onSuccess={handleApplicationSuccess}
         />
       )}
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 };

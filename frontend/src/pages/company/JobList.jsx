@@ -366,7 +366,7 @@ const JobList = () => {
                             <div className="flex-shrink-0">
                                 <button
                                     onClick={handleCreateJob}
-                                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium cursor-pointer"
+                                    className="bg-[#F4B400] text-black px-4 py-2 rounded-lg hover:bg-[#E6A200] transition-colors text-sm font-medium cursor-pointer"
                                 >
                                     Create New Job
                                 </button>
@@ -692,7 +692,7 @@ const JobList = () => {
                                                 </p>
                                                 <button
                                                     onClick={handleCreateJob}
-                                                    className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                                                    className="bg-[#F4B400] text-black px-6 py-2 rounded-lg hover:bg-[#E6A200] transition-colors"
                                                 >
                                                     Post Your First Job
                                                 </button>

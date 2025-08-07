@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NavBar from '../../Components/NavBar';
+import Footer from '../../Components/Footer';
 import FloatingDecorations from '../../Components/FloatingDecorations';
 
 const AppliedJobs = () => {
@@ -9,7 +10,6 @@ const AppliedJobs = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [totalApplications, setTotalApplications] = useState(0);
   const [statusFilter, setStatusFilter] = useState('');
   const [displayCount, setDisplayCount] = useState(15);
@@ -50,7 +50,6 @@ const AppliedJobs = () => {
       const data = await response.json();
       setApplications(data.applications);
       setCurrentPage(data.currentPage);
-      setTotalPages(data.totalPages);
       setTotalApplications(data.total);
       setError(null);
     } catch (err) {
@@ -144,9 +143,14 @@ const AppliedJobs = () => {
               <p className="text-lg text-blue-100">Track the status of your job applications</p>
             </div>
             
-            <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-8 text-center relative z-10">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="mt-4 text-gray-600">Loading your applications...</p>
+            <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-12 text-center relative z-10">
+              <div className="max-w-md mx-auto">
+                <div className="inline-flex items-center justify-center w-20 h-20 mb-6">
+                  <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200 border-t-blue-600"></div>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">Loading Applications</h3>
+                <p className="text-gray-600">Fetching your job applications...</p>
+              </div>
             </div>
           </div>
         </div>
@@ -169,20 +173,25 @@ const AppliedJobs = () => {
               <p className="text-lg text-blue-100">Track the status of your job applications</p>
             </div>
             
-            <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-8 text-center relative z-10">
-              <div className="text-red-500 mb-4">
-                <svg className="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+            <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-12 text-center relative z-10">
+              <div className="max-w-md mx-auto">
+                <div className="w-20 h-20 mx-auto mb-6 bg-red-100 rounded-full flex items-center justify-center">
+                  <svg className="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">Error Loading Applications</h3>
+                <p className="text-gray-600 mb-8 leading-relaxed">{error}</p>
+                <button 
+                  onClick={() => fetchApplications(currentPage)}
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 font-medium shadow-lg hover:shadow-xl flex items-center mx-auto"
+                >
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Try Again
+                </button>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">Error Loading Applications</h3>
-              <p className="text-gray-600 mb-6">{error}</p>
-              <button 
-                onClick={() => fetchApplications(currentPage)}
-                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Try Again
-              </button>
             </div>
           </div>
         </div>
@@ -205,70 +214,95 @@ const AppliedJobs = () => {
           </div>
 
           {/* Filter and Stats */}
-          <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-6 mb-6 relative z-10">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-              <div>
-                <p className="text-lg font-semibold text-gray-900">
-                  {totalApplications} Total Applications
-                </p>
-                <p className="text-gray-600">
-                  Showing {applications.length} applications on page {currentPage} of {totalPages}
-                </p>
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 mb-8 relative z-10">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+              <div className="flex items-center space-x-4">
+                <div className="bg-blue-100 p-3 rounded-lg">
+                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {totalApplications}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Total Applications
+                  </p>
+                </div>
               </div>
               
-              <div className="flex items-center gap-4">
-                <label className="text-sm font-medium text-gray-700">Filter by status:</label>
-                <select
-                  value={statusFilter}
-                  onChange={handleStatusFilterChange}
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">All Status</option>
-                  <option value="pending">Pending</option>
-                  <option value="reviewing">Reviewing</option>
-                  <option value="shortlisted">Shortlisted</option>
-                  <option value="interview">Interview</option>
-                  <option value="offered">Offered</option>
-                  <option value="rejected">Rejected</option>
-                  <option value="withdrawn">Withdrawn</option>
-                </select>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                <div className="text-sm text-gray-600">
+                  Showing {applications.length} applications
+                </div>
+                <div className="flex items-center gap-3">
+                  <label className="text-sm font-medium text-gray-700">Filter:</label>
+                  <select
+                    value={statusFilter}
+                    onChange={handleStatusFilterChange}
+                    className="border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white min-w-[140px]"
+                  >
+                    <option value="">All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="reviewing">Reviewing</option>
+                    <option value="shortlisted">Shortlisted</option>
+                    <option value="interview">Interview</option>
+                    <option value="offered">Offered</option>
+                    <option value="rejected">Rejected</option>
+                    <option value="withdrawn">Withdrawn</option>
+                  </select>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Applications List */}
           {applications.length === 0 ? (
-            <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-8 text-center relative z-10">
-              <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
+            <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-12 text-center relative z-10">
+              <div className="max-w-md mx-auto">
+                <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center">
+                  <svg className="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                  {statusFilter ? `No ${statusFilter} applications found` : 'No applications yet'}
+                </h3>
+                
+                <p className="text-gray-600 mb-8 leading-relaxed">
+                  {statusFilter 
+                    ? `You don't have any applications with "${statusFilter}" status. Try changing the filter to see other applications.`
+                    : "You haven't applied to any jobs yet. Start exploring opportunities and take the first step towards your dream career!"
+                  }
+                </p>
+                
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  {!statusFilter && (
+                    <button 
+                      onClick={() => navigate('/')}
+                      className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 font-medium shadow-lg hover:shadow-xl flex items-center justify-center"
+                    >
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                      Browse Jobs
+                    </button>
+                  )}
+                  {statusFilter && (
+                    <button 
+                      onClick={() => setStatusFilter('')}
+                      className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-all duration-300 font-medium shadow-lg hover:shadow-xl flex items-center justify-center"
+                    >
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      Clear Filter
+                    </button>
+                  )}
+                </div>
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                {statusFilter ? `No ${statusFilter} applications found` : 'No applications yet'}
-              </h3>
-              <p className="text-gray-600 mb-6">
-                {statusFilter 
-                  ? `You don't have any applications with "${statusFilter}" status.`
-                  : "You haven't applied to any jobs yet. Start exploring opportunities!"
-                }
-              </p>
-              {!statusFilter && (
-                <button 
-                  onClick={() => navigate('/')}
-                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Browse Jobs
-                </button>
-              )}
-              {statusFilter && (
-                <button 
-                  onClick={() => setStatusFilter('')}
-                  className="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors"
-                >
-                  Clear Filter
-                </button>
-              )}
             </div>
           ) : (
             <div className="relative z-10">
@@ -277,109 +311,149 @@ const AppliedJobs = () => {
                 {visibleApplications.map((application) => (
                   <div
                     key={application._id}
-                    className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow"
+                    className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow flex flex-col h-full"
                   >
-                    {/* Company Logo and Job Info */}
-                    <div className="flex items-start gap-3 mb-4">
-                      {application.jobId?.companyId?.profilePicture ? (
-                        <img
-                          src={getImageUrl(application.jobId.companyId.profilePicture)}
-                          alt={application.jobId.companyId.companyName}
-                          className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
-                        />
-                      ) : (
-                        <div className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <span className="text-gray-600 font-semibold text-xs">
-                            {application.jobId?.companyId?.companyName?.charAt(0).toUpperCase() || 'C'}
-                          </span>
+                    <div className="p-6 flex flex-col flex-1">
+                      {/* Company Logo and Basic Info */}
+                      <div className="flex items-start space-x-4 mb-4 min-h-[4rem]">
+                        <div className="w-12 h-12 rounded-lg border border-gray-200 flex-shrink-0 overflow-hidden bg-gray-50 flex items-center justify-center">
+                          {application.jobId?.companyId?.profilePicture ? (
+                            <img
+                              src={getImageUrl(application.jobId.companyId.profilePicture)}
+                              alt={application.jobId.companyId.companyName}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                                e.target.nextSibling.style.display = 'flex';
+                              }}
+                            />
+                          ) : null}
+                          <div 
+                            className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-semibold text-sm"
+                            style={{ display: application.jobId?.companyId?.profilePicture ? 'none' : 'flex' }}
+                          >
+                            {application.jobId?.companyId?.companyName ? 
+                              application.jobId.companyId.companyName.charAt(0).toUpperCase() : 
+                              'C'
+                            }
+                          </div>
                         </div>
+                        <div className="flex-1 min-w-0">
+                          <h3
+                            onClick={() => handleJobClick(application.jobId._id)}
+                            className="text-lg font-semibold text-gray-900 hover:text-blue-600 cursor-pointer transition-colors line-clamp-2 mb-1"
+                          >
+                            {application.jobId.title}
+                          </h3>
+                          <p className="text-gray-600 text-sm">{application.jobId?.companyId?.companyName}</p>
+                        </div>
+                        {/* Status Badge */}
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(application.status)} flex-shrink-0`}>
+                          {getStatusDisplayText(application.status)}
+                        </span>
+                      </div>
+
+                      {/* Location and Job Type */}
+                      <div className="mb-4 min-h-[3rem]">
+                        <div className="flex items-center text-sm text-gray-500 mb-2">
+                          <svg className="w-4 h-4 mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                          </svg>
+                          <span className="truncate">{application.jobId.location}</span>
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            {application.jobId.type}
+                          </span>
+                          {application.jobId.workLocation && (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              {application.jobId.workLocation}
+                            </span>
+                          )}
+                          {application.jobId.experienceLevel && (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                              {application.jobId.experienceLevel}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Application Timeline */}
+                      <div className="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-100">
+                        <div className="flex items-center text-xs text-gray-600 mb-2">
+                          <svg className="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <span>Applied: {formatDate(application.applicationDate)}</span>
+                        </div>
+                        {application.updatedAt !== application.applicationDate && (
+                          <div className="flex items-center text-xs text-blue-600">
+                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            <span>Updated: {formatDate(application.updatedAt)}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Application Details Preview */}
+                      {(application.coverLetter || application.personalStatement) ? (
+                        <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
+                          <div className="flex items-center mb-2">
+                            <svg className="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <span className="text-xs font-semibold text-blue-800">Application Details</span>
+                          </div>
+                          {application.coverLetter && (
+                            <p className="text-xs text-blue-700 line-clamp-2 mb-1">
+                              <span className="font-medium">Cover Letter: </span>
+                              {application.coverLetter.length > 60 
+                                ? `${application.coverLetter.substring(0, 60)}...` 
+                                : application.coverLetter
+                              }
+                            </p>
+                          )}
+                          {application.personalStatement && (
+                            <p className="text-xs text-blue-700 line-clamp-2">
+                              <span className="font-medium">Personal Statement: </span>
+                              {application.personalStatement.length > 60 
+                                ? `${application.personalStatement.substring(0, 60)}...` 
+                                : application.personalStatement
+                              }
+                            </p>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="mb-4"></div>
                       )}
-                      
-                      <div className="flex-1 min-w-0">
+
+                      {/* Footer */}
+                      <div className="flex flex-col gap-2 pt-4 border-t border-gray-100 mt-auto">
                         <button
                           onClick={() => handleJobClick(application.jobId._id)}
-                          className="text-base font-semibold text-gray-900 hover:text-blue-600 transition-colors text-left line-clamp-2 mb-1"
+                          className="w-full bg-blue-600 text-white text-sm font-medium py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
                         >
-                          {application.jobId.title}
+                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                          View Job Details
                         </button>
-                        <p className="text-sm text-gray-600 truncate">
-                          {application.jobId?.companyId?.companyName}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Status Badge */}
-                    <div className="mb-3">
-                      <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full ${getStatusBadgeColor(application.status)}`}>
-                        {getStatusDisplayText(application.status)}
-                      </span>
-                    </div>
-
-                    {/* Location and Job Type */}
-                    <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500 mb-3">
-                      <div className="flex items-center">
-                        <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        <span className="truncate">{application.jobId.location}</span>
-                      </div>
-                      <span>•</span>
-                      <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
-                        {application.jobId.type}
-                      </span>
-                    </div>
-
-                    {/* Application Date */}
-                    <div className="text-xs text-gray-500 mb-3">
-                      <p>Applied on {formatDate(application.applicationDate)}</p>
-                      {application.updatedAt !== application.applicationDate && (
-                        <p>Updated {formatDate(application.updatedAt)}</p>
-                      )}
-                    </div>
-
-                    {/* Application Details Preview */}
-                    {(application.coverLetter || application.personalStatement) && (
-                      <div className="mb-3 p-2 bg-gray-50 rounded text-xs">
-                        {application.coverLetter && (
-                          <p className="text-gray-600 line-clamp-2">
-                            <span className="font-medium">Cover Letter: </span>
-                            {application.coverLetter.length > 80 
-                              ? `${application.coverLetter.substring(0, 80)}...` 
-                              : application.coverLetter
-                            }
-                          </p>
-                        )}
-                        {application.personalStatement && (
-                          <p className="text-gray-600 line-clamp-2 mt-1">
-                            <span className="font-medium">Personal Statement: </span>
-                            {application.personalStatement.length > 80 
-                              ? `${application.personalStatement.substring(0, 80)}...` 
-                              : application.personalStatement
-                            }
-                          </p>
+                        {application.resume && (
+                          <a
+                            href={`http://localhost:3000/${application.resume}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full text-gray-600 hover:text-gray-700 text-sm font-medium py-2 px-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-center flex items-center justify-center"
+                          >
+                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            Download Resume
+                          </a>
                         )}
                       </div>
-                    )}
-
-                    {/* Action Buttons */}
-                    <div className="flex flex-col gap-2">
-                      <button
-                        onClick={() => handleJobClick(application.jobId._id)}
-                        className="w-full text-blue-600 hover:text-blue-700 text-sm font-medium py-2 px-3 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors"
-                      >
-                        View Job Details
-                      </button>
-                      {application.resume && (
-                        <a
-                          href={`http://localhost:3000/${application.resume}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-full text-gray-600 hover:text-gray-700 text-sm font-medium py-2 px-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-center"
-                        >
-                          View Resume
-                        </a>
-                      )}
                     </div>
                   </div>
                 ))}
@@ -390,11 +464,14 @@ const AppliedJobs = () => {
                 <div className="text-center">
                   <button
                     onClick={handleLoadMore}
-                    className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                    className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-4 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center mx-auto"
                   >
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
                     Load More Applications
                   </button>
-                  <p className="text-sm text-gray-500 mt-2">
+                  <p className="text-sm text-gray-500 mt-3">
                     Showing {visibleApplications.length} of {applications.length} applications
                   </p>
                 </div>
@@ -403,13 +480,18 @@ const AppliedJobs = () => {
           )}
 
           {loading && applications.length > 0 && (
-            <div className="text-center py-8 relative z-10">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="mt-2 text-gray-600">Loading...</p>
+            <div className="text-center py-12 relative z-10">
+              <div className="inline-flex items-center justify-center w-16 h-16 mb-4">
+                <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-200 border-t-blue-600"></div>
+              </div>
+              <p className="text-gray-600 font-medium">Loading more applications...</p>
             </div>
           )}
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 };

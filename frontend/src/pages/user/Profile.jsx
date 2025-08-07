@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FiUser, FiMail, FiPhone, FiMapPin, FiCalendar, FiEdit3, FiPlus } from 'react-icons/fi';
 import NavBar from '../../Components/NavBar';
+import Footer from '../../Components/Footer';
 import FloatingDecorations from '../../Components/FloatingDecorations';
 import EditProfileModal from '../../Components/EditProfileModal';
 
@@ -164,14 +165,14 @@ const Profile = () => {
         <div className="absolute inset-0 z-0">
           <FloatingDecorations />
         </div>
-        <div className="relative z-20 max-w-6xl mx-auto px-6">
+        <div className="relative z-20 max-w-4xl mx-auto px-6">
           <div className="flex items-start space-x-6">
             {/* Avatar */}
             <div className="relative">
               <div className="w-32 h-32 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden">
                 {user.profilePicture ? (
                   <img 
-                    src={user.profilePicture} 
+                    src={user.profilePicture.startsWith('http') ? user.profilePicture : `http://localhost:3000/${user.profilePicture}`} 
                     alt="Profile" 
                     className="w-full h-full object-cover"
                   />
@@ -411,6 +412,9 @@ const Profile = () => {
         user={user}
         onSave={handleSaveProfile}
       />
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 };export default Profile;

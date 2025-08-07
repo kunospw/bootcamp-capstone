@@ -35,13 +35,31 @@ router.post("/", authenticateUser, async(req, res) => {
         });
 
         await savedJob.save();
-        await savedJob.populate('jobId');
+        await savedJob.populate({
+            path: 'jobId',
+            populate: [
+                {
+                    path: 'companyId',
+                    select: 'companyName profilePicture'
+                },
+                {
+                    path: 'category',
+                    select: 'categoryName'
+                }
+            ]
+        });
+
+        // Add canApply status
+        const savedJobObj = savedJob.toObject();
+        if (savedJobObj.jobId) {
+            savedJobObj.jobId.canApply = savedJobObj.jobId.isActive;
+        }
 
         console.log('Job saved successfully:', savedJob); // Debug log
 
         res.status(201).json({
             message: "Job saved successfully",
-            savedJob
+            savedJob: savedJobObj
         });
     } catch (error) {
         console.error('Error saving job:', error);
@@ -62,20 +80,35 @@ router.get("/", authenticateUser, async(req, res) => {
         const savedJobs = await SavedJob.getSavedJobsByUser(userId, filters)
             .populate({
                 path: 'jobId',
-                populate: {
-                    path: 'companyId',
-                    select: 'companyName profilePicture'
-                }
+                populate: [
+                    {
+                        path: 'companyId',
+                        select: 'companyName profilePicture'
+                    },
+                    {
+                        path: 'category',
+                        select: 'categoryName'
+                    }
+                ]
             })
             .limit(limit * 1)
             .skip((page - 1) * limit);
 
         const total = await SavedJob.countDocuments({ userId, isActive: true });
 
+        // Add canApply status to each job (like in job.js)
+        const savedJobsWithStatus = savedJobs.map(savedJob => {
+            const savedJobObj = savedJob.toObject();
+            if (savedJobObj.jobId) {
+                savedJobObj.jobId.canApply = savedJobObj.jobId.isActive; // Add canApply property
+            }
+            return savedJobObj;
+        });
+
         console.log('Found saved jobs:', savedJobs.length); // Debug log
 
         res.json({
-            savedJobs,
+            savedJobs: savedJobsWithStatus,
             totalPages: Math.ceil(total / limit),
             currentPage: parseInt(page),
             total
@@ -95,14 +128,39 @@ router.get("/check/:jobId", authenticateUser, async(req, res) => {
         console.log('Checking if job is saved:', { userId, jobId }); // Debug log
 
         const savedJob = await SavedJob.findOne({ userId, jobId, isActive: true })
-            .populate('jobId');
+            .populate({
+                path: 'jobId',
+                populate: [
+                    {
+                        path: 'companyId',
+                        select: 'companyName profilePicture'
+                    },
+                    {
+                        path: 'category',
+                        select: 'categoryName'
+                    }
+                ]
+            });
 
-        console.log('Saved job check result:', { isSaved: !!savedJob }); // Debug log
+        // Add canApply status if job exists
+        if (savedJob && savedJob.jobId) {
+            const savedJobObj = savedJob.toObject();
+            savedJobObj.jobId.canApply = savedJobObj.jobId.isActive;
+            
+            console.log('Saved job check result:', { isSaved: !!savedJob }); // Debug log
 
-        res.json({
-            isSaved: !!savedJob,
-            savedJob: savedJob || null
-        });
+            res.json({
+                isSaved: !!savedJob,
+                savedJob: savedJobObj || null
+            });
+        } else {
+            console.log('Saved job check result:', { isSaved: !!savedJob }); // Debug log
+
+            res.json({
+                isSaved: !!savedJob,
+                savedJob: savedJob || null
+            });
+        }
     } catch (error) {
         console.error('Error checking saved job:', error);
         res.status(500).json({ message: error.message });
@@ -130,17 +188,29 @@ router.put("/:id", authenticateUser, async(req, res) => {
         await savedJob.save();
         await savedJob.populate({
             path: 'jobId',
-            populate: {
-                path: 'companyId',
-                select: 'companyName profilePicture'
-            }
+            populate: [
+                {
+                    path: 'companyId',
+                    select: 'companyName profilePicture'
+                },
+                {
+                    path: 'category',
+                    select: 'categoryName'
+                }
+            ]
         });
+
+        // Add canApply status
+        const savedJobObj = savedJob.toObject();
+        if (savedJobObj.jobId) {
+            savedJobObj.jobId.canApply = savedJobObj.jobId.isActive;
+        }
 
         console.log('Saved job updated:', savedJob); // Debug log
 
         res.json({
             message: "Saved job updated successfully",
-            savedJob
+            savedJob: savedJobObj
         });
     } catch (error) {
         console.error('Error updating saved job:', error);
@@ -169,17 +239,29 @@ router.patch("/:id/clear-note", authenticateUser, async(req, res) => {
         await savedJob.save();
         await savedJob.populate({
             path: 'jobId',
-            populate: {
-                path: 'companyId',
-                select: 'companyName profilePicture'
-            }
+            populate: [
+                {
+                    path: 'companyId',
+                    select: 'companyName profilePicture'
+                },
+                {
+                    path: 'category',
+                    select: 'categoryName'
+                }
+            ]
         });
+
+        // Add canApply status
+        const savedJobObj = savedJob.toObject();
+        if (savedJobObj.jobId) {
+            savedJobObj.jobId.canApply = savedJobObj.jobId.isActive;
+        }
 
         console.log('Note cleared from saved job successfully'); // Debug log
 
         res.json({
             message: "Note cleared successfully",
-            savedJob
+            savedJob: savedJobObj
         });
     } catch (error) {
         console.error('Error clearing note from saved job:', error);
@@ -220,19 +302,31 @@ router.get("/:id", authenticateUser, async(req, res) => {
         const savedJob = await SavedJob.findOne({ _id: id, userId })
             .populate({
                 path: 'jobId',
-                populate: {
-                    path: 'companyId',
-                    select: 'companyName profilePicture'
-                }
+                populate: [
+                    {
+                        path: 'companyId',
+                        select: 'companyName profilePicture'
+                    },
+                    {
+                        path: 'category',
+                        select: 'categoryName'
+                    }
+                ]
             });
 
         if (!savedJob) {
             return res.status(404).json({ message: "Saved job not found" });
         }
 
+        // Add canApply status
+        const savedJobObj = savedJob.toObject();
+        if (savedJobObj.jobId) {
+            savedJobObj.jobId.canApply = savedJobObj.jobId.isActive;
+        }
+
         console.log('Saved job found:', savedJob); // Debug log
 
-        res.json(savedJob);
+        res.json(savedJobObj);
     } catch (error) {
         console.error('Error fetching saved job:', error);
         res.status(500).json({ message: error.message });

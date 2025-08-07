@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react'; // Add useCallback
 import { useNavigate } from 'react-router-dom';
 import NavBar from '../../Components/NavBar';
+import Footer from '../../Components/Footer';
 import FloatingDecorations from '../../Components/FloatingDecorations';
 import SaveJobForm from '../../Components/SaveJobForm';
+import ApplicationForm from '../../Components/ApplicationForm';
 
 const JobList = () => {
     const navigate = useNavigate();
@@ -35,6 +37,11 @@ const JobList = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [tempVisibleNotes, setTempVisibleNotes] = useState(new Set());
 
+    // Application form state
+    const [showApplicationForm, setShowApplicationForm] = useState(false);
+    const [selectedJob, setSelectedJob] = useState(null);
+    const [applicationStatuses, setApplicationStatuses] = useState(new Map());
+
     // Check authentication status
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -53,7 +60,7 @@ const JobList = () => {
             // Build query parameters
             const queryParams = new URLSearchParams({
                 page: page.toString(),
-                limit: '15',
+                limit: '9',
                 includeInactive: activeShowInactive.toString()
             });
 
@@ -110,7 +117,7 @@ const JobList = () => {
     // Initial load
     useEffect(() => {
         fetchJobs(1);
-    }, []); // Only run on mount
+    }, [fetchJobs]); // Include fetchJobs dependency
 
     // Auto-search with debounce for search field
     useEffect(() => {
@@ -121,10 +128,8 @@ const JobList = () => {
 
         // Set new timer for search debounce (500ms delay)
         const timer = setTimeout(() => {
-            if (filters.search !== '') { // Only auto-search when there's text
-                console.log('Auto-searching for:', filters.search);
-                fetchJobs(1);
-            }
+            console.log('Auto-searching for:', filters.search || '(empty - show all)');
+            fetchJobs(1); // Always fetch, whether search is empty or not
         }, 500);
 
         setSearchDebounceTimer(timer);
@@ -135,27 +140,20 @@ const JobList = () => {
                 clearTimeout(timer);
             }
         };
-    }, [filters.search]); // Only trigger on search changes
+    }, [filters.search, fetchJobs, searchDebounceTimer]); // Include all dependencies
 
     // Immediate fetch for other filter changes
     useEffect(() => {
         fetchJobs(1);
-    }, [filters.location, filters.type, filters.workLocation, filters.experienceLevel]);
+    }, [filters.location, filters.type, filters.workLocation, filters.experienceLevel, fetchJobs]);
 
     // Refetch when showInactive changes
     useEffect(() => {
         fetchJobs(1);
-    }, [showInactive]);
-
-    // Load saved jobs status when authenticated
-    useEffect(() => {
-        if (isAuthenticated && jobs.length > 0) {
-            checkSavedJobsStatus();
-        }
-    }, [isAuthenticated, jobs]);
+    }, [showInactive, fetchJobs]);
 
     // Check which jobs are already saved and get their details
-    const checkSavedJobsStatus = async () => {
+    const checkSavedJobsStatus = useCallback(async () => {
         try {
             const token = localStorage.getItem('token');
             if (!token) return;
@@ -186,6 +184,80 @@ const JobList = () => {
         } catch (error) {
             console.error('Error checking saved jobs status:', error);
         }
+    }, [jobs]);
+
+    // Check which jobs user has applied to
+    const checkApplicationStatuses = useCallback(async () => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            const response = await fetch('http://localhost:3000/api/applications/my-applications', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const statusMap = new Map();
+                data.applications.forEach(app => {
+                    if (app.jobId && app.jobId._id) {
+                        statusMap.set(app.jobId._id, app.status);
+                    }
+                });
+                setApplicationStatuses(statusMap);
+            }
+        } catch (error) {
+            console.error('Error checking application statuses:', error);
+        }
+    }, []);
+
+    // Load saved jobs status when authenticated
+    useEffect(() => {
+        if (isAuthenticated && jobs.length > 0) {
+            checkSavedJobsStatus();
+            checkApplicationStatuses();
+        }
+    }, [isAuthenticated, jobs, checkSavedJobsStatus, checkApplicationStatuses]);
+
+    // Handle apply button click
+    const handleApply = (job) => {
+        if (!isAuthenticated) {
+            navigate('/signin');
+            return;
+        }
+        
+        // Check if already applied
+        if (applicationStatuses.has(job._id)) {
+            alert(`You have already applied to this job. Status: ${applicationStatuses.get(job._id)}`);
+            return;
+        }
+        
+        // Check application deadline
+        if (job.applicationDeadline && new Date() > new Date(job.applicationDeadline)) {
+            alert('The application deadline for this job has passed.');
+            return;
+        }
+        
+        // Show application form
+        setSelectedJob(job);
+        setShowApplicationForm(true);
+    };
+
+    // Handle successful application submission
+    const handleApplicationSuccess = () => {
+        setShowApplicationForm(false);
+        setSelectedJob(null);
+        setApplicationStatuses(prev => new Map([...prev, [selectedJob._id, 'pending']]));
+        alert('Application submitted successfully!');
+    };
+
+    // Handle application form close
+    const handleApplicationClose = () => {
+        setShowApplicationForm(false);
+        setSelectedJob(null);
     };
 
     // Handle filter changes with immediate effect for dropdowns
@@ -642,10 +714,6 @@ const JobList = () => {
                                     Clear All Filters
                                 </button>
                             </div>
-                            
-                            <p className="text-xs text-gray-500 mt-2">
-                                Search is dynamic - results update as you type. Other filters apply immediately.
-                            </p>
                         </form>
                     </div>
 
@@ -917,10 +985,26 @@ const JobList = () => {
                                                         </>
                                                     )}
                                                     <button 
-                                                        onClick={() => navigate(`/job/${job._id}`)}
-                                                        className="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-xs font-medium"
+                                                        onClick={() => handleApply(job)}
+                                                        disabled={applicationStatuses.has(job._id) || (job.applicationDeadline && new Date() > new Date(job.applicationDeadline)) || !job.canApply}
+                                                        className={`px-3 py-1 rounded-md transition-colors text-xs font-medium ${
+                                                            applicationStatuses.has(job._id)
+                                                                ? 'bg-gray-500 text-white cursor-not-allowed'
+                                                                : (job.applicationDeadline && new Date() > new Date(job.applicationDeadline)) || !job.canApply
+                                                                    ? 'bg-red-500 text-white cursor-not-allowed'
+                                                                    : !isAuthenticated
+                                                                        ? 'bg-blue-600 text-white hover:bg-blue-700'
+                                                                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                                                        }`}
                                                     >
-                                                        View
+                                                        {applicationStatuses.has(job._id) 
+                                                            ? `Applied (${applicationStatuses.get(job._id)})` 
+                                                            : (job.applicationDeadline && new Date() > new Date(job.applicationDeadline)) || !job.canApply
+                                                                ? 'Unavailable'
+                                                                : !isAuthenticated 
+                                                                    ? 'Login to Apply' 
+                                                                    : 'Apply'
+                                                        }
                                                     </button>
                                                 </div>
                                             </div>
@@ -1050,23 +1134,38 @@ const JobList = () => {
                     </div>
 
                     {pagination.hasMore && jobs.length > 0 && (
-                        <div className="flex justify-center mt-8">
+                        <div className="flex justify-center mt-12">
                             <button
                                 onClick={handleLoadMore}
                                 disabled={loading}
-                                className={`px-6 py-3 rounded-lg border transition-colors ${
+                                className={`group relative px-8 py-4 rounded-xl font-semibold text-sm transition-all duration-300 transform ${
                                     loading
-                                        ? 'border-gray-200 text-gray-400 cursor-not-allowed bg-gray-50'
-                                        : 'border-blue-600 text-blue-600 hover:bg-blue-50 bg-white'
-                                }`}
+                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed scale-95'
+                                        : 'bg-[#F4B400] text-black hover:bg-[#E6A200] hover:scale-105 hover:shadow-lg active:scale-95'
+                                } shadow-md min-w-[180px]`}
                             >
                                 {loading ? (
-                                    <div className="flex items-center">
-                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-                                        Loading more jobs...
+                                    <div className="flex items-center justify-center">
+                                        <div className="animate-spin rounded-full h-5 w-5 border-2 border-gray-300 border-t-gray-600 mr-3"></div>
+                                        <span>Loading...</span>
                                     </div>
                                 ) : (
-                                    'Load More Jobs'
+                                    <div className="flex items-center justify-center">
+                                        <span className="mr-2">Load More Jobs</span>
+                                        <svg 
+                                            className="w-4 h-4 transition-transform duration-300 group-hover:translate-y-0.5" 
+                                            fill="none" 
+                                            stroke="currentColor" 
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                                        </svg>
+                                    </div>
+                                )}
+                                
+                                {/* Subtle background animation on hover */}
+                                {!loading && (
+                                    <div className="absolute inset-0 rounded-xl bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
                                 )}
                             </button>
                         </div>
@@ -1088,6 +1187,18 @@ const JobList = () => {
                     )}
                 </div>
             </div>
+
+            {/* Application Form Modal */}
+            {showApplicationForm && selectedJob && isAuthenticated && (
+                <ApplicationForm
+                    job={selectedJob}
+                    onClose={handleApplicationClose}
+                    onSuccess={handleApplicationSuccess}
+                />
+            )}
+
+            {/* Footer */}
+            <Footer />
         </div>
     );
 };

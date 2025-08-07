@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import NavBar from '../../Components/NavBar'
+import Footer from '../../Components/Footer'
+import FloatingDecorations from '../../Components/FloatingDecorations'
 import { cvAnalyzerAPI } from '../../services/api'
 
 const CvAnalyzer = () => {
@@ -9,7 +11,6 @@ const CvAnalyzer = () => {
   const [targetJobTitle, setTargetJobTitle] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState(null);
-  const [analysisId, setAnalysisId] = useState(null);
   const [dragActive, setDragActive] = useState(false);
   const [pdfUrl, setPdfUrl] = useState(null);
   const [pdfLoading, setPdfLoading] = useState(false);
@@ -104,7 +105,6 @@ const CvAnalyzer = () => {
       // Upload and start analysis
       const uploadResponse = await cvAnalyzerAPI.uploadAndAnalyze(formData);
       const newAnalysisId = uploadResponse.data.analysisId;
-      setAnalysisId(newAnalysisId);
 
       // Poll for results
       const result = await cvAnalyzerAPI.pollAnalysisStatus(newAnalysisId);
@@ -125,15 +125,20 @@ const CvAnalyzer = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <NavBar />
-      <div className="container mx-auto px-4 py-8 pt-24 max-w-6xl">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">CV Analyzer</h1>
-          <p className="text-lg text-gray-600">Upload your CV and get AI-powered insights to improve your job application success</p>
+      <div className="relative pt-16">
+        <div className="absolute inset-x-0 top-0 h-[325px] bg-[#0D6EFD] overflow-hidden z-10">
+          <FloatingDecorations />
         </div>
+        
+        <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold text-white mb-4">CV Analyzer</h1>
+            <p className="text-lg text-blue-100">Upload your CV and get AI-powered insights to improve your job application success</p>
+          </div>
 
-        <div className="space-y-8">
+          <div className="space-y-8">
           {/* Upload Section */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-6 relative z-10">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* File Upload - 1/3 width */}
               <div className="lg:col-span-1">
@@ -370,7 +375,7 @@ const CvAnalyzer = () => {
 
           {/* Analysis Results */}
           {analysisResult && (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-6 relative z-10">
               <h2 className="text-2xl font-semibold text-gray-900 mb-6">Analysis Results</h2>
               
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -547,7 +552,7 @@ const CvAnalyzer = () => {
 
           {/* Analysis History */}
           {showHistory && analysisHistory.length > 0 && (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-6 relative z-10">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-semibold text-gray-900">Analysis History</h2>
                 <button
@@ -608,7 +613,7 @@ const CvAnalyzer = () => {
 
           {/* Show History Button */}
           {!showHistory && analysisHistory.length > 0 && (
-            <div className="text-center">
+            <div className="text-center relative z-10">
               <button
                 onClick={() => setShowHistory(true)}
                 className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
@@ -622,6 +627,10 @@ const CvAnalyzer = () => {
           )}
         </div>
       </div>
+      </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 };

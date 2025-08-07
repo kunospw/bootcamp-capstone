@@ -102,8 +102,8 @@ savedJobSchema.statics.getSavedJobsByUser = function(userId, filters = {}) {
         query.reminderDate = { $exists: true, $ne: null };
     }
 
-    return this.find(query)
-        .sort({ dateSaved: -1 });
+    // Return query object, not executed find() so it can be chained with populate
+    return this.find(query).sort({ dateSaved: -1 });
 };
 
 export default mongoose.model("SavedJob", savedJobSchema);

@@ -36,6 +36,11 @@ const SideBar = () => {
                 location.pathname.startsWith('/company/jobs/edit/') ||
                 location.pathname.startsWith('/company/jobs/');
         }
+        if (path === '/company/applications') {
+            // Applications page should be active for applications list and application detail pages
+            return location.pathname === '/company/applications' ||
+                location.pathname.startsWith('/company/applications/');
+        }
         return location.pathname === path;
     };
 
@@ -67,54 +72,54 @@ const SideBar = () => {
                     } sm:translate-x-0 shadow-lg`}
                 aria-label="Sidebar"
             >
-                <div className="h-full px-4 py-6 overflow-y-auto bg-gradient-to-b from-blue-50 to-white border-r border-gray-200 flex flex-col">
+                <div className="h-full px-4 py-6 overflow-y-auto bg-[#0D6EFD] border-r border-blue-600 flex flex-col">
                     {/* Mobile Close Button */}
                     <div className="flex justify-between items-center mb-6 sm:hidden">
                         <div className="flex items-center gap-3">
                             <img src={logo} className="h-8 w-8 object-contain" alt="Job Hive Logo" />
-                            <span className="text-lg font-bold text-gray-800">Job Hive</span>
+                            <span className="text-lg font-bold text-white">Job Hive</span>
                         </div>
                         <button
                             onClick={toggleMobileMenu}
-                            className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors"
+                            className="p-2 rounded-lg text-white hover:bg-white/10 transition-colors"
                         >
                             <FaTimes className="w-5 h-5" />
                         </button>
                     </div>
 
                     {/* Logo Section - Desktop */}
-                    <div className="hidden sm:flex mb-8 w-full justify-center items-center gap-3 p-4 bg-transparent border-gray-100">
+                    <div className="hidden sm:flex mb-8 w-full justify-center items-center gap-3 p-4 bg-transparent">
                         <img src={logo} className="h-12 w-12 object-contain" alt="Job Hive Logo" />
                         <div className="flex flex-col">
-                            <span className="text-2xl font-bold text-gray-800 uppercase tracking-wide">Job Hive</span>
-                            <span className="text-xs text-blue-600 font-medium">Your Career Partner</span>
+                            <span className="text-2xl font-bold text-white uppercase tracking-wide">Job Hive</span>
+                            <span className="text-xs text-blue-200 font-medium">Your Career Partner</span>
                         </div>
                     </div>
 
                     {/* Navigation Menu - Main Content */}
                     <nav className="flex-1 space-y-3">
                         <div className="mb-4">
-                            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-3">Main Menu</h3>
+                            <h3 className="text-xs font-semibold text-blue-200 uppercase tracking-wider mb-3 px-3">Main Menu</h3>
                             <ul className="space-y-2">
                                 <li>
                                     <button
                                         onClick={() => handleNavigation('/company/profile')}
                                         className={`group flex items-center p-3 w-full text-left rounded-xl transition-all duration-200 border border-transparent ${isActivePath('/company/profile')
-                                                ? 'bg-blue-100 text-blue-700 border-blue-200'
-                                                : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200'
+                                                ? 'bg-white text-[#0D6EFD] border-white shadow-sm'
+                                                : 'text-white hover:bg-white/10 hover:text-white hover:border-white/20'
                                             }`}
                                     >
                                         <div className={`flex items-center justify-center w-10 h-10 rounded-lg transition-colors ${isActivePath('/company/profile')
-                                                ? 'bg-blue-200'
-                                                : 'bg-blue-100 group-hover:bg-blue-200'
+                                                ? 'bg-[#0D6EFD] text-white'
+                                                : 'bg-white/20 group-hover:bg-white/30'
                                             }`}>
                                             <FaUser className={`w-5 h-5 transition-colors ${isActivePath('/company/profile')
-                                                    ? 'text-blue-700'
-                                                    : 'text-blue-600 group-hover:text-blue-700'
+                                                    ? 'text-white'
+                                                    : 'text-white group-hover:text-white'
                                                 }`} />
                                         </div>
                                         <span className="flex-1 ms-4 font-medium">Profile</span>
-                                        <div className={`w-2 h-2 rounded-full bg-blue-500 transition-opacity ${isActivePath('/company/profile')
+                                        <div className={`w-2 h-2 rounded-full bg-white transition-opacity ${isActivePath('/company/profile')
                                                 ? 'opacity-100'
                                                 : 'opacity-0 group-hover:opacity-100'
                                             }`}></div>
@@ -124,21 +129,21 @@ const SideBar = () => {
                                     <button
                                         onClick={() => handleNavigation('/company/jobs')}
                                         className={`group flex items-center p-3 w-full text-left rounded-xl transition-all duration-200 border border-transparent ${isActivePath('/company/jobs')
-                                                ? 'bg-green-100 text-green-700 border-green-200'
-                                                : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200'
+                                                ? 'bg-white text-[#0D6EFD] border-white shadow-sm'
+                                                : 'text-white hover:bg-white/10 hover:text-white hover:border-white/20'
                                             }`}
                                     >
                                         <div className={`flex items-center justify-center w-10 h-10 rounded-lg transition-colors ${isActivePath('/company/jobs')
-                                                ? 'bg-green-200'
-                                                : 'bg-green-100 group-hover:bg-green-200'
+                                                ? 'bg-[#0D6EFD] text-white'
+                                                : 'bg-white/20 group-hover:bg-white/30'
                                             }`}>
                                             <FaBriefcase className={`w-5 h-5 transition-colors ${isActivePath('/company/jobs')
-                                                    ? 'text-green-700'
-                                                    : 'text-green-600 group-hover:text-green-700'
+                                                    ? 'text-white'
+                                                    : 'text-white group-hover:text-white'
                                                 }`} />
                                         </div>
                                         <span className="flex-1 ms-4 font-medium">Job List</span>
-                                        <div className={`w-2 h-2 rounded-full bg-green-500 transition-opacity ${isActivePath('/company/jobs')
+                                        <div className={`w-2 h-2 rounded-full bg-white transition-opacity ${isActivePath('/company/jobs')
                                                 ? 'opacity-100'
                                                 : 'opacity-0 group-hover:opacity-100'
                                             }`}></div>
@@ -148,21 +153,21 @@ const SideBar = () => {
                                     <button
                                         onClick={() => handleNavigation('/company/applications')}
                                         className={`group flex items-center p-3 w-full text-left rounded-xl transition-all duration-200 border border-transparent ${isActivePath('/company/applications')
-                                                ? 'bg-purple-100 text-purple-700 border-purple-200'
-                                                : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200'
+                                                ? 'bg-white text-[#0D6EFD] border-white shadow-sm'
+                                                : 'text-white hover:bg-white/10 hover:text-white hover:border-white/20'
                                             }`}
                                     >
                                         <div className={`flex items-center justify-center w-10 h-10 rounded-lg transition-colors ${isActivePath('/company/applications')
-                                                ? 'bg-purple-200'
-                                                : 'bg-purple-100 group-hover:bg-purple-200'
+                                                ? 'bg-[#0D6EFD] text-white'
+                                                : 'bg-white/20 group-hover:bg-white/30'
                                             }`}>
                                             <FaInbox className={`w-5 h-5 transition-colors ${isActivePath('/company/applications')
-                                                    ? 'text-purple-700'
-                                                    : 'text-purple-600 group-hover:text-purple-700'
+                                                    ? 'text-white'
+                                                    : 'text-white group-hover:text-white'
                                                 }`} />
                                         </div>
                                         <span className="flex-1 ms-4 font-medium">Applications</span>
-                                        <div className={`w-2 h-2 rounded-full bg-purple-500 transition-opacity ${isActivePath('/company/applications')
+                                        <div className={`w-2 h-2 rounded-full bg-white transition-opacity ${isActivePath('/company/applications')
                                                 ? 'opacity-100'
                                                 : 'opacity-0 group-hover:opacity-100'
                                             }`}></div>
@@ -173,19 +178,19 @@ const SideBar = () => {
                     </nav>
 
                     {/* Account Section - Bottom */}
-                    <div className="mt-auto pt-4 border-t border-gray-200">
-                        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-3">Account</h3>
+                    <div className="mt-auto pt-4 border-t border-white/20">
+                        <h3 className="text-xs font-semibold text-blue-200 uppercase tracking-wider mb-3 px-3">Account</h3>
                         <ul className="space-y-2">
                             <li>
                                 <button
                                     onClick={handleSignOut}
-                                    className="group flex items-center p-3 w-full text-left text-gray-700 rounded-xl hover:bg-red-50 hover:text-red-700 transition-all duration-200 border border-transparent hover:border-red-200"
+                                    className="group flex items-center p-3 w-full text-left text-white rounded-xl hover:bg-red-500/20 hover:text-red-100 transition-all duration-200 border border-transparent hover:border-red-400/30"
                                 >
-                                    <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-red-100 group-hover:bg-red-200 transition-colors">
-                                        <FaSignOutAlt className="w-5 h-5 text-red-600 group-hover:text-red-700" />
+                                    <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-red-500/20 group-hover:bg-red-500/30 transition-colors">
+                                        <FaSignOutAlt className="w-5 h-5 text-red-200 group-hover:text-red-100" />
                                     </div>
                                     <span className="flex-1 ms-4 font-medium">Sign Out</span>
-                                    <div className="w-2 h-2 rounded-full bg-red-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                    <div className="w-2 h-2 rounded-full bg-red-300 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                 </button>
                             </li>
                         </ul>

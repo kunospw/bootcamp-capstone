@@ -29,9 +29,9 @@ const NavBar = () => {
 
     // Helper function to get link classes
     const getLinkClasses = (path) => {
-        const baseClasses = "block py-2 px-3 rounded-sm md:p-0 cursor-pointer transition-colors w-full text-left";
-        const activeClasses = "text-white border-b-2 border-white md:border-b-2";
-        const inactiveClasses = "text-white/80 hover:bg-white/10 md:hover:bg-transparent md:hover:text-white";
+        const baseClasses = "block py-3 px-4 md:py-2 md:px-3 rounded-lg md:rounded-sm md:p-0 cursor-pointer transition-colors w-full text-left";
+        const activeClasses = "text-white bg-white/10 md:bg-transparent border-l-4 border-white md:border-l-0 md:border-b-2 md:border-white";
+        const inactiveClasses = "text-white/90 hover:bg-white/10 md:hover:bg-transparent md:hover:text-white";
         
         return `${baseClasses} ${isActiveLink(path) ? activeClasses : inactiveClasses}`;
     };
@@ -129,8 +129,8 @@ const NavBar = () => {
     }, []);
     return (
         <div>
-            <nav className="bg-[#0D6EFD]/90 backdrop-blur-md border-none fixed top-0 left-0 right-0 z-50">
-                <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4 relative">
+            <nav className="bg-[#0D6EFD] backdrop-blur-md border-none fixed top-0 left-0 right-0 z-50">
+                <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto py-3 px-4 relative">
                     <button 
                         onClick={() => navigate('/')}
                         className="flex items-center space-x-3 rtl:space-x-reverse cursor-pointer hover:opacity-80 transition-opacity"
@@ -287,7 +287,7 @@ const NavBar = () => {
                     <div className={`absolute top-full left-0 right-0 md:relative md:top-auto md:left-auto md:right-auto items-center justify-between w-full md:flex md:w-auto md:order-1 transition-all duration-300 ease-in-out ${
                         isMobileMenuOpen ? 'block' : 'hidden'
                     }`} id="navbar-user">
-                        <ul className="flex flex-col font-medium p-4 md:p-0 mt-0 border border-white/20 rounded-b-lg bg-[#0D6EFD]/90 backdrop-blur-md md:space-x-8 rtl:space-x-reverse md:flex-row md:border-0 md:bg-transparent md:rounded-none">
+                        <ul className="flex flex-col font-medium p-4 md:p-0 mt-0 border-0 md:border-0 rounded-b-lg bg-[#0D6EFD] backdrop-blur-md md:space-x-8 rtl:space-x-reverse md:flex-row md:bg-transparent md:rounded-none shadow-lg md:shadow-none space-y-2 md:space-y-0">
                             <li className="w-full md:w-auto">
                                 <button 
                                     onClick={() => {
