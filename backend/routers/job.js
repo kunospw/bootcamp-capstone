@@ -5,6 +5,35 @@ import Category from "../models/category.model.js";
 
 const router = express.Router();
 
+// In-memory store to track recent views (in production, use Redis)
+const recentViews = new Map();
+
+// Clean up old entries every 5 minutes
+setInterval(() => {
+    const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
+    for (const [key, timestamp] of recentViews.entries()) {
+        if (timestamp < fiveMinutesAgo) {
+            recentViews.delete(key);
+        }
+    }
+}, 5 * 60 * 1000);
+
+// Helper function to check if view should be counted
+function shouldCountView(jobId, identifier) {
+    const key = `${jobId}_${identifier}`;
+    const lastView = recentViews.get(key);
+    const now = Date.now();
+    const cooldownPeriod = 30 * 1000; // 30 seconds cooldown
+    
+    if (!lastView || (now - lastView) > cooldownPeriod) {
+        recentViews.set(key, now);
+        return true;
+    }
+    
+    console.log(`[JOB VIEW] Skipping duplicate view for ${key} (cooldown active)`);
+    return false;
+}
+
 // Get all categories
 router.get("/categories", async(req, res) => {
     try {
@@ -102,6 +131,8 @@ router.get("/", async(req, res) => {
 // Get single job by ID
 router.get("/:id", async(req, res) => {
     try {
+        console.log(`[JOB VIEW] Fetching job ${req.params.id} - User-Agent: ${req.get('User-Agent')?.substring(0, 50) || 'unknown'}`);
+        
         const job = await Job.findById(req.params.id)
             .populate("category")
             .populate("companyId", "-password");
@@ -116,14 +147,28 @@ router.get("/:id", async(req, res) => {
             await job.save();
         }
 
-        // Increment view count for all jobs (active and inactive)
-        await job.incrementViews();
-
-        // Add additional status information (simplified)
-        const jobObj = job.toObject();
-        jobObj.canApply = job.isActive; // Simplified - only check if active
-
-        res.json(jobObj);
+        // Create a unique identifier for view tracking (IP + User-Agent hash)
+        const clientIP = req.ip || req.connection.remoteAddress || 'unknown';
+        const userAgent = req.get('User-Agent') || 'unknown';
+        const viewIdentifier = `${clientIP}_${userAgent.substring(0, 20)}`;
+        
+        // Only increment view count if not a duplicate within cooldown period
+        if (shouldCountView(req.params.id, viewIdentifier)) {
+            console.log(`[JOB VIEW] Current views: ${job.views}, incrementing...`);
+            const updatedJob = await job.incrementViews();
+            console.log(`[JOB VIEW] New views: ${updatedJob.views}`);
+            
+            // Add additional status information (simplified)
+            const jobObj = updatedJob.toObject();
+            jobObj.canApply = job.isActive; // Simplified - only check if active
+            res.json(jobObj);
+        } else {
+            // Return job without incrementing views
+            const jobObj = job.toObject();
+            jobObj.canApply = job.isActive;
+            res.json(jobObj);
+        }
+        
     } catch (error) {
         console.error('Error in GET /api/jobs/:id:', error);
         res.status(500).json({ message: error.message });

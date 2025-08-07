@@ -1,5 +1,16 @@
 import mongoose from "mongoose";
 
+// Application Status Enum - aligned with notification system
+export const ApplicationStatus = {
+  APPLIED: 'APPLIED',
+  UNDER_REVIEW: 'UNDER_REVIEW',
+  SHORTLISTED: 'SHORTLISTED',
+  INTERVIEW_SCHEDULED: 'INTERVIEW_SCHEDULED',
+  JOB_OFFERED: 'JOB_OFFERED',
+  REJECTED: 'REJECTED',
+  WITHDRAWN: 'WITHDRAWN'
+};
+
 const applicationSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -87,13 +98,13 @@ const applicationSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['pending', 'reviewing', 'shortlisted', 'interview', 'offered', 'rejected', 'withdrawn'],
-        default: 'pending'
+        enum: Object.values(ApplicationStatus),
+        default: ApplicationStatus.APPLIED
     },
     statusHistory: [{
         status: {
             type: String,
-            enum: ['pending', 'reviewing', 'shortlisted', 'interview', 'offered', 'rejected', 'withdrawn'],
+            enum: Object.values(ApplicationStatus),
             required: true
         },
         date: {
@@ -228,7 +239,7 @@ applicationSchema.methods.addCompanyNote = function(note, createdBy) {
 
 // Method to check if application is editable
 applicationSchema.methods.isEditable = function() {
-    return ['pending', 'reviewing'].includes(this.status);
+    return [ApplicationStatus.APPLIED, ApplicationStatus.UNDER_REVIEW].includes(this.status);
 };
 
 // Pre-save middleware to add initial status to history

@@ -151,10 +151,14 @@ jobSchema.virtual("applications", {
     foreignField: "jobId",
 });
 
-// Method to increment views
+// Method to increment views (with atomic operation to prevent race conditions)
 jobSchema.methods.incrementViews = function() {
-    this.views += 1;
-    return this.save();
+    // Use atomic increment to prevent race conditions
+    return this.constructor.findByIdAndUpdate(
+        this._id,
+        { $inc: { views: 1 } },
+        { new: true }
+    );
 };
 
 // Method to increment applications count

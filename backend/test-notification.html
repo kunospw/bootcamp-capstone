@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notification System Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        .section h3 {
+            margin-top: 0;
+            color: #0D6EFD;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #0D6EFD;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #0b5ed7;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            min-height: 20px;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔔 Notification System Test</h1>
+        
+        <div class="section">
+            <h3>Authentication</h3>
+            <div class="form-group">
+                <label for="token">JWT Token:</label>
+                <input type="text" id="token" placeholder="Paste your JWT token here">
+                <small>Get this from browser dev tools after logging in</small>
+            </div>
+            <button onclick="testAuth()">Test Authentication</button>
+            <div id="authResult" class="result"></div>
+        </div>
+
+        <div class="section">
+            <h3>Create Test Notification</h3>
+            <div class="form-group">
+                <label for="recipientId">Recipient ID:</label>
+                <input type="text" id="recipientId" placeholder="User or Company ID">
+            </div>
+            <div class="form-group">
+                <label for="recipientType">Recipient Type:</label>
+                <select id="recipientType">
+                    <option value="user">User</option>
+                    <option value="company">Company</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="notificationType">Notification Type:</label>
+                <select id="notificationType">
+                    <option value="STATUS_UPDATE">Status Update</option>
+                    <option value="NEW_APPLICATION">New Application</option>
+                    <option value="APPLICATION_WITHDRAWN">Application Withdrawn</option>
+                    <option value="JOB_POSTED">Job Posted</option>
+                    <option value="JOB_DEADLINE_REMINDER">Deadline Reminder</option>
+                    <option value="PROFILE_VIEW">Profile View</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="title">Title:</label>
+                <input type="text" id="title" placeholder="Notification title">
+            </div>
+            <div class="form-group">
+                <label for="message">Message:</label>
+                <textarea id="message" rows="3" placeholder="Notification message"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="priority">Priority:</label>
+                <select id="priority">
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                    <option value="urgent">Urgent</option>
+                </select>
+            </div>
+            <button onclick="createTestNotification()">Create Test Notification</button>
+            <div id="createResult" class="result"></div>
+        </div>
+
+        <div class="section">
+            <h3>Fetch Notifications</h3>
+            <button onclick="fetchNotifications()">Get My Notifications</button>
+            <button onclick="getNotificationStats()">Get Notification Stats</button>
+            <div id="fetchResult" class="result"></div>
+        </div>
+
+        <div class="section">
+            <h3>Real-time Connection Test</h3>
+            <button onclick="testSocketConnection()">Test Socket.io Connection</button>
+            <div id="socketResult" class="result"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script>
+        let socket = null;
+        const API_BASE = 'http://localhost:3000';
+
+        function showResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `result ${type}`;
+        }
+
+        function getAuthHeaders() {
+            const token = document.getElementById('token').value;
+            return token ? { 'Authorization': `Bearer ${token}` } : {};
+        }
+
+        async function testAuth() {
+            try {
+                const response = await fetch(`${API_BASE}/api/notifications`, {
+                    headers: getAuthHeaders()
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    showResult('authResult', `✅ Authentication successful! Found ${data.notifications.length} notifications`, 'success');
+                } else {
+                    const error = await response.text();
+                    showResult('authResult', `❌ Authentication failed: ${error}`, 'error');
+                }
+            } catch (error) {
+                showResult('authResult', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function createTestNotification() {
+            try {
+                const notification = {
+                    recipientId: document.getElementById('recipientId').value,
+                    recipientType: document.getElementById('recipientType').value,
+                    type: document.getElementById('notificationType').value,
+                    title: document.getElementById('title').value,
+                    message: document.getElementById('message').value,
+                    priority: document.getElementById('priority').value
+                };
+
+                const response = await fetch(`${API_BASE}/api/notifications/test`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...getAuthHeaders()
+                    },
+                    body: JSON.stringify(notification)
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showResult('createResult', `✅ Notification created successfully! ID: ${data.notification._id}`, 'success');
+                } else {
+                    const error = await response.text();
+                    showResult('createResult', `❌ Failed to create notification: ${error}`, 'error');
+                }
+            } catch (error) {
+                showResult('createResult', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function fetchNotifications() {
+            try {
+                const response = await fetch(`${API_BASE}/api/notifications`, {
+                    headers: getAuthHeaders()
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showResult('fetchResult', `✅ Found ${data.notifications.length} notifications. Total: ${data.totalCount}, Unread: ${data.unreadCount}`, 'success');
+                } else {
+                    const error = await response.text();
+                    showResult('fetchResult', `❌ Failed to fetch notifications: ${error}`, 'error');
+                }
+            } catch (error) {
+                showResult('fetchResult', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function getNotificationStats() {
+            try {
+                const response = await fetch(`${API_BASE}/api/notifications/stats`, {
+                    headers: getAuthHeaders()
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showResult('fetchResult', `✅ Stats - Total: ${data.totalCount}, Unread: ${data.unreadCount}, Today: ${data.todayCount}`, 'success');
+                } else {
+                    const error = await response.text();
+                    showResult('fetchResult', `❌ Failed to get stats: ${error}`, 'error');
+                }
+            } catch (error) {
+                showResult('fetchResult', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        function testSocketConnection() {
+            try {
+                const token = document.getElementById('token').value;
+                if (!token) {
+                    showResult('socketResult', '❌ Please provide a JWT token first', 'error');
+                    return;
+                }
+
+                // Disconnect existing socket
+                if (socket) {
+                    socket.disconnect();
+                }
+
+                socket = io(API_BASE, {
+                    auth: {
+                        token: token
+                    }
+                });
+
+                socket.on('connect', () => {
+                    showResult('socketResult', '✅ Socket.io connected successfully!', 'success');
+                });
+
+                socket.on('disconnect', () => {
+                    showResult('socketResult', '❌ Socket.io disconnected', 'error');
+                });
+
+                socket.on('connect_error', (error) => {
+                    showResult('socketResult', `❌ Socket.io connection error: ${error.message}`, 'error');
+                });
+
+                socket.on('notification', (notification) => {
+                    showResult('socketResult', `🔔 Received real-time notification: ${notification.title}`, 'success');
+                });
+
+                socket.on('notification_update', (data) => {
+                    showResult('socketResult', `📬 Notification update: ${data.message}`, 'info');
+                });
+
+            } catch (error) {
+                showResult('socketResult', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-fill some test data
+        document.getElementById('title').value = 'Test Notification';
+        document.getElementById('message').value = 'This is a test notification from the notification system.';
+    </script>
+</body>
+</html>

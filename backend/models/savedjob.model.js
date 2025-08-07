@@ -98,7 +98,7 @@ savedJobSchema.statics.getSavedJobsByUser = function(userId, filters = {}) {
         query.tags = { $in: filters.tags };
     }
 
-    if (filters.hasReminder) {
+    if (filters.hasReminder) {  
         query.reminderDate = { $exists: true, $ne: null };
     }
 

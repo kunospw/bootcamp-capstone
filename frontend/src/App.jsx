@@ -18,10 +18,12 @@ import SavedJobs from "./pages/user/SavedJobs.jsx";
 import NavBar from "./Components/NavBar.jsx";
 import CompanyDetail from './pages/user/CompanyDetail';
 import AppliedJobs from './pages/user/AppliedJobs';
+import ToastNotification from './Components/ToastNotification.jsx';
 
 export default function App() {
   return (
     <Router>
+      <ToastNotification />
       <Routes>
         <Route path="/signup" element={<SignUp />} />
         <Route path="/signin" element={<SignIn />} />

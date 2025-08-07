@@ -77,6 +77,34 @@ const ApplicantsDetail = () => {
         }
     };
 
+    // Map backend status to frontend display
+    const mapStatusToDisplay = (backendStatus) => {
+        const statusMap = {
+            'APPLIED': 'pending',
+            'UNDER_REVIEW': 'reviewing', 
+            'SHORTLISTED': 'shortlisted',
+            'INTERVIEW_SCHEDULED': 'interview',
+            'JOB_OFFERED': 'offered',
+            'REJECTED': 'rejected',
+            'WITHDRAWN': 'withdrawn'
+        };
+        return statusMap[backendStatus] || backendStatus.toLowerCase();
+    };
+
+    // Map frontend display to backend status
+    const mapDisplayToStatus = (displayStatus) => {
+        const statusMap = {
+            'pending': 'APPLIED',
+            'reviewing': 'UNDER_REVIEW',
+            'shortlisted': 'SHORTLISTED', 
+            'interview': 'INTERVIEW_SCHEDULED',
+            'offered': 'JOB_OFFERED',
+            'rejected': 'REJECTED',
+            'withdrawn': 'WITHDRAWN'
+        };
+        return statusMap[displayStatus] || displayStatus.toUpperCase();
+    };
+
     const updateApplicationStatus = async (newStatus) => {
         try {
             const token = localStorage.getItem('token');
@@ -87,7 +115,7 @@ const ApplicantsDetail = () => {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ 
-                    status: newStatus, 
+                    status: mapDisplayToStatus(newStatus), 
                     note: statusNote 
                 })
             });
@@ -517,16 +545,16 @@ const ApplicantsDetail = () => {
                                                 { status: 'reviewing', label: 'Under Review', icon: FaSearch, color: 'text-blue-600' },
                                                 { status: 'shortlisted', label: 'Shortlisted', icon: FaStar, color: 'text-purple-600' },
                                                 { status: 'interview', label: 'Interview Stage', icon: FaComments, color: 'text-indigo-600' },
-                                                ...(application.status === 'rejected' 
+                                                ...(mapStatusToDisplay(application.status) === 'rejected' 
                                                     ? [{ status: 'rejected', label: 'Not Selected', icon: FaTimes, color: 'text-red-600' }]
                                                     : [{ status: 'offered', label: 'Job Offered', icon: FaGift, color: 'text-green-600' }]
                                                 )
                                             ].map((step) => {
-                                                const isCompleted = application.statusHistory?.some(h => h.status === step.status);
-                                                const isCurrent = application.status === step.status;
-                                                const isRejected = application.status === 'rejected' && step.status === 'rejected';
-                                                const isOffered = application.status === 'offered' && step.status === 'offered';
-                                                const statusEntry = application.statusHistory?.find(h => h.status === step.status);
+                                                const isCompleted = application.statusHistory?.some(h => mapStatusToDisplay(h.status) === step.status);
+                                                const isCurrent = mapStatusToDisplay(application.status) === step.status;
+                                                const isRejected = mapStatusToDisplay(application.status) === 'rejected' && step.status === 'rejected';
+                                                const isOffered = mapStatusToDisplay(application.status) === 'offered' && step.status === 'offered';
+                                                const statusEntry = application.statusHistory?.find(h => mapStatusToDisplay(h.status) === step.status);
                                                 
                                                 // Check if this step should be marked as completed
                                                 // For offered or rejected status, mark the final step as completed
@@ -579,7 +607,7 @@ const ApplicantsDetail = () => {
                                                                 {/* Action Button for each step */}
                                                                 {!isCompleted && !isFinalCompleted && (
                                                                     <div className="ml-2">
-                                                                        {step.status === 'reviewing' && application.status === 'pending' && (
+                                                                        {step.status === 'reviewing' && mapStatusToDisplay(application.status) === 'pending' && (
                                                                             <button
                                                                                 onClick={() => updateApplicationStatus('reviewing')}
                                                                                 className="flex items-center justify-center gap-1 bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700 transition-colors w-16"
@@ -589,7 +617,7 @@ const ApplicantsDetail = () => {
                                                                             </button>
                                                                         )}
                                                                         
-                                                                        {step.status === 'shortlisted' && (application.status === 'reviewing' || application.status === 'pending') && (
+                                                                        {step.status === 'shortlisted' && (['reviewing', 'pending'].includes(mapStatusToDisplay(application.status))) && (
                                                                             <button
                                                                                 onClick={() => updateApplicationStatus('shortlisted')}
                                                                                 className="flex items-center justify-center gap-1 bg-purple-600 text-white px-2 py-1 rounded text-xs hover:bg-purple-700 transition-colors w-16"
@@ -599,7 +627,7 @@ const ApplicantsDetail = () => {
                                                                             </button>
                                                                         )}
                                                                         
-                                                                        {step.status === 'interview' && (application.status === 'reviewing' || application.status === 'shortlisted') && (
+                                                                        {step.status === 'interview' && (['reviewing', 'shortlisted'].includes(mapStatusToDisplay(application.status))) && (
                                                                             <button
                                                                                 onClick={() => updateApplicationStatus('interview')}
                                                                                 className="flex items-center justify-center gap-1 bg-indigo-600 text-white px-2 py-1 rounded text-xs hover:bg-indigo-700 transition-colors w-16"
@@ -609,7 +637,7 @@ const ApplicantsDetail = () => {
                                                                             </button>
                                                                         )}
                                                                         
-                                                                        {step.status === 'offered' && (application.status === 'interview' || application.status === 'shortlisted') && (
+                                                                        {step.status === 'offered' && (['interview', 'shortlisted'].includes(mapStatusToDisplay(application.status))) && (
                                                                             <button
                                                                                 onClick={() => updateApplicationStatus('offered')}
                                                                                 className="flex items-center justify-center gap-1 bg-green-600 text-white px-2 py-1 rounded text-xs hover:bg-green-700 transition-colors w-16"
@@ -619,7 +647,7 @@ const ApplicantsDetail = () => {
                                                                             </button>
                                                                         )}
                                                                         
-                                                                        {step.status === 'rejected' && application.status !== 'rejected' && application.status !== 'offered' && (
+                                                                        {step.status === 'rejected' && !['rejected', 'offered'].includes(mapStatusToDisplay(application.status)) && (
                                                                             <button
                                                                                 onClick={() => updateApplicationStatus('rejected')}
                                                                                 className="flex items-center justify-center gap-1 bg-red-600 text-white px-2 py-1 rounded text-xs hover:bg-red-700 transition-colors w-16"

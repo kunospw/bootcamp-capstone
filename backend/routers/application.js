@@ -1,12 +1,24 @@
 import express from "express";
 import mongoose from "mongoose";
-import Application from "../models/application.model.js";
+import Application, { ApplicationStatus } from "../models/application.model.js";
 import Job from "../models/job.model.js";
 import { authenticateUser, authenticateCompany } from "../middleware/auth.js";
+import NotificationService from "../services/notification.service.js";
 import multer from "multer";
 import path from "path";
 
 const router = express.Router();
+
+// Initialize notification service (will be set with Socket.io in app.js)
+let notificationService = new NotificationService();
+
+/**
+ * Set notification service instance (called from app.js)
+ * @param {NotificationService} service - Notification service instance
+ */
+export function setNotificationServiceForApplications(service) {
+  notificationService = service;
+}
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -72,6 +84,15 @@ router.post("/", authenticateUser, upload.single("resume"), async(req, res) => {
 
         // Increment job applications count
         await job.incrementApplications();
+
+        // Send notification to company about new application
+        try {
+            await notificationService.sendNewApplicationNotification(application._id);
+            console.log(`[NOTIFICATION] New application notification sent for application ${application._id}`);
+        } catch (notificationError) {
+            console.error('[NOTIFICATION] Failed to send new application notification:', notificationError);
+            // Don't fail the application submission if notification fails
+        }
 
         res.status(201).json({
             message: "Application submitted successfully",
@@ -193,7 +214,23 @@ router.patch("/:id/status", authenticateCompany, async(req, res) => {
             return res.status(403).json({ message: "Unauthorized" });
         }
 
+        // Store previous status for notification
+        const previousStatus = application.status;
+
         await application.updateStatus(status, note, req.company._id);
+
+        // Send status update notification to user
+        try {
+            await notificationService.sendStatusUpdateNotification(
+                application._id, 
+                status, 
+                req.company._id
+            );
+            console.log(`[NOTIFICATION] Status update notification sent for application ${application._id}: ${previousStatus} -> ${status}`);
+        } catch (notificationError) {
+            console.error('[NOTIFICATION] Failed to send status update notification:', notificationError);
+            // Don't fail the status update if notification fails
+        }
 
         res.json({
             message: "Application status updated successfully",

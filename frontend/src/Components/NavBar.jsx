@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import logo from '../assets/logo.svg'; // Adjust the path as necessary
+import NotificationBell from './NotificationBell';
 
 const NavBar = () => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -163,6 +164,9 @@ const NavBar = () => {
                                 )}
                             </button>
                         )}
+
+                        {/* Notification Bell - Only show when logged in */}
+                        {isLoggedIn && <NotificationBell />}
                         
                         <button 
                             type="button" 

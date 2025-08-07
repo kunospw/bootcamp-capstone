@@ -100,6 +100,62 @@ const Applications = () => {
         fetchStatusCounts();
     }, [fetchStatusCounts]);
 
+    // Update application status
+    const updateApplicationStatus = async (applicationId, newStatus) => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`http://localhost:3000/api/applications/${applicationId}/status`, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ status: newStatus })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to update application status');
+            }
+
+            // Refresh applications after status update
+            fetchApplications();
+            
+            // Show success notification (if notification system is available)
+            console.log(`Status updated to ${newStatus} successfully`);
+        } catch (error) {
+            console.error('Error updating status:', error);
+            alert('Failed to update application status. Please try again.');
+        }
+    };
+
+    // Map backend status to frontend display
+    const mapStatusToDisplay = (backendStatus) => {
+        const statusMap = {
+            'APPLIED': 'pending',
+            'UNDER_REVIEW': 'reviewing', 
+            'SHORTLISTED': 'shortlisted',
+            'INTERVIEW_SCHEDULED': 'interview',
+            'JOB_OFFERED': 'offered',
+            'REJECTED': 'rejected',
+            'WITHDRAWN': 'withdrawn'
+        };
+        return statusMap[backendStatus] || backendStatus.toLowerCase();
+    };
+
+    // Map frontend display to backend status
+    const mapDisplayToStatus = (displayStatus) => {
+        const statusMap = {
+            'pending': 'APPLIED',
+            'reviewing': 'UNDER_REVIEW',
+            'shortlisted': 'SHORTLISTED', 
+            'interview': 'INTERVIEW_SCHEDULED',
+            'offered': 'JOB_OFFERED',
+            'rejected': 'REJECTED',
+            'withdrawn': 'WITHDRAWN'
+        };
+        return statusMap[displayStatus] || displayStatus.toUpperCase();
+    };
+
     const getStatusColor = (status) => {
         const colors = {
             'pending': 'bg-yellow-100 text-yellow-800',
@@ -273,12 +329,63 @@ const Applications = () => {
 
                                         <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                                             <div className="flex items-center gap-2">
-                                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(application.status)}`}>
-                                                    {application.status.charAt(0).toUpperCase() + application.status.slice(1)}
+                                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(mapStatusToDisplay(application.status))}`}>
+                                                    {mapStatusToDisplay(application.status).charAt(0).toUpperCase() + mapStatusToDisplay(application.status).slice(1)}
                                                 </span>
                                             </div>
                                             
                                             <div className="flex gap-1">
+                                                {/* Status Update Buttons */}
+                                                {mapStatusToDisplay(application.status) === 'pending' && (
+                                                    <button
+                                                        onClick={() => updateApplicationStatus(application._id, mapDisplayToStatus('reviewing'))}
+                                                        className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                                                        title="Mark as Under Review"
+                                                    >
+                                                        Review
+                                                    </button>
+                                                )}
+                                                
+                                                {['pending', 'reviewing'].includes(mapStatusToDisplay(application.status)) && (
+                                                    <button
+                                                        onClick={() => updateApplicationStatus(application._id, mapDisplayToStatus('shortlisted'))}
+                                                        className="px-2 py-1 text-xs bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors"
+                                                        title="Shortlist Candidate"
+                                                    >
+                                                        Shortlist
+                                                    </button>
+                                                )}
+                                                
+                                                {['reviewing', 'shortlisted'].includes(mapStatusToDisplay(application.status)) && (
+                                                    <button
+                                                        onClick={() => updateApplicationStatus(application._id, mapDisplayToStatus('interview'))}
+                                                        className="px-2 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors"
+                                                        title="Schedule Interview"
+                                                    >
+                                                        Interview
+                                                    </button>
+                                                )}
+                                                
+                                                {['interview', 'shortlisted'].includes(mapStatusToDisplay(application.status)) && (
+                                                    <button
+                                                        onClick={() => updateApplicationStatus(application._id, mapDisplayToStatus('offered'))}
+                                                        className="px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                                                        title="Make Job Offer"
+                                                    >
+                                                        Offer
+                                                    </button>
+                                                )}
+                                                
+                                                {!['rejected', 'offered'].includes(mapStatusToDisplay(application.status)) && (
+                                                    <button
+                                                        onClick={() => updateApplicationStatus(application._id, mapDisplayToStatus('rejected'))}
+                                                        className="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                                                        title="Reject Application"
+                                                    >
+                                                        Reject
+                                                    </button>
+                                                )}
+                                                
                                                 <button 
                                                     onClick={() => navigate(`/company/applications/${application._id}`)}
                                                     title="View Application Details"
