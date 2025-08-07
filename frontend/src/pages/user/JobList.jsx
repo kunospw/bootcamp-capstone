@@ -117,7 +117,7 @@ const JobList = () => {
     // Initial load
     useEffect(() => {
         fetchJobs(1);
-    }, [fetchJobs]); // Include fetchJobs dependency
+    }, []); // Only run on mount
 
     // Auto-search with debounce for search field
     useEffect(() => {
@@ -128,8 +128,10 @@ const JobList = () => {
 
         // Set new timer for search debounce (500ms delay)
         const timer = setTimeout(() => {
-            console.log('Auto-searching for:', filters.search || '(empty - show all)');
-            fetchJobs(1); // Always fetch, whether search is empty or not
+            if (filters.search !== '') { // Only auto-search when there's text
+                console.log('Auto-searching for:', filters.search);
+                fetchJobs(1);
+            }
         }, 500);
 
         setSearchDebounceTimer(timer);
@@ -140,20 +142,28 @@ const JobList = () => {
                 clearTimeout(timer);
             }
         };
-    }, [filters.search, fetchJobs, searchDebounceTimer]); // Include all dependencies
+    }, [filters.search]); // Only trigger on search changes
 
     // Immediate fetch for other filter changes
     useEffect(() => {
         fetchJobs(1);
-    }, [filters.location, filters.type, filters.workLocation, filters.experienceLevel, fetchJobs]);
+    }, [filters.location, filters.type, filters.workLocation, filters.experienceLevel]);
 
     // Refetch when showInactive changes
     useEffect(() => {
         fetchJobs(1);
-    }, [showInactive, fetchJobs]);
+    }, [showInactive]);
+
+    // Load saved jobs status when authenticated
+    useEffect(() => {
+        if (isAuthenticated && jobs.length > 0) {
+            checkSavedJobsStatus();
+            checkApplicationStatuses();
+        }
+    }, [isAuthenticated, jobs]);
 
     // Check which jobs are already saved and get their details
-    const checkSavedJobsStatus = useCallback(async () => {
+    const checkSavedJobsStatus = async () => {
         try {
             const token = localStorage.getItem('token');
             if (!token) return;
@@ -184,10 +194,10 @@ const JobList = () => {
         } catch (error) {
             console.error('Error checking saved jobs status:', error);
         }
-    }, [jobs]);
+    };
 
     // Check which jobs user has applied to
-    const checkApplicationStatuses = useCallback(async () => {
+    const checkApplicationStatuses = async () => {
         try {
             const token = localStorage.getItem('token');
             if (!token) return;
@@ -212,15 +222,7 @@ const JobList = () => {
         } catch (error) {
             console.error('Error checking application statuses:', error);
         }
-    }, []);
-
-    // Load saved jobs status when authenticated
-    useEffect(() => {
-        if (isAuthenticated && jobs.length > 0) {
-            checkSavedJobsStatus();
-            checkApplicationStatuses();
-        }
-    }, [isAuthenticated, jobs, checkSavedJobsStatus, checkApplicationStatuses]);
+    };
 
     // Handle apply button click
     const handleApply = (job) => {
