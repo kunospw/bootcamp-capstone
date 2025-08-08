@@ -517,10 +517,8 @@ const ApplicantsDetail = () => {
                                                 { status: 'reviewing', label: 'Under Review', icon: FaSearch, color: 'text-blue-600' },
                                                 { status: 'shortlisted', label: 'Shortlisted', icon: FaStar, color: 'text-purple-600' },
                                                 { status: 'interview', label: 'Interview Stage', icon: FaComments, color: 'text-indigo-600' },
-                                                ...(application.status === 'rejected' 
-                                                    ? [{ status: 'rejected', label: 'Not Selected', icon: FaTimes, color: 'text-red-600' }]
-                                                    : [{ status: 'offered', label: 'Job Offered', icon: FaGift, color: 'text-green-600' }]
-                                                )
+                                                { status: 'offered', label: 'Job Offered', icon: FaGift, color: 'text-green-600' },
+                                                { status: 'rejected', label: 'Not Selected', icon: FaTimes, color: 'text-red-600' }
                                             ].map((step) => {
                                                 const isCompleted = application.statusHistory?.some(h => h.status === step.status);
                                                 const isCurrent = application.status === step.status;

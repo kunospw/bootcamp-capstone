@@ -48,9 +48,13 @@ const AppliedJobs = () => {
       }
 
       const data = await response.json();
-      setApplications(data.applications);
+      
+      // Filter out applications where jobId is null or undefined
+      const validApplications = data.applications.filter(app => app.jobId && app.jobId._id);
+      
+      setApplications(validApplications);
       setCurrentPage(data.currentPage);
-      setTotalApplications(data.total);
+      setTotalApplications(validApplications.length); // Use filtered count
       setError(null);
     } catch (err) {
       console.error('Error fetching applications:', err);
@@ -313,23 +317,6 @@ const AppliedJobs = () => {
                     key={application._id}
                     className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow flex flex-col h-full"
                   >
-                    {/* Check if jobId exists */}
-                    {!application.jobId ? (
-                      <div className="p-6 flex flex-col flex-1 justify-center items-center text-center">
-                        <div className="text-gray-400 mb-2">
-                          <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z" />
-                          </svg>
-                        </div>
-                        <h3 className="text-lg font-medium text-gray-900 mb-1">Job Not Available</h3>
-                        <p className="text-sm text-gray-500 mb-4">This job posting may have been removed or is no longer available.</p>
-                        <div className="mt-auto pt-4">
-                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(application.status)}`}>
-                            {getStatusDisplayText(application.status)}
-                          </span>
-                        </div>
-                      </div>
-                    ) : (
                     <div className="p-6 flex flex-col flex-1">
                       {/* Company Logo and Basic Info */}
                       <div className="flex items-start space-x-4 mb-4 min-h-[4rem]">
@@ -475,7 +462,6 @@ const AppliedJobs = () => {
                         )}
                       </div>
                     </div>
-                    )}
                   </div>
                 ))}
               </div>
