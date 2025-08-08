@@ -30,7 +30,7 @@ const JobDetail = () => {
                 }
 
                 // Fetch job data
-                const jobResponse = await fetch(`http://localhost:3000/api/jobs/${id}`, {
+                const jobResponse = await fetch(`https://api.sonervous.site/api/jobs/${id}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
@@ -48,7 +48,7 @@ const JobDetail = () => {
                 }
 
                 // Fetch applications count (just the total, not the full data)
-                const applicationsResponse = await fetch(`http://localhost:3000/api/applications/company-applications?jobId=${id}&page=1&limit=1`, {
+                const applicationsResponse = await fetch(`https://api.sonervous.site/api/applications/company-applications?jobId=${id}&page=1&limit=1`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
@@ -80,7 +80,7 @@ const JobDetail = () => {
                 return;
             }
 
-            const response = await fetch(`http://localhost:3000/api/applications/company-applications?jobId=${id}&page=${currentPage}&limit=${applicantsPerPage}`, {
+            const response = await fetch(`https://api.sonervous.site/api/applications/company-applications?jobId=${id}&page=${currentPage}&limit=${applicantsPerPage}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -114,7 +114,7 @@ const JobDetail = () => {
             const token = localStorage.getItem('token');
             if (!token) return;
 
-            const response = await fetch(`http://localhost:3000/api/applications/company-applications?jobId=${id}`, {
+            const response = await fetch(`https://api.sonervous.site/api/applications/company-applications?jobId=${id}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -261,7 +261,7 @@ const JobDetail = () => {
         try {
             setActionLoading(true);
             const token = localStorage.getItem('token');
-            const response = await fetch(`http://localhost:3000/api/jobs/${id}`, {
+            const response = await fetch(`https://api.sonervous.site/api/jobs/${id}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -288,7 +288,7 @@ const JobDetail = () => {
         try {
             setActionLoading(true);
             const token = localStorage.getItem('token');
-            const response = await fetch(`http://localhost:3000/api/jobs/${id}`, {
+            const response = await fetch(`https://api.sonervous.site/api/jobs/${id}`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -361,7 +361,7 @@ const JobDetail = () => {
     const handleDownloadResume = (application) => {
         if (application.resume) {
             const link = document.createElement('a');
-            link.href = `http://localhost:3000/${application.resume}`;
+            link.href = `https://api.sonervous.site/${application.resume}`;
             link.download = application.resume.split('/').pop();
             document.body.appendChild(link);
             link.click();

@@ -18,7 +18,7 @@ const CompanyDetail = () => {
   const fetchCompanyDetails = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:3000/company/${id}`);
+      const response = await fetch(`https://api.sonervous.site/company/${id}`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -40,7 +40,7 @@ const CompanyDetail = () => {
     try {
       setJobsLoading(true);
       // Filter jobs by companyId to only get jobs from this specific company
-      const response = await fetch(`http://localhost:3000/api/jobs?companyId=${id}&includeInactive=true`);
+      const response = await fetch(`https://api.sonervous.site/api/jobs?companyId=${id}&includeInactive=true`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -67,7 +67,7 @@ const CompanyDetail = () => {
   const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
     if (imagePath.startsWith('http')) return imagePath;
-    return `http://localhost:3000/${imagePath}`;
+    return `https://api.sonervous.site/${imagePath}`;
   };
 
   // Format date

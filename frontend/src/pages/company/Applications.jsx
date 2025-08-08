@@ -32,7 +32,7 @@ const Applications = () => {
                 params.append('status', filter);
             }
 
-            const response = await fetch(`http://localhost:3000/api/applications/company-applications?${params}`, {
+            const response = await fetch(`https://api.sonervous.site/api/applications/company-applications?${params}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -76,7 +76,7 @@ const Applications = () => {
             const token = localStorage.getItem('token');
             if (!token) return;
 
-            const response = await fetch(`http://localhost:3000/api/applications/company-applications/status-counts`, {
+            const response = await fetch(`https://api.sonervous.site/api/applications/company-applications/status-counts`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -126,7 +126,7 @@ const Applications = () => {
     const handleDownloadResume = (application) => {
         if (application.resume) {
             const link = document.createElement('a');
-            link.href = `http://localhost:3000/${application.resume}`;
+            link.href = `https://api.sonervous.site/${application.resume}`;
             link.download = application.resume.split('/').pop();
             document.body.appendChild(link);
             link.click();

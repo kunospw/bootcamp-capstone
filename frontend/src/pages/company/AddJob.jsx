@@ -325,7 +325,7 @@ const AddJob = () => {
         contactPhone: formData.contactPhone.trim() || undefined
       };
 
-      const response = await fetch('http://localhost:3000/api/jobs', {
+      const response = await fetch('https://api.sonervous.site/api/jobs', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

@@ -25,7 +25,7 @@ const Profile = () => {
             const payload = JSON.parse(atob(token.split('.')[1]));
             const companyId = payload.companyId;
 
-            const response = await fetch(`http://localhost:3000/company/profile/${companyId}`, {
+            const response = await fetch(`https://api.sonervous.site/company/profile/${companyId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -96,7 +96,7 @@ const Profile = () => {
                         <div className="relative h-32 sm:h-64 flex items-center justify-center bg-gray-200">
                             {company?.bannerPicture ? (
                                 <img 
-                                    src={`http://localhost:3000/${company.bannerPicture}`}
+                                    src={`https://api.sonervous.site/${company.bannerPicture}`}
                                     alt="Company Banner"
                                     className="w-full h-full object-cover"
                                 />
@@ -125,7 +125,7 @@ const Profile = () => {
                                 <div className='profile-pic w-32 h-32 sm:w-48 sm:h-48 rounded-full bg-gray-200 shadow-sm flex-shrink-0 overflow-hidden relative group'>
                                     {company?.profilePicture ? (
                                         <img 
-                                            src={`http://localhost:3000/${company.profilePicture}`}
+                                            src={`https://api.sonervous.site/${company.profilePicture}`}
                                             alt="Profile"
                                             className="w-full h-full object-cover"
                                         />

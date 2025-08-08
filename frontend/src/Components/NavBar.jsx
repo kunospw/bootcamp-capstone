@@ -54,7 +54,7 @@ const NavBar = () => {
     // Fetch user data from backend
     const fetchUserData = async (token) => {
         try {
-            const response = await fetch('http://localhost:3000/auth/profile', {
+            const response = await fetch('https://api.sonervous.site/auth/profile', {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -182,7 +182,7 @@ const NavBar = () => {
                             <span className="sr-only">Open user menu</span>
                             {isLoggedIn ? (
                                 userData?.profilePicture ? (
-                                    <img className="w-8 h-8 rounded-full object-cover" src={`http://localhost:3000/${userData.profilePicture}`} alt="user photo" />
+                                    <img className="w-8 h-8 rounded-full object-cover" src={`https://api.sonervous.site/${userData.profilePicture}`} alt="user photo" />
                                 ) : (
                                     <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
                                         <span className="text-white font-semibold text-sm">

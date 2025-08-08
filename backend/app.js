@@ -26,7 +26,7 @@ if (process.env.NODE_ENV !== 'production') {
 app.use(cookieParser());
 app.use(
     cors({
-        origin: "http://localhost:5173",
+        origin: "https://sonervous.site",
         credentials: true,
     })
 );
@@ -61,7 +61,12 @@ app.use("/api/v1/cv-analyzer", cvAnalyzerRouter);
 
 // Basic test route
 app.get("/", (req, res) => {
-    res.json({ message: "Job Portal API is running!" });
+    res.json({ 
+        message: "Job Portal API is running!",
+        timestamp: new Date().toISOString(),
+        port: process.env.PORT || 3000,
+        origin: req.get('Origin') || 'Direct access'
+    });
 });
 
 // Add a test route for saved jobs to debug

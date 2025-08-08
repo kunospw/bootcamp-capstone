@@ -31,7 +31,7 @@ const AppliedJobs = () => {
         ...(statusFilter && { status: statusFilter })
       }).toString();
 
-      const response = await fetch(`http://localhost:3000/api/applications/my-applications?${queryParams}`, {
+      const response = await fetch(`https://api.sonervous.site/api/applications/my-applications?${queryParams}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -125,7 +125,7 @@ const AppliedJobs = () => {
   const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
     if (imagePath.startsWith('http')) return imagePath;
-    return `http://localhost:3000/${imagePath}`;
+    return `https://api.sonervous.site/${imagePath}`;
   };
 
   if (loading && applications.length === 0) {
@@ -442,7 +442,7 @@ const AppliedJobs = () => {
                         </button>
                         {application.resume && (
                           <a
-                            href={`http://localhost:3000/${application.resume}`}
+                            href={`https://api.sonervous.site/${application.resume}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="w-full text-gray-600 hover:text-gray-700 text-sm font-medium py-2 px-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-center flex items-center justify-center"

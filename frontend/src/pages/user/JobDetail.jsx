@@ -29,7 +29,7 @@ const JobDetail = () => {
   const fetchJobDetails = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:3000/api/jobs/${id}`);
+      const response = await fetch(`https://api.sonervous.site/api/jobs/${id}`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -102,7 +102,7 @@ const JobDetail = () => {
       if (!isAuthenticated) return;
       
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3000/api/saved-jobs', {
+      const response = await fetch('https://api.sonervous.site/api/saved-jobs', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -144,7 +144,7 @@ const JobDetail = () => {
       // Save with default values
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:3000/api/saved-jobs', {
+        const response = await fetch('https://api.sonervous.site/api/saved-jobs', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -178,7 +178,7 @@ const JobDetail = () => {
   const handleUpdateSavedJob = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3000/api/saved-jobs/${savedJobId}`, {
+      const response = await fetch(`https://api.sonervous.site/api/saved-jobs/${savedJobId}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -207,7 +207,7 @@ const JobDetail = () => {
   const handleUnsaveJob = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3000/api/saved-jobs/${savedJobId}`, {
+      const response = await fetch(`https://api.sonervous.site/api/saved-jobs/${savedJobId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -269,7 +269,7 @@ const JobDetail = () => {
       if (!isAuthenticated) return;
       
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3000/api/applications/my-applications', {
+      const response = await fetch('https://api.sonervous.site/api/applications/my-applications', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -412,7 +412,7 @@ const JobDetail = () => {
                   {job.companyId?.profilePicture && (
                     <div className="flex-shrink-0">
                       <img 
-                        src={`http://localhost:3000/${job.companyId.profilePicture}`} 
+                        src={`https://api.sonervous.site/${job.companyId.profilePicture}`} 
                         alt={job.companyId?.companyName || 'Company'}
                         className="w-20 h-20 rounded-lg object-cover border-2 border-white/20"
                       />

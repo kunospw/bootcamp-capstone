@@ -89,7 +89,7 @@ const EditJob = () => {
                 return;
             }
 
-            const response = await fetch(`http://localhost:3000/api/jobs/${jobId}`, {
+            const response = await fetch(`https://api.sonervous.site/api/jobs/${jobId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -272,7 +272,7 @@ const EditJob = () => {
                 contactPhone: formData.contactPhone.trim() || undefined
             };
 
-            const response = await fetch(`http://localhost:3000/api/jobs/${jobId}`, {
+            const response = await fetch(`https://api.sonervous.site/api/jobs/${jobId}`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`,

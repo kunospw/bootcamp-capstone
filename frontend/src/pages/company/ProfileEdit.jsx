@@ -57,7 +57,7 @@ const ProfileEdit = () => {
       const companyId = payload.companyId;
 
       const response = await fetch(
-        `http://localhost:3000/company/profile/${companyId}`,
+        `https://api.sonervous.site/company/profile/${companyId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -149,7 +149,7 @@ const ProfileEdit = () => {
       }
 
       const response = await fetch(
-        `http://localhost:3000/company/profile/${companyId}`,
+        `https://api.sonervous.site/company/profile/${companyId}`,
         {
           method: "PUT",
           headers: {
@@ -229,7 +229,7 @@ const ProfileEdit = () => {
                 />
               ) : currentImages.bannerPicture ? (
                 <img
-                  src={`http://localhost:3000/${currentImages.bannerPicture}`}
+                  src={`https://api.sonervous.site/${currentImages.bannerPicture}`}
                   alt="Current Banner"
                   className="w-full h-full object-cover"
                 />
@@ -291,7 +291,7 @@ const ProfileEdit = () => {
                       />
                     ) : currentImages.profilePicture ? (
                       <img
-                        src={`http://localhost:3000/${currentImages.profilePicture}`}
+                        src={`https://api.sonervous.site/${currentImages.profilePicture}`}
                         alt="Current Profile"
                         className="w-full h-full object-cover"
                       />

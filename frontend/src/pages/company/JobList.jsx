@@ -62,7 +62,7 @@ const JobList = () => {
             console.log('Fetching jobs for company:', companyId); // Debug log
 
             const response = await fetch(
-                `http://localhost:3000/api/jobs/company/${companyId}?${queryParams}`,
+                `https://api.sonervous.site/api/jobs/company/${companyId}?${queryParams}`,
                 {
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -139,7 +139,7 @@ const JobList = () => {
 
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`http://localhost:3000/api/jobs/${jobId}`, {
+            const response = await fetch(`https://api.sonervous.site/api/jobs/${jobId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`,

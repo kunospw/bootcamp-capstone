@@ -50,7 +50,7 @@ const SavedJobs = () => {
             if (filterSearch) params.append("search", filterSearch);
 
             const response = await fetch(
-                `http://localhost:3000/api/saved-jobs?${params.toString()}`,
+                `https://api.sonervous.site/api/saved-jobs?${params.toString()}`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -122,7 +122,7 @@ const SavedJobs = () => {
             if (!token) return;
 
             const response = await fetch(
-                "http://localhost:3000/api/applications/my-applications",
+                "https://api.sonervous.site/api/applications/my-applications",
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -199,7 +199,7 @@ const SavedJobs = () => {
         try {
             const token = localStorage.getItem("token");
             const response = await fetch(
-                `http://localhost:3000/api/saved-jobs/${savedJobId}`,
+                `https://api.sonervous.site/api/saved-jobs/${savedJobId}`,
                 {
                     method: "DELETE",
                     headers: {
@@ -224,7 +224,7 @@ const SavedJobs = () => {
         try {
             const token = localStorage.getItem("token");
             const response = await fetch(
-                `http://localhost:3000/api/saved-jobs/${savedJobId}/clear-note`,
+                `https://api.sonervous.site/api/saved-jobs/${savedJobId}/clear-note`,
                 {
                     method: "PATCH",
                     headers: {
@@ -592,7 +592,7 @@ const SavedJobs = () => {
                                                     <div className="w-12 h-12 rounded-lg border border-gray-200 flex-shrink-0 overflow-hidden bg-gray-50 flex items-center justify-center">
                                                         {savedJob.jobId.companyId?.profilePicture ? (
                                                             <img
-                                                                src={`http://localhost:3000/${savedJob.jobId.companyId.profilePicture}`}
+                                                                src={`https://api.sonervous.site/${savedJob.jobId.companyId.profilePicture}`}
                                                                 alt={savedJob.jobId.companyId.companyName}
                                                                 className="w-full h-full object-cover"
                                                                 onError={(e) => {

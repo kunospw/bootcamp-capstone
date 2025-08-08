@@ -251,7 +251,7 @@ const EditProfileModal = ({ isOpen, onClose, user, onSave }) => {
         
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('http://localhost:3000/auth/upload-profile-picture', {
+            const response = await fetch('https://api.sonervous.site/auth/upload-profile-picture', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -397,7 +397,7 @@ const EditProfileModal = ({ isOpen, onClose, user, onSave }) => {
                                                 />
                                             ) : formData.profilePicture ? (
                                                 <img 
-                                                    src={formData.profilePicture.startsWith('http') ? formData.profilePicture : `http://localhost:3000/${formData.profilePicture}`} 
+                                                    src={formData.profilePicture.startsWith('http') ? formData.profilePicture : `https://api.sonervous.site/${formData.profilePicture}`} 
                                                     alt="Current Profile" 
                                                     className="w-full h-full object-cover"
                                                 />

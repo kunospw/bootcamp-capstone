@@ -28,7 +28,7 @@ const ApplicantsDetail = () => {
             }
 
             console.log('Fetching application details for ID:', applicationId);
-            const response = await fetch(`http://localhost:3000/api/applications/company/${applicationId}`, {
+            const response = await fetch(`https://api.sonervous.site/api/applications/company/${applicationId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -80,7 +80,7 @@ const ApplicantsDetail = () => {
     const updateApplicationStatus = async (newStatus) => {
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`http://localhost:3000/api/applications/${applicationId}/status`, {
+            const response = await fetch(`https://api.sonervous.site/api/applications/${applicationId}/status`, {
                 method: 'PATCH',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -114,7 +114,7 @@ const ApplicantsDetail = () => {
             }
 
             const token = localStorage.getItem('token');
-            const response = await fetch(`http://localhost:3000/api/applications/${applicationId}/note`, {
+            const response = await fetch(`https://api.sonervous.site/api/applications/${applicationId}/note`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -401,14 +401,14 @@ const ApplicantsDetail = () => {
                                         </div>
                                         <div className="flex gap-2">
                                             <button 
-                                                onClick={() => window.open(`http://localhost:3000/${application.resume}`, '_blank')}
+                                                onClick={() => window.open(`https://api.sonervous.site/${application.resume}`, '_blank')}
                                                 className="inline-flex items-center gap-2 bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm"
                                             >
                                                 <FaEye className="w-4 h-4" />
                                                 View
                                             </button>
                                             <a 
-                                                href={`http://localhost:3000/${application.resume}`} 
+                                                href={`https://api.sonervous.site/${application.resume}`} 
                                                 download
                                                 className="inline-flex items-center gap-2 bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm"
                                             >

@@ -36,7 +36,7 @@ const Profile = () => {
         return;
       }
 
-      const response = await fetch('http://localhost:3000/auth/profile', {
+      const response = await fetch('https://api.sonervous.site/auth/profile', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -69,7 +69,7 @@ const Profile = () => {
         return false;
       }
 
-      const response = await fetch('http://localhost:3000/auth/profile', {
+      const response = await fetch('https://api.sonervous.site/auth/profile', {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -172,7 +172,7 @@ const Profile = () => {
               <div className="w-32 h-32 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden">
                 {user.profilePicture ? (
                   <img 
-                    src={user.profilePicture.startsWith('http') ? user.profilePicture : `http://localhost:3000/${user.profilePicture}`} 
+                    src={user.profilePicture.startsWith('http') ? user.profilePicture : `https://api.sonervous.site/${user.profilePicture}`} 
                     alt="Profile" 
                     className="w-full h-full object-cover"
                   />

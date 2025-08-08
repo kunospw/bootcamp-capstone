@@ -28,7 +28,7 @@ const CompanyList = () => {
         ...filters
       }).toString();
 
-      const response = await fetch(`http://localhost:3000/company?${queryParams}`);
+      const response = await fetch(`https://api.sonervous.site/company?${queryParams}`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -83,7 +83,7 @@ const CompanyList = () => {
   const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
     if (imagePath.startsWith('http')) return imagePath;
-    return `http://localhost:3000/${imagePath}`;
+    return `https://api.sonervous.site/${imagePath}`;
   };
 
   if (loading && companies.length === 0) {

@@ -109,7 +109,7 @@ export default function SignUp() {
         formData.append("credentialFile", credentialFile);
       }
       try {
-        const res = await fetch(`http://localhost:3000${endpoint}`, {
+        const res = await fetch(`https://api.sonervous.site${endpoint}`, {
           method: "POST",
           body: formData,
           credentials: "include",
@@ -130,7 +130,7 @@ export default function SignUp() {
     } else {
       // User registration
       try {
-        const res = await fetch(`http://localhost:3000${endpoint}`, {
+        const res = await fetch(`https://api.sonervous.site${endpoint}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -492,7 +492,7 @@ export default function SignUp() {
               </div>
 
               <div className='mt-6 gap-3'>
-                <a href="http://localhost:3000/auth/google">
+                <a href="https://api.sonervous.site/auth/google">
                   <button className='w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 transition duration-200'>
                     <svg className='w-5 h-5' viewBox='0 0 24 24'>
                       <path fill='currentColor' d='M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z' />

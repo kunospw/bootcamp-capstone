@@ -1,5 +1,5 @@
 // API configuration and utility functions
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.sonervous.site/api';
 
 // Get token from localStorage
 const getAuthToken = () => {

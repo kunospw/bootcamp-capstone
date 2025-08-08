@@ -63,7 +63,7 @@ const ApplicationForm = ({ job, onClose, onSuccess }) => {
           return;
         }
 
-        const response = await fetch('http://localhost:3000/auth/profile', {
+        const response = await fetch('https://api.sonervous.site/auth/profile', {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
@@ -200,7 +200,7 @@ const ApplicationForm = ({ job, onClose, onSuccess }) => {
         applicationData.append('resume', resumeFile);
       }
 
-      const response = await fetch('http://localhost:3000/api/applications', {
+      const response = await fetch('https://api.sonervous.site/api/applications', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

@@ -85,7 +85,7 @@ const JobList = () => {
 
             console.log('Fetching with params:', queryParams.toString()); // Debug log
 
-            const response = await fetch(`http://localhost:3000/api/jobs?${queryParams}`);
+            const response = await fetch(`https://api.sonervous.site/api/jobs?${queryParams}`);
 
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -172,7 +172,7 @@ const JobList = () => {
             
             for (const job of jobs) {
                 try {
-                    const response = await fetch(`http://localhost:3000/api/saved-jobs/check/${job._id}`, {
+                    const response = await fetch(`https://api.sonervous.site/api/saved-jobs/check/${job._id}`, {
                         headers: {
                             'Authorization': `Bearer ${token}`
                         }
@@ -202,7 +202,7 @@ const JobList = () => {
             const token = localStorage.getItem('token');
             if (!token) return;
 
-            const response = await fetch('http://localhost:3000/api/applications/my-applications', {
+            const response = await fetch('https://api.sonervous.site/api/applications/my-applications', {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',
@@ -375,7 +375,7 @@ const JobList = () => {
             
             let response;
             if (existingSave) {
-                response = await fetch(`http://localhost:3000/api/saved-jobs/${existingSave._id}`, {
+                response = await fetch(`https://api.sonervous.site/api/saved-jobs/${existingSave._id}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -384,7 +384,7 @@ const JobList = () => {
                     body: JSON.stringify(saveData)
                 });
             } else {
-                response = await fetch('http://localhost:3000/api/saved-jobs', {
+                response = await fetch('https://api.sonervous.site/api/saved-jobs', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -440,7 +440,7 @@ const JobList = () => {
                 return;
             }
 
-            const response = await fetch(`http://localhost:3000/api/saved-jobs/${savedJobDetail._id}`, {
+            const response = await fetch(`https://api.sonervous.site/api/saved-jobs/${savedJobDetail._id}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -493,7 +493,7 @@ const JobList = () => {
                 return;
             }
 
-            const response = await fetch(`http://localhost:3000/api/saved-jobs/${savedJobDetail._id}/clear-note`, {
+            const response = await fetch(`https://api.sonervous.site/api/saved-jobs/${savedJobDetail._id}/clear-note`, {
                 method: 'PATCH',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -866,7 +866,7 @@ const JobList = () => {
                                             <div className="flex items-start space-x-3 flex-1">
                                                 {job.companyId?.profilePicture && (
                                                     <img
-                                                        src={`http://localhost:3000/${job.companyId.profilePicture}`}
+                                                        src={`https://api.sonervous.site/${job.companyId.profilePicture}`}
                                                         alt={job.companyId?.companyName || 'Company'}
                                                         className="w-10 h-10 rounded-lg object-cover border border-gray-200 flex-shrink-0"
                                                     />
