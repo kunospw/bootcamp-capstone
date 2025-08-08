@@ -252,7 +252,7 @@ const Profile = () => {
         {/* Personal Summary Section */}
         <div className="mb-12">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">Personal Summary</h2>
+            <h2 className="text-xl font-semibold text-gray-900">Professional Summary</h2>
             <hr className="flex-1 ml-4 border-gray-300" />
           </div>
           

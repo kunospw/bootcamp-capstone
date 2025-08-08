@@ -313,6 +313,23 @@ const AppliedJobs = () => {
                     key={application._id}
                     className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow flex flex-col h-full"
                   >
+                    {/* Check if jobId exists */}
+                    {!application.jobId ? (
+                      <div className="p-6 flex flex-col flex-1 justify-center items-center text-center">
+                        <div className="text-gray-400 mb-2">
+                          <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z" />
+                          </svg>
+                        </div>
+                        <h3 className="text-lg font-medium text-gray-900 mb-1">Job Not Available</h3>
+                        <p className="text-sm text-gray-500 mb-4">This job posting may have been removed or is no longer available.</p>
+                        <div className="mt-auto pt-4">
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(application.status)}`}>
+                            {getStatusDisplayText(application.status)}
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
                     <div className="p-6 flex flex-col flex-1">
                       {/* Company Logo and Basic Info */}
                       <div className="flex items-start space-x-4 mb-4 min-h-[4rem]">
@@ -320,7 +337,7 @@ const AppliedJobs = () => {
                           {application.jobId?.companyId?.profilePicture ? (
                             <img
                               src={getImageUrl(application.jobId.companyId.profilePicture)}
-                              alt={application.jobId.companyId.companyName}
+                              alt={application.jobId?.companyId?.companyName || 'Company logo'}
                               className="w-full h-full object-cover"
                               onError={(e) => {
                                 e.target.style.display = 'none';
@@ -340,12 +357,12 @@ const AppliedJobs = () => {
                         </div>
                         <div className="flex-1 min-w-0">
                           <h3
-                            onClick={() => handleJobClick(application.jobId._id)}
+                            onClick={() => application.jobId?._id && handleJobClick(application.jobId._id)}
                             className="text-lg font-semibold text-gray-900 hover:text-blue-600 cursor-pointer transition-colors line-clamp-2 mb-1"
                           >
-                            {application.jobId.title}
+                            {application.jobId?.title || 'Job title not available'}
                           </h3>
-                          <p className="text-gray-600 text-sm">{application.jobId?.companyId?.companyName}</p>
+                          <p className="text-gray-600 text-sm">{application.jobId?.companyId?.companyName || 'Company not available'}</p>
                         </div>
                         {/* Status Badge */}
                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(application.status)} flex-shrink-0`}>
@@ -359,18 +376,20 @@ const AppliedJobs = () => {
                           <svg className="w-4 h-4 mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                           </svg>
-                          <span className="truncate">{application.jobId.location}</span>
+                          <span className="truncate">{application.jobId?.location || 'Location not specified'}</span>
                         </div>
                         <div className="flex flex-wrap gap-1">
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            {application.jobId.type}
-                          </span>
-                          {application.jobId.workLocation && (
+                          {application.jobId?.type && (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              {application.jobId.type}
+                            </span>
+                          )}
+                          {application.jobId?.workLocation && (
                             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                               {application.jobId.workLocation}
                             </span>
                           )}
-                          {application.jobId.experienceLevel && (
+                          {application.jobId?.experienceLevel && (
                             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
                               {application.jobId.experienceLevel}
                             </span>
@@ -431,8 +450,9 @@ const AppliedJobs = () => {
                       {/* Footer */}
                       <div className="flex flex-col gap-2 pt-4 border-t border-gray-100 mt-auto">
                         <button
-                          onClick={() => handleJobClick(application.jobId._id)}
-                          className="w-full bg-blue-600 text-white text-sm font-medium py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
+                          onClick={() => application.jobId?._id && handleJobClick(application.jobId._id)}
+                          disabled={!application.jobId?._id}
+                          className="w-full bg-blue-600 text-white text-sm font-medium py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center disabled:bg-gray-400 disabled:cursor-not-allowed"
                         >
                           <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -455,6 +475,7 @@ const AppliedJobs = () => {
                         )}
                       </div>
                     </div>
+                    )}
                   </div>
                 ))}
               </div>

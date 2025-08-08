@@ -12,6 +12,7 @@ import {
   FaEnvelope,
   FaUpload,
   FaChevronDown,
+  FaSearch,
 } from "react-icons/fa";
 
 const ProfileEdit = () => {
@@ -19,13 +20,27 @@ const ProfileEdit = () => {
 
   const [formData, setFormData] = useState({
     companyName: "",
-    mainLocation: "",
+    country: "",
+    city: "",
     industry: "",
     website: "",
     phoneNumber: "",
     email: "",
     description: "",
   });
+
+  // Country and City states
+  const [countries, setCountries] = useState([]);
+  const [cities, setCities] = useState([]);
+  const [loadingCountries, setLoadingCountries] = useState(false);
+  
+  // Dropdown states
+  const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
+  const [cityDropdownOpen, setCityDropdownOpen] = useState(false);
+  const [countrySearch, setCountrySearch] = useState('');
+  const [citySearch, setCitySearch] = useState('');
+  const [filteredCountries, setFilteredCountries] = useState([]);
+  const [filteredCities, setFilteredCities] = useState([]);
 
   const [currentImages, setCurrentImages] = useState({
     profilePicture: "",
@@ -40,9 +55,75 @@ const ProfileEdit = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
+  // useEffect hooks
   useEffect(() => {
+    fetchCountries();
     fetchCompanyProfile();
   }, []);
+
+  // Set cities when countries are loaded and country is already selected
+  useEffect(() => {
+    if (countries.length > 0 && formData.country) {
+      const selectedCountry = countries.find(country => country.country === formData.country);
+      if (selectedCountry) {
+        setCities(selectedCountry.cities);
+      }
+    }
+  }, [countries, formData.country]);
+
+  // Filter countries based on search
+  useEffect(() => {
+    if (countrySearch) {
+      const filtered = countries.filter(country => 
+        country.country.toLowerCase().includes(countrySearch.toLowerCase())
+      );
+      setFilteredCountries(filtered);
+    } else {
+      setFilteredCountries(countries);
+    }
+  }, [countries, countrySearch]);
+
+  // Filter cities based on search
+  useEffect(() => {
+    if (citySearch) {
+      const filtered = cities.filter(city => 
+        city.toLowerCase().includes(citySearch.toLowerCase())
+      );
+      setFilteredCities(filtered);
+    } else {
+      setFilteredCities(cities);
+    }
+  }, [cities, citySearch]);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('.dropdown-container')) {
+        setCountryDropdownOpen(false);
+        setCityDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const fetchCountries = async () => {
+    setLoadingCountries(true);
+    try {
+      const response = await fetch('https://countriesnow.space/api/v0.1/countries');
+      const data = await response.json();
+      if (data.error === false) {
+        setCountries(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching countries:', error);
+    } finally {
+      setLoadingCountries(false);
+    }
+  };
 
   const fetchCompanyProfile = async () => {
     try {
@@ -68,9 +149,24 @@ const ProfileEdit = () => {
 
       if (response.ok) {
         const data = await response.json();
+        
+        // Parse location to country and city if it exists
+        let country = "";
+        let city = "";
+        if (data.mainLocation) {
+          const locationParts = data.mainLocation.split(", ");
+          if (locationParts.length === 2) {
+            country = locationParts[0];
+            city = locationParts[1];
+          } else {
+            country = data.mainLocation;
+          }
+        }
+
         setFormData({
           companyName: data.companyName || "",
-          mainLocation: data.mainLocation || "",
+          country: country,
+          city: city,
           industry: data.industry || "",
           website: data.website || "",
           phoneNumber: data.phoneNumber || "",
@@ -93,6 +189,31 @@ const ProfileEdit = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCountrySelect = (country) => {
+    setFormData(prev => ({
+      ...prev,
+      country: country,
+      city: '' // Reset city when country changes
+    }));
+    
+    const selectedCountry = countries.find(c => c.country === country);
+    if (selectedCountry) {
+      setCities(selectedCountry.cities);
+    }
+    
+    setCountryDropdownOpen(false);
+    setCountrySearch('');
+  };
+
+  const handleCitySelect = (city) => {
+    setFormData(prev => ({
+      ...prev,
+      city: city
+    }));
+    setCityDropdownOpen(false);
+    setCitySearch('');
   };
 
   const handleInputChange = (e) => {
@@ -135,10 +256,19 @@ const ProfileEdit = () => {
       // Create FormData for file uploads
       const formDataToSend = new FormData();
 
+      // Combine country and city into mainLocation
+      const mainLocation = formData.country && formData.city 
+        ? `${formData.country}, ${formData.city}` 
+        : formData.country || formData.city || '';
+
       // Append text fields
-      Object.keys(formData).forEach((key) => {
-        formDataToSend.append(key, formData[key]);
-      });
+      formDataToSend.append('companyName', formData.companyName);
+      formDataToSend.append('mainLocation', mainLocation);
+      formDataToSend.append('industry', formData.industry);
+      formDataToSend.append('website', formData.website);
+      formDataToSend.append('phoneNumber', formData.phoneNumber);
+      formDataToSend.append('email', formData.email);
+      formDataToSend.append('description', formData.description);
 
       // Append files if selected
       if (bannerFile) {
@@ -390,19 +520,137 @@ const ProfileEdit = () => {
                     </div>
                   </div>
 
-                  {/* Location, Industry, Website */}
+                  {/* Location - Country and City */}
                   <div className="flex flex-col gap-3 w-full">
+                    {/* Country Dropdown */}
                     <div className="flex items-center gap-2">
                       <FaMapMarkerAlt className="text-red-500 flex-shrink-0" />
-                      <input
-                        type="text"
-                        name="mainLocation"
-                        value={formData.mainLocation}
-                        onChange={handleInputChange}
-                        placeholder="Company Location"
-                        className="w-full sm:w-[60%] lg:w-[50%] px-3 py-2 sm:py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-600"
-                      />
+                      <div className='relative w-full sm:w-[60%] lg:w-[50%] dropdown-container'>
+                        {/* Country Input Button */}
+                        <button
+                          type="button"
+                          onClick={() => setCountryDropdownOpen(!countryDropdownOpen)}
+                          disabled={loadingCountries}
+                          className='w-full px-3 py-2 sm:py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-600 bg-white text-left flex items-center justify-between disabled:bg-gray-100'
+                        >
+                          <span className='truncate'>
+                            {loadingCountries 
+                              ? 'Loading countries...' 
+                              : formData.country || 'Select Country'
+                            }
+                          </span>
+                          <FaChevronDown className={`w-3 h-3 text-gray-400 transition-transform duration-200 ${countryDropdownOpen ? 'rotate-180' : ''} flex-shrink-0`} />
+                        </button>
+
+                        {/* Country Dropdown Menu */}
+                        <div className={`absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-hidden transition-all duration-150 ease-in-out origin-top ${
+                          countryDropdownOpen 
+                            ? 'opacity-100 scale-y-100 translate-y-0' 
+                            : 'opacity-0 scale-y-0 -translate-y-2 pointer-events-none'
+                        }`}>
+                          {/* Search Input */}
+                          <div className='p-2 border-b border-gray-200'>
+                            <div className='relative'>
+                              <FaSearch className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-3 h-3' />
+                              <input
+                                type="text"
+                                placeholder="Search countries..."
+                                value={countrySearch}
+                                onChange={(e) => setCountrySearch(e.target.value)}
+                                className='w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm'
+                              />
+                            </div>
+                          </div>
+                          
+                          {/* Countries List */}
+                          <div className='max-h-44 overflow-y-auto'>
+                            {filteredCountries.length > 0 ? (
+                              filteredCountries.map((country) => (
+                                <button
+                                  key={country.iso2}
+                                  type="button"
+                                  onClick={() => handleCountrySelect(country.country)}
+                                  className='w-full px-3 py-2 text-left hover:bg-blue-50 focus:bg-blue-50 focus:outline-none text-sm transition-colors duration-150'
+                                >
+                                  {country.country}
+                                </button>
+                              ))
+                            ) : (
+                              <div className='px-3 py-2 text-gray-500 text-sm'>
+                                No countries found
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
                     </div>
+
+                    {/* City Dropdown */}
+                    <div className="flex items-center gap-2">
+                      <FaMapMarkerAlt className="text-red-500 flex-shrink-0 opacity-60" />
+                      <div className='relative w-full sm:w-[60%] lg:w-[50%] dropdown-container'>
+                        {/* City Input Button */}
+                        <button
+                          type="button"
+                          onClick={() => setCityDropdownOpen(!cityDropdownOpen)}
+                          disabled={!formData.country || cities.length === 0}
+                          className='w-full px-3 py-2 sm:py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-600 bg-white text-left flex items-center justify-between disabled:bg-gray-100 disabled:cursor-not-allowed'
+                        >
+                          <span className='truncate'>
+                            {!formData.country 
+                              ? 'Select country first' 
+                              : cities.length === 0 
+                                ? 'No cities available' 
+                                : formData.city || 'Select City (Optional)'
+                            }
+                          </span>
+                          <FaChevronDown className={`w-3 h-3 text-gray-400 transition-transform duration-200 ${cityDropdownOpen ? 'rotate-180' : ''} flex-shrink-0`} />
+                        </button>
+
+                        {/* City Dropdown Menu */}
+                        <div className={`absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-hidden transition-all duration-150 ease-in-out origin-top ${
+                          cityDropdownOpen && formData.country && cities.length > 0
+                            ? 'opacity-100 scale-y-100 translate-y-0' 
+                            : 'opacity-0 scale-y-0 -translate-y-2 pointer-events-none'
+                        }`}>
+                          {/* Search Input */}
+                          <div className='p-2 border-b border-gray-200'>
+                            <div className='relative'>
+                              <FaSearch className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-3 h-3' />
+                              <input
+                                type="text"
+                                placeholder="Search cities..."
+                                value={citySearch}
+                                onChange={(e) => setCitySearch(e.target.value)}
+                                className='w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm'
+                              />
+                            </div>
+                          </div>
+                          
+                          {/* Cities List */}
+                          <div className='max-h-44 overflow-y-auto'>
+                            {filteredCities.length > 0 ? (
+                              filteredCities.map((city, index) => (
+                                <button
+                                  key={index}
+                                  type="button"
+                                  onClick={() => handleCitySelect(city)}
+                                  className='w-full px-3 py-2 text-left hover:bg-blue-50 focus:bg-blue-50 focus:outline-none text-sm transition-colors duration-150'
+                                >
+                                  {city}
+                                </button>
+                              ))
+                            ) : (
+                              <div className='px-3 py-2 text-gray-500 text-sm'>
+                                No cities found
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Industry */}
                     <div className="flex items-center gap-2">
                       <FaIndustry className="text-blue-500 flex-shrink-0" />
                       <input
@@ -414,6 +662,8 @@ const ProfileEdit = () => {
                         className="w-full sm:w-[60%] lg:w-[50%] px-3 py-2 sm:py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-600"
                       />
                     </div>
+
+                    {/* Website */}
                     <div className="flex items-center gap-2">
                       <FaGlobe className="text-green-500 flex-shrink-0" />
                       <input
