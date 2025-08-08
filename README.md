@@ -16,6 +16,20 @@ The job market can be messy — job seekers struggle to stand out while recruite
 - ⚡ Real-time application tracking for both candidates and recruiters
 - 📊 Smart analytics and insights
 
+## 🎯 Target Users
+
+### Primary Users
+- **Job Seekers** (Age 22-35)
+  - Recent graduates entering the job market
+  - Career changers seeking new opportunities
+  - Professionals looking for better application management
+
+### Secondary Users  
+- **HR Recruiters & Companies**
+  - Need efficient application management systems
+  - Seeking better candidate evaluation tools
+  - Looking for streamlined recruitment processes
+
 ## 🎯 Mission
 
 To revolutionize job hunting by making the process smart, efficient, and personalized for everyone — as easy as scrolling your favorite social app.
@@ -24,20 +38,22 @@ To revolutionize job hunting by making the process smart, efficient, and persona
 
 ### For Job Seekers 👤
 - 🔐 **Secure Authentication** - JWT-based login system
-- 🔍 **Advanced Job Search** - Filter by location, salary, skills, and more
-- 🤖 **AI CV Analyzer** - GPT-4o powered resume optimization
+- 🔍 **Advanced Job Search** - Filter by Major, Level, Type, Location, and Salary range
+- 🤖 **AI CV Analyzer** - GPT-4o powered resume optimization with job matching
 - 📊 **Personalized Scoring** - Get improvement tips and match ratings
-- 📝 **One-click Applications** - Apply to jobs instantly
-- 💾 **Job Bookmarking** - Save jobs with personal notes
+- 📝 **One-click Applications** - Apply to jobs with automatic pre-filled information
+- 💾 **Job Bookmarking** - Save jobs with custom notes for future reference
 - 📈 **Application Tracking** - Monitor your application status in real-time
+- ⚡ **Real-time Notifications** - Socket.io powered instant status updates
 
-### For Recruiters 🏢
-- 📋 **Job Management** - Post and manage job listings effortlessly
-- 👥 **Centralized Dashboard** - View all applications in one place
-- 🔄 **Status Updates** - Automated notifications for applicants
-- 👁 **AI-Enhanced Profiles** - View candidate profiles with CV insights
+### For Companies/Recruiters 🏢
+- 📋 **Company Profile Management** - Create detailed profiles with logo, industry, and location
+- 🏗️ **Job Posting & Management** - Easy CRUD operations for job listings
+- 👥 **Applicant Tracking System** - View and manage applicants with comprehensive dashboard
+- 🔄 **Status Management** - Update application statuses with automated notifications
+- 👁 **AI-Enhanced Profiles** - Access candidate profiles with CV insights
 - 📊 **Recruitment Analytics** - Track hiring metrics and performance
-- 🎯 **Smart Filtering** - Find the perfect candidates faster
+- 🎯 **Smart Filtering** - Advanced applicant filtering capabilities
 
 ## 🛠 Tech Stack
 
@@ -45,9 +61,10 @@ To revolutionize job hunting by making the process smart, efficient, and persona
 |----------|-------------|
 | **Frontend** | React.js, TailwindCSS |
 | **Backend** | Node.js, Express.js |
-| **Database** | MongoDB |
+| **Database** | MongoDB, Mongoose |
 | **AI Integration** | OpenAI GPT-4o |
-| **Authentication** | JWT |
+| **Real-time** | Socket.io |
+| **Authentication** | JWT, bcrypt |
 | **Version Control** | Git, GitHub |
 
 ## 📦 Installation & Setup
@@ -55,7 +72,8 @@ To revolutionize job hunting by making the process smart, efficient, and persona
 ### Prerequisites
 - Node.js (v14 or higher)
 - MongoDB (local or cloud instance)
-- OpenAI API key
+- OpenAI API key (GPT-4o access)
+- Git
 
 ### 1️⃣ Clone the repository
 ```bash
@@ -70,23 +88,24 @@ cp .env.example .env
 
 # Edit .env with your configuration
 # Required variables:
-# - MONGODB_URI
-# - JWT_SECRET
-# - OPENAI_API_KEY
-# - PORT (optional, defaults to 5000)
+# - MONGODB_URI=your_mongodb_connection_string
+# - JWT_SECRET=your_jwt_secret_key
+# - OPENAI_API_KEY=your_openai_api_key
+# - NODE_ENV=development
+# - PORT=5000 (optional, defaults to 5000)
 ```
 
 ### 3️⃣ Install dependencies
 
 **Backend setup:**
 ```bash
-cd server
+cd backend
 npm install
 ```
 
 **Frontend setup:**
 ```bash
-cd client
+cd frontend
 npm install
 ```
 
@@ -94,13 +113,13 @@ npm install
 
 **Start the backend server:**
 ```bash
-cd server
+cd backend
 npm start
 ```
 
 **Start the frontend (in a new terminal):**
 ```bash
-cd client
+cd frontend
 npm run dev
 ```
 
@@ -127,25 +146,34 @@ We welcome contributions! Here's how you can help:
 
 Please read our [Contributing Guidelines](CONTRIBUTING.md) for more details.
 
-## 📝 API Documentation
+### API Documentation
 
-### Authentication Endpoints
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - User login
-- `GET /api/auth/profile` - Get user profile
-
-### Job Endpoints
-- `GET /api/jobs` - Get all jobs
-- `POST /api/jobs` - Create new job (recruiters only)
-- `GET /api/jobs/:id` - Get specific job
-- `PUT /api/jobs/:id` - Update job (recruiters only)
-
-### Application Endpoints
-- `POST /api/applications` - Apply to job
-- `GET /api/applications` - Get user applications
-- `PUT /api/applications/:id` - Update application status
-
-For detailed API documentation, visit our [API Docs](docs/api.md).
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| **Authentication** |
+| `POST` | `/api/v1/auth/register` | User registration |
+| `POST` | `/api/v1/auth/login` | User authentication |
+| `GET` | `/api/v1/auth/profile` | Get user profile |
+| `PUT` | `/api/v1/auth/profile` | Update user profile |
+| **Job Management** |
+| `GET` | `/api/v1/jobs` | Get all jobs with filters |
+| `POST` | `/api/v1/jobs` | Create new job posting |
+| `GET` | `/api/v1/jobs/:id` | Get specific job details |
+| `PUT` | `/api/v1/jobs/:id` | Update job posting |
+| `DELETE` | `/api/v1/jobs/:id` | Delete job posting |
+| **Applications** |
+| `POST` | `/api/v1/applications` | Submit job application |
+| `GET` | `/api/v1/applications` | Get user applications |
+| `PUT` | `/api/v1/applications/:id/status` | Update application status |
+| **AI CV Analysis** |
+| `POST` | `/api/v1/cv-analyzer/upload` | Upload and analyze CV |
+| `GET` | `/api/v1/cv-analyzer/results/:id` | Get analysis results |
+| **Saved Jobs** |
+| `POST` | `/api/v1/saved-jobs` | Save/unsave job |
+| `GET` | `/api/v1/saved-jobs` | Get saved jobs |
+| **Notifications** |
+| `GET` | `/api/v1/notifications` | Get user notifications |
+| `PATCH` | `/api/v1/notifications/:id/read` | Mark notification as read |
 
 ## 📊 Project Structure
 
@@ -153,34 +181,55 @@ For detailed API documentation, visit our [API Docs](docs/api.md).
 bootcamp-capstone/
 ├── client/                 # React frontend
 │   ├── src/
-│   │   ├── components/     # Reusable components
+│   │   ├── components/     # Reusable UI components
 │   │   ├── pages/          # Page components
+│   │   ├── context/        # React Context (AuthContext, NotificationContext)
 │   │   ├── services/       # API services
 │   │   └── utils/          # Utility functions
 ├── server/                 # Node.js backend
 │   ├── controllers/        # Route controllers
-│   ├── middleware/         # Custom middleware
-│   ├── models/             # Database models
-│   ├── routes/             # API routes
+│   ├── middleware/         # Custom middleware (auth, validation)
+│   ├── models/             # Mongoose models (7 collections)
+│   │   ├── User.js         # User authentication
+│   │   ├── Company.js      # Company profiles
+│   │   ├── Job.js          # Job postings
+│   │   ├── Application.js  # Job applications
+│   │   ├── CVAnalysis.js   # AI CV analysis results
+│   │   ├── SavedJob.js     # Bookmarked jobs
+│   │   └── Category.js     # Job categories
+│   ├── routes/             # API routes (18+ endpoints)
 │   └── utils/              # Utility functions
 ├── docs/                   # Documentation
 └── README.md
 ```
 
-## 🐛 Known Issues
+## 🐛 Known Issues & Limitations
 
 - CV upload currently supports PDF format only
 - Real-time notifications require WebSocket connection
-- Mobile responsiveness needs improvement for dashboard views
+- Mobile responsiveness needs improvement for company dashboard
+- AI analysis processing time depends on OpenAI API response
+- File upload size limited to 10MB for CV files
 
 ## 🔮 Roadmap
 
-- [ ] Mobile app development
+### Phase 1 (Current)
+- [x] Core MERN stack implementation
+- [x] AI-powered CV analysis
+- [x] Real-time notifications
+- [x] Complete user authentication
+
+### Phase 2 (Next Quarter)
+- [ ] Mobile app development (React Native)
 - [ ] Video interview integration
-- [ ] Advanced ML job matching
+- [ ] Advanced ML job matching algorithms
+- [ ] Email notification system
+
+### Phase 3 (Future)
 - [ ] Multi-language support
 - [ ] Company profiles and reviews
 - [ ] Salary insights and analytics
+- [ ] Integration with LinkedIn and other job boards
 
 ## 📄 License
 
