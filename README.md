@@ -237,7 +237,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 👨‍💻 Authors
 
-- **Filbert Sembiring M.** - *Initial work* - [@FilbertSM](https://github.com/FilbertSM)
-- **Dyah Puspo Rini** - *Initial work* - [@kunospw](https://github.com/kunospw)
-- **Mika Rahmat Ramadhan** - *Initial work* - [@NvZ4](https://github.com/NvZ4)
-- **Haris Muhyidin Shofar** - *Initial work* - [@rahmatramadhanmika](https://github.com/rahmatramadhanmika)
+- **Filbert Sembiring M.** - *Initial work* - *AI & Backend Developer* - [@FilbertSM](https://github.com/FilbertSM)
+- **Dyah Puspo Rini** - *Initial work* - *Backend Developer* - [@kunospw](https://github.com/kunospw)
+- **Mika Rahmat Ramadhan** - *Initial work* - *Frontend Developer* - [@NvZ4](https://github.com/NvZ4)
+- **Haris Muhyidin Shofar** - *Initial work* - *UI/UX Designer* - [@rahmatramadhanmika](https://github.com/rahmatramadhanmika)
