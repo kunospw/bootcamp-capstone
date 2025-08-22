@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import NavBar from '../../Components/NavBar'
 import Footer from '../../Components/Footer'
 import FloatingDecorations from '../../Components/FloatingDecorations'
 import { cvAnalyzerAPI } from '../../services/api'
 
 const CvAnalyzer = () => {
+  const navigate = useNavigate();
   const [uploadedFile, setUploadedFile] = useState(null);
   const [experienceLevel, setExperienceLevel] = useState('');
   const [major, setMajor] = useState('');
@@ -545,6 +547,141 @@ const CvAnalyzer = () => {
                       <p className="text-sm text-gray-700 capitalize">{analysisResult.marketInsights.demandLevel}</p>
                     </div>
                   </div>
+                </div>
+              )}
+
+              {/* Job Matching Results */}
+              {analysisResult.jobMatching && analysisResult.jobMatching.matches && analysisResult.jobMatching.matches.length > 0 && (
+                <div className="mt-8 pt-6 border-t border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center">
+                    <svg className="w-5 h-5 mr-2 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    Recommended Jobs ({analysisResult.jobMatching.matches.length})
+                  </h3>
+                  
+                  {/* Carousel Container */}
+                  <div className="relative">
+                    <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory">
+                      {analysisResult.jobMatching.matches.map((match, index) => (
+                        <div 
+                          key={index} 
+                          className="flex-none w-80 snap-start cursor-pointer transform transition-all duration-200 hover:scale-105"
+                          onClick={() => navigate(`/job/${match.jobId}`)}
+                        >
+                          <div className="bg-white border border-gray-200 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 p-6 h-full">
+                            {/* Header */}
+                            <div className="flex items-start justify-between mb-4">
+                              <div className="flex-1 min-w-0">
+                                <h4 className="text-xl font-semibold text-gray-900 truncate mb-1">
+                                  {match.title}
+                                </h4>
+                                <div className="flex items-center">
+                                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                                    match.score >= 70 ? 'bg-green-100 text-green-800' :
+                                    match.score >= 50 ? 'bg-yellow-100 text-yellow-800' :
+                                    'bg-orange-100 text-orange-800'
+                                  }`}>
+                                    {match.score}% match
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="ml-3">
+                                <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
+                              </div>
+                            </div>
+
+                            {/* Matching Skills */}
+                            {match.matchingSkills && match.matchingSkills.length > 0 && (
+                              <div className="mb-4">
+                                <p className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                  <svg className="w-4 h-4 mr-1 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                  </svg>
+                                  Your Skills Match
+                                </p>
+                                <div className="flex flex-wrap gap-2">
+                                  {match.matchingSkills.slice(0, 4).map((skill, skillIndex) => (
+                                    <span key={skillIndex} className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-green-50 text-green-700 border border-green-200">
+                                      {skill}
+                                    </span>
+                                  ))}
+                                  {match.matchingSkills.length > 4 && (
+                                    <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-50 text-gray-500">
+                                      +{match.matchingSkills.length - 4} more
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Skills to Develop */}
+                            {match.missingSkills && match.missingSkills.length > 0 && (
+                              <div className="mb-4">
+                                <p className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                  <svg className="w-4 h-4 mr-1 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                                  </svg>
+                                  Skills to Learn
+                                </p>
+                                <div className="flex flex-wrap gap-2">
+                                  {match.missingSkills.slice(0, 3).map((skill, skillIndex) => (
+                                    <span key={skillIndex} className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-yellow-50 text-yellow-700 border border-yellow-200">
+                                      {skill}
+                                    </span>
+                                  ))}
+                                  {match.missingSkills.length > 3 && (
+                                    <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-50 text-gray-500">
+                                      +{match.missingSkills.length - 3} more
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Call to Action */}
+                            <div className="pt-4 border-t border-gray-100">
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm text-gray-500">Click to view details</span>
+                                <div className="flex items-center text-blue-600 text-sm font-medium">
+                                  Apply Now
+                                  <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                  </svg>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {/* Scroll Indicators */}
+                    {analysisResult.jobMatching.matches.length > 1 && (
+                      <div className="flex justify-center mt-4 space-x-2">
+                        {analysisResult.jobMatching.matches.map((_, index) => (
+                          <div key={index} className="w-2 h-2 rounded-full bg-gray-300"></div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* View All Jobs Button */}
+                  {analysisResult.jobMatching.matches.length > 0 && (
+                    <div className="mt-6 text-center">
+                      <button
+                        onClick={() => navigate('/jobs')}
+                        className="inline-flex items-center px-6 py-3 border border-gray-300 shadow-sm text-base font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200"
+                      >
+                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        Browse All Jobs
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

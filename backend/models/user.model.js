@@ -20,9 +20,7 @@ const userSchema = new mongoose.Schema({
         ],
     },
     password: {
-        type: String,
-        required: [true, "Password is required"],
-        minlength: [3, "Password must be at least 3 characters"],
+        type: String
     },
     phoneNumber: {
         type: String,
@@ -56,7 +54,7 @@ const userSchema = new mongoose.Schema({
     savedJobs: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "Job",
-    }, ],
+    },],
     isActive: {
         type: Boolean,
         default: true,
@@ -80,7 +78,7 @@ const userSchema = new mongoose.Schema({
     skills: [{
         type: String,
         trim: true,
-    }, ],
+    },],
     experience: [{
         company: {
             type: String,
@@ -107,7 +105,7 @@ const userSchema = new mongoose.Schema({
             type: String,
             maxlength: [500, "Description cannot exceed 500 characters"],
         },
-    }, ],
+    },],
     education: [{
         institution: {
             type: String,
@@ -138,13 +136,13 @@ const userSchema = new mongoose.Schema({
             type: String,
             trim: true,
         },
-    }, ],
+    },],
 }, {
     timestamps: true,
 });
 
 // Hash password before saving
-userSchema.pre("save", async function(next) {
+userSchema.pre("save", async function (next) {
     // Only hash the password if it has been modified (or is new)
     if (!this.isModified("password")) return next();
 
@@ -159,12 +157,12 @@ userSchema.pre("save", async function(next) {
 });
 
 // Compare password method
-userSchema.methods.matchPassword = async function(enteredPassword) {
+userSchema.methods.matchPassword = async function (enteredPassword) {
     return await bcrypt.compare(enteredPassword, this.password);
 };
 
 // Update last login
-userSchema.methods.updateLastLogin = function() {
+userSchema.methods.updateLastLogin = function () {
     this.lastLogin = new Date();
     return this.save({ validateBeforeSave: false });
 };

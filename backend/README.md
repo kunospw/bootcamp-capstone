@@ -10,13 +10,29 @@ A comprehensive MERN stack backend for a job portal application with integrated 
 - **Job Management**: Job listings, applications, search and filtering
 - **Application Tracking**: Application status management and notifications
 
-### 🆕 CV Analyzer Module (NEW)
-- **AI-Powered CV Analysis**: OpenAI GPT-4 integration for intelligent resume analysis
+### 🆕 CV Analyzer & Smart Matching Module (NEW)
+- **AI-Powered CV Analysis**: OpenAI GPT-4o integration for intelligent resume analysis
+- **Smart Job Matching**: AI-powered job recommendations with compatibility scoring
+- **Automated Candidate Screening**: Bulk CV analysis and ranking for companies
+- **Skills Gap Analysis**: Visual skill matching with improvement recommendations
 - **ATS Compatibility**: Automated Applicant Tracking System compatibility assessment
-- **Skills Gap Analysis**: Identification of missing skills and improvement recommendations
-- **Market Positioning**: Industry-specific insights and salary benchmarking
-- **Performance Analytics**: User analytics and improvement tracking
-- **Enterprise Security**: Comprehensive security measures and data protection
+- **Percentage-Based Scoring**: 70% skills match + 30% experience level compatibility
+- **Real-time Analysis**: Instant CV processing with intelligent caching
+- **Dual View Modes**: Toggle between regular and AI-powered analysis interfaces
+- **Performance Analytics**: Comprehensive analytics and success tracking
+- **Enterprise Security**: Advanced security measures and data protection
+
+### 🎯 Smart Matching Features
+- **Job Seekers**: 
+  - Interactive job recommendation carousel
+  - Skill gap identification and learning paths
+  - Compatibility scoring (0-100%)
+  - One-click job application with pre-filled data
+- **Companies**: 
+  - Smart candidate ranking and filtering
+  - Visual skill analysis with green/yellow indicators
+  - Statistics dashboard (high/medium matches, averages)
+  - Advanced sorting (score, skills, experience, date)
 
 ## 📋 Table of Contents
 

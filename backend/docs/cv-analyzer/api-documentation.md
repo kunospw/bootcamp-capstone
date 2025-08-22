@@ -1,10 +1,11 @@
-# CV Analyzer API Documentation
+# CV Analyzer & Smart Matching API Documentation
 
-This document provides comprehensive API reference for the CV Analyzer module of the Job Portal application.
+This document provides comprehensive API reference for the CV Analyzer and Smart Matching modules of the Job Portal application.
 
 ## Base URL
 ```
 /api/v1/cv-analyzer
+/api/applications
 ```
 
 ## Authentication
@@ -13,9 +14,135 @@ All endpoints require user authentication via JWT token. Include the token in th
 Authorization: Bearer <your_jwt_token>
 ```
 
+## Smart Matching Features
+
+### Overview
+The Smart Matching system provides AI-powered candidate screening and job recommendations:
+
+- **For Job Seekers**: Intelligent job matching with compatibility scores
+- **For Companies**: Automated CV analysis and candidate ranking
+- **Skills Analysis**: Detailed skill gap analysis with visual indicators
+- **Scoring Algorithm**: 70% skills match + 30% experience level compatibility
+
 ## Endpoints
 
-### 1. Upload and Analyze CV
+### 1. Job Recommendations (Job Seekers)
+
+**GET** `/jobs/recommendations/:userId`
+
+Get AI-powered job recommendations for a specific user based on their CV and profile.
+
+#### Request
+
+**Headers:**
+- `Authorization: Bearer <token>`
+
+**Parameters:**
+- `userId`: MongoDB ObjectId of the user
+
+#### Response
+
+**Success (200 OK):**
+```javascript
+{
+  success: true,
+  data: {
+    recommendations: [
+      {
+        job: {
+          _id: "507f1f77bcf86cd799439011",
+          title: "Frontend Developer",
+          company: "Tech Corp",
+          location: "Remote",
+          salary: { min: 60000, max: 80000 },
+          type: "full-time",
+          description: "...",
+          requirements: ["React", "JavaScript", "CSS"]
+        },
+        matchScore: 75,
+        matchingSkills: ["React", "JavaScript"],
+        missingSkills: ["TypeScript", "Node.js"],
+        experienceMatch: 80,
+        analysis: "Strong match for frontend development..."
+      }
+    ],
+    totalMatches: 5,
+    averageScore: 68
+  }
+}
+```
+
+### 2. Company Applications with CV Analysis
+
+**GET** `/applications/company-applications-with-analysis`
+
+Get company applications with AI-powered CV analysis and scoring.
+
+#### Request
+
+**Headers:**
+- `Authorization: Bearer <token>`
+
+**Query Parameters:**
+- `jobId`: (Optional) Filter by specific job ID
+- `page`: Page number (default: 1)
+- `limit`: Items per page (default: 10)
+- `sortBy`: Sort criteria ("score" | "skills" | "experience" | "date")
+- `status`: (Optional) Filter by application status
+
+#### Response
+
+**Success (200 OK):**
+```javascript
+{
+  success: true,
+  data: {
+    applications: [
+      {
+        _id: "507f1f77bcf86cd799439011",
+        userId: {
+          _id: "507f1f77bcf86cd799439012",
+          fullName: "John Doe",
+          email: "john@example.com"
+        },
+        jobId: {
+          _id: "507f1f77bcf86cd799439013",
+          title: "Backend Developer",
+          requirements: ["Node.js", "MongoDB", "Express"]
+        },
+        status: "pending",
+        applicationDate: "2025-01-15T10:30:00Z",
+        cvAnalysis: {
+          overallScore: 82,
+          skillMatch: {
+            matchPercentage: 75,
+            matchingSkills: ["Node.js", "Express"],
+            missingSkills: ["MongoDB", "Docker"],
+            totalRequired: 4,
+            totalMatched: 2
+          },
+          experienceLevelMatch: 90,
+          analysisDate: "2025-01-15T10:31:00Z"
+        }
+      }
+    ],
+    stats: {
+      totalApplications: 15,
+      highScoreCount: 3,      // 80%+ match
+      mediumScoreCount: 8,    // 60-79% match
+      averageScore: 67
+    },
+    pagination: {
+      currentPage: 1,
+      totalPages: 2,
+      totalApplications: 15,
+      limit: 10
+    }
+  }
+}
+```
+
+### 3. Upload and Analyze CV
 
 **POST** `/upload`
 
@@ -167,6 +294,30 @@ Retrieves the analysis results for a specific CV analysis.
   }
 }
 ```
+
+#### Job Matching
+
+Successful analyses include a `jobMatching` object with recommended roles:
+
+```javascript
+{
+  jobMatching: {
+    matches: [
+      {
+        jobId: "507f1f77bcf86cd799439012",
+        title: "Backend Developer",
+        companyId: "507f1f77bcf86cd799439013",
+        score: 80,
+        matchingSkills: ["Node.js", "MongoDB"],
+        missingSkills: ["Express"]
+      }
+    ]
+  }
+}
+```
+
+`score` represents the percentage of a job's listed skills that match the candidate's extracted skills.
+
 
 **Error (404 Not Found):**
 ```javascript

@@ -40,7 +40,8 @@ To revolutionize job hunting by making the process smart, efficient, and persona
 - 🔐 **Secure Authentication** - JWT-based login system
 - 🔍 **Advanced Job Search** - Filter by Major, Level, Type, Location, and Salary range
 - 🤖 **AI CV Analyzer** - GPT-4o powered resume optimization with job matching
-- 📊 **Personalized Scoring** - Get improvement tips and match ratings
+- 🎯 **Smart Job Recommendations** - AI-powered job matching with skill analysis and scoring
+- 📊 **Personalized Scoring** - Get improvement tips and match ratings (up to 100% compatibility)
 - 📝 **One-click Applications** - Apply to jobs with automatic pre-filled information
 - 💾 **Job Bookmarking** - Save jobs with custom notes for future reference
 - 📈 **Application Tracking** - Monitor your application status in real-time
@@ -49,11 +50,54 @@ To revolutionize job hunting by making the process smart, efficient, and persona
 ### For Companies/Recruiters 🏢
 - 📋 **Company Profile Management** - Create detailed profiles with logo, industry, and location
 - 🏗️ **Job Posting & Management** - Easy CRUD operations for job listings
-- 👥 **Applicant Tracking System** - View and manage applicants with comprehensive dashboard
+- 👥 **Advanced Applicant Management** - Smart CV analysis with skill matching and scoring
+- 🧠 **AI-Powered Candidate Screening** - Automated CV analysis with percentage-based matching
+- 📊 **Skills Gap Analysis** - Visual skill matching with green (matching) and yellow (missing) indicators
+- 🎯 **Smart Sorting & Filtering** - Sort candidates by overall score, skills match, or experience level
 - 🔄 **Status Management** - Update application statuses with automated notifications
-- 👁 **AI-Enhanced Profiles** - Access candidate profiles with CV insights
-- 📊 **Recruitment Analytics** - Track hiring metrics and performance
-- 🎯 **Smart Filtering** - Advanced applicant filtering capabilities
+- 👁 **Enhanced Candidate Profiles** - Access detailed CV insights and compatibility scores
+- � **Recruitment Analytics** - Track hiring metrics with smart analysis statistics
+- 🔍 **Dual View Modes** - Toggle between regular and AI-powered smart analysis views
+
+## 🧠 AI CV Analysis System
+
+Our cutting-edge AI CV Analysis system revolutionizes how companies evaluate candidates and how job seekers optimize their applications.
+
+### 🎯 For Job Seekers
+- **Smart Job Matching**: AI analyzes your CV and recommends jobs with compatibility scores
+- **Skill Gap Analysis**: Identifies missing skills and provides improvement suggestions
+- **Interactive Carousel**: Browse recommended jobs with click-to-view functionality
+- **Real-time Scoring**: Get instant feedback on how well you match job requirements
+
+### 🏢 For Companies
+- **Automated CV Screening**: AI analyzes all applications and scores them automatically
+- **Smart Analysis Toggle**: Switch between regular view and AI-powered analysis
+- **Comprehensive Statistics**: 
+  - Total applications count
+  - High match candidates (80%+ score)
+  - Medium match candidates (60-79% score)
+  - Average compatibility score
+- **Visual Skill Matching**:
+  - 🟢 **Green badges** for matching skills
+  - 🟡 **Yellow badges** for missing skills
+  - Skill count indicators with expandable views
+- **Advanced Sorting Options**:
+  - Overall match score (recommended)
+  - Skills compatibility percentage
+  - Experience level match
+  - Application date
+- **Color-coded Scoring**:
+  - 🟢 Green (80%+): Excellent match
+  - 🟡 Yellow (60-79%): Good match
+  - 🟠 Orange (40-59%): Fair match
+  - 🔴 Red (<40%): Poor match
+
+### 🔧 Technical Implementation
+- **PDF Parsing**: Extracts text content from uploaded CV files
+- **Skill Extraction**: Identifies 50+ technical and soft skills using regex patterns
+- **Weighted Scoring Algorithm**: 70% skills match + 30% experience level compatibility
+- **Flexible Major Mapping**: Maps related fields (e.g., Statistics → Data Science)
+- **Real-time Analysis**: Processes CVs instantly with caching for performance
 
 ## 🛠 Tech Stack
 
@@ -63,6 +107,7 @@ To revolutionize job hunting by making the process smart, efficient, and persona
 | **Backend** | Node.js, Express.js |
 | **Database** | MongoDB, Mongoose |
 | **AI Integration** | OpenAI GPT-4o |
+| **File Processing** | pdf-parse, Multer |
 | **Real-time** | Socket.io |
 | **Authentication** | JWT, bcrypt |
 | **Version Control** | Git, GitHub |

@@ -3,6 +3,7 @@ import User from "../models/user.model.js";
 import Job from "../models/job.model.js";
 import OpenAIService from "../services/openai.service.js";
 import PDFParserService from "../services/pdf-parser.service.js";
+import JobMatchingService from "../services/job-matching.service.js";
 import fs from "fs/promises";
 import path from "path";
 
@@ -14,6 +15,7 @@ class CVAnalyzerController {
   constructor() {
     this.openAIService = new OpenAIService();
     this.pdfParserService = new PDFParserService();
+    this.jobMatchingService = new JobMatchingService();
   }
 
   /**
@@ -24,7 +26,7 @@ class CVAnalyzerController {
     try {
       const { experienceLevel, major, targetJobTitle } = req.body;
       const userId = req.user._id;
-      
+
       // Validate required fields
       if (!experienceLevel || !major) {
         return res.status(400).json({
@@ -97,7 +99,7 @@ class CVAnalyzerController {
 
     } catch (error) {
       console.error("CV upload error:", error);
-      
+
       // Clean up uploaded file if exists
       if (req.file?.path) {
         try {
@@ -214,10 +216,10 @@ class CVAnalyzerController {
       // Update job data if provided
       if (experienceLevel || major || targetJobTitle) {
         let jobData = { ...analysis.jobData };
-        
+
         if (experienceLevel) jobData.experienceLevel = experienceLevel;
         if (major) jobData.major = major;
-        
+
         if (targetJobTitle !== undefined) {
           if (targetJobTitle && targetJobTitle.trim()) {
             jobData.targetJobTitle = targetJobTitle.trim();
@@ -226,7 +228,7 @@ class CVAnalyzerController {
             delete jobData.targetJobTitle;
           }
         }
-        
+
         analysis.jobData = jobData;
       }
 
@@ -347,7 +349,7 @@ class CVAnalyzerController {
   async performAnalysis(analysisId) {
     try {
       console.log(`Starting analysis for ID: ${analysisId}`);
-      
+
       const analysis = await CVAnalysis.findById(analysisId);
       if (!analysis) {
         throw new Error("Analysis record not found");
@@ -358,7 +360,7 @@ class CVAnalyzerController {
       // Extract text from PDF file during analysis (not during upload)
       console.log('Starting PDF text extraction during analysis...');
       let extractedText;
-      
+
       try {
         const extractionResult = await this.pdfParserService.extractTextFromPDF(analysis.filePath, {
           size: analysis.fileSize,
@@ -366,11 +368,11 @@ class CVAnalyzerController {
         });
         extractedText = extractionResult.text;
         console.log('PDF text extraction completed, text length:', extractedText.length);
-        
+
         // Update the analysis record with extracted text
         analysis.extractedText = extractedText;
         await analysis.save();
-        
+
       } catch (extractionError) {
         console.error('PDF extraction failed during analysis:', extractionError);
         throw new Error(`Failed to extract text from CV: ${extractionError.message}`);
@@ -403,6 +405,12 @@ class CVAnalyzerController {
       if (aiResult.jobMatching) {
         analysis.jobMatching = aiResult.jobMatching;
       }
+      const extractedSkills = aiResult.analysis?.sections?.skills || [];
+      const jobMatches = await this.jobMatchingService.findMatches(
+        extractedSkills,
+        analysis.jobData
+      );
+      analysis.jobMatching = jobMatches;
       if (aiResult.marketInsights) {
         analysis.marketInsights = aiResult.marketInsights;
       }

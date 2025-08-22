@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import app from '../app.js';
 import User from '../models/user.model.js';
 import CVAnalysis from '../models/cvanalysis.model.js';
+import Job from '../models/job.model.js';
 import jwt from 'jsonwebtoken';
 import fs from 'fs/promises';
 import path from 'path';
@@ -23,6 +24,8 @@ describe('CV Analyzer API Tests', () => {
     // Clean up test data
     await User.deleteMany({});
     await CVAnalysis.deleteMany({});
+    await Job.deleteMany({});
+
 
     // Create test user
     testUser = new User({
@@ -143,7 +146,7 @@ describe('CV Analyzer API Tests', () => {
 
     test('should return 404 for non-existent analysis', async () => {
       const fakeId = new mongoose.Types.ObjectId();
-      
+
       const response = await request(app)
         .get(`/api/v1/cv-analyzer/results/${fakeId}`)
         .set('Authorization', `Bearer ${authToken}`)
@@ -269,7 +272,7 @@ describe('CV Analyzer API Tests', () => {
 
     test('should return 404 for non-existent analysis', async () => {
       const fakeId = new mongoose.Types.ObjectId();
-      
+
       const response = await request(app)
         .delete(`/api/v1/cv-analyzer/${fakeId}`)
         .set('Authorization', `Bearer ${authToken}`)
@@ -297,7 +300,7 @@ describe('CV Analyzer API Tests', () => {
   describe('Input Validation Tests', () => {
     test('should validate experience level enum', async () => {
       const invalidLevels = ['beginner', 'expert', 'novice'];
-      
+
       for (const level of invalidLevels) {
         const response = await request(app)
           .post('/api/v1/cv-analyzer/upload')
@@ -373,6 +376,45 @@ describe('CV Analyzer API Tests', () => {
       expect(response.body.success).toBe(false);
       expect(response.body.message).toContain('Invalid ID format');
     });
+    describe('Job Matching', () => {
+      test('should populate jobMatching results', async () => {
+        const job = await Job.create({
+          title: 'Backend Developer',
+          major: 'Computer Science',
+          type: 'full-time',
+          workLocation: 'remote',
+          location: 'Anywhere',
+          description: 'Backend role',
+          requirements: ['Node.js', 'MongoDB'],
+          skills: ['Node.js', 'MongoDB'],
+          experienceLevel: 'mid',
+          companyId: new mongoose.Types.ObjectId()
+        });
+
+        const analysis = new CVAnalysis({
+          userId: testUser._id,
+          originalFilename: 'jobmatch.pdf',
+          filePath: '/tmp/jobmatch.pdf',
+          fileSize: 1000,
+          extractedText: 'Processing...',
+          jobData: {
+            experienceLevel: 'mid',
+            major: 'Computer Science'
+          },
+          processingStatus: 'processing'
+        });
+        await analysis.save();
+
+        const controller = (await import('../controllers/cv-analyzer.controller.js')).default;
+        await controller.performAnalysis(analysis._id);
+
+        const updated = await CVAnalysis.findById(analysis._id);
+        expect(updated.jobMatching).toBeDefined();
+        expect(updated.jobMatching.matches.length).toBeGreaterThan(0);
+        expect(updated.jobMatching.matches[0].jobId.toString()).toBe(job._id.toString());
+        expect(updated.jobMatching.matches[0].matchingSkills).toContain('Node.js');
+      });
+    });
   });
 });
 
@@ -383,13 +425,12 @@ jest.mock('../services/openai.service.js', () => {
       analysis: {
         overallScore: 85,
         sections: {
-          atsCompatibility: { score: 90 },
-          skillsAlignment: { score: 80 }
+          skills: ['Node.js', 'MongoDB']
         }
       },
       recommendations: [],
-      skillsAnalysis: {},
-      matchingScore: { overall: 85 }
+      jobMatching: {},
+      marketInsights: {}
     })
   }));
 });
@@ -397,6 +438,6 @@ jest.mock('../services/openai.service.js', () => {
 // Mock PDF parser service for testing
 jest.mock('../services/pdf-parser.service.js', () => {
   return jest.fn().mockImplementation(() => ({
-    extractText: jest.fn().mockResolvedValue('Sample extracted CV text for testing')
+    extractTextFromPDF: jest.fn().mockResolvedValue({ text: 'Sample extracted CV text for testing' })
   }));
 });
